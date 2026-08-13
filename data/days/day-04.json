@@ -201,5 +201,17 @@
       "notitie": "camping voor die nacht"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "inzet": {
+        "dxMm": 4.84,
+        "dyMm": 9.35
+      },
+      "titelblok": {
+        "dxMm": -4.5,
+        "dyMm": -4.67
+      }
+    }
+  }
 }

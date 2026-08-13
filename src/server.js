@@ -45,6 +45,9 @@ const MIMES = {
 /** Onthoudt de opgehaalde daggegevens, zodat draaien aan een knop niet opnieuw downloadt. */
 const dagCache = new Map()
 
+/** De laatst gemaakte laag met opgetilde plaatsnamen. */
+let bovenlaagCache = null
+
 async function dagGegevens (nummer, stijlOverschrijving) {
   const sleutel = `${nummer}:${JSON.stringify(stijlOverschrijving ?? {})}`
   if (!dagCache.has(sleutel)) {
@@ -141,6 +144,16 @@ const server = createServer(async (req, res) => {
     // ---------------------------------------------------------------- schema
     if (pad === '/api/schema') return json(res, { groepen: GROEPEN, knoppen: KNOPPEN })
 
+    // ------------------------------------------------------------- kleurensets
+    if (pad === '/api/presets') {
+      const map = join(ROOT, 'data', 'presets')
+      const uit = []
+      for (const b of (await readdir(map)).filter(b => b.endsWith('.json')).sort()) {
+        uit.push(JSON.parse(await readFile(join(map, b), 'utf8')))
+      }
+      return json(res, uit)
+    }
+
     // ------------------------------------------------------- welke dagen zijn er
     if (pad === '/api/dagen') {
       const dagen = (await alleDagen()).map(d => ({ dag: d.dag, datum: d.datum, titel: d.titel }))
@@ -206,19 +219,31 @@ const server = createServer(async (req, res) => {
       const dem = overzicht ? await reisDem(stijl, view) : d.dem
 
       const r = await achtergrondVoorStijl({
-        dem, view, stijl, dpi,
+        dem, view, stijl, dpi, route: coords,
         onProgress: b => process.stdout.write(`  ... ${typeof b === 'string' ? b : ''}\n`)
       })
+
+      // De opgetilde plaatsnamen worden apart opgehaald; hier alleen melden dat
+      // ze er zijn, zodat de pagina weet of hij die laag moet ophalen.
+      bovenlaagCache = r.bovenPng ?? null
 
       res.writeHead(200, {
         'content-type': 'image/png',
         'x-plaatsing': JSON.stringify({
           xMm: r.xMm, yMm: r.yMm, breedteMm: r.breedteMm, hoogteMm: r.hoogteMm,
-          bronvermelding: r.bronvermelding
+          bronvermelding: r.bronvermelding,
+          bovenlaag: !!r.bovenPng
         }),
         'cache-control': 'no-store'
       })
       return res.end(r.png)
+    }
+
+    // ------------------------------------------- opgetilde plaatsnamen
+    if (pad === '/api/bovenlaag') {
+      if (!bovenlaagCache) { res.writeHead(204).end(); return }
+      res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' })
+      return res.end(bovenlaagCache)
     }
 
     // ------------------------------------------------------- inzetkaartje

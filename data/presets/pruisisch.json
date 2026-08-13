@@ -1,0 +1,37 @@
+{
+  "naam": "Pruisisch",
+  "beschrijving": "Dieper en donkerder blauw, bijna zwart in de schaduw. Streng en klassiek.",
+  "voorbeeld": [
+    "#1c4966",
+    "#f6f6f3",
+    "#1d2a33"
+  ],
+  "stijl": {
+    "route.kleur": "#1c4966",
+    "route.buitenKleur": "#f6f6f3",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#f6f6f3",
+    "pijltjes.randKleur": "#1c4966",
+    "markers.stopVulling": "#f6f6f3",
+    "markers.stopRand": "#1c4966",
+    "markers.slaapVulling": "#1c4966",
+    "markers.slaapRand": "#f6f6f3",
+    "markers.viaVulling": "#1c4966",
+    "labels.kleur": "#1d2a33",
+    "labels.haloKleur": "#f6f6f3",
+    "eerdere.kleur": "#88919a",
+    "titelblok.kleur": "#1d2a33",
+    "inzet.kaderKleur": "#1c4966",
+    "inzet.routeKleur": "#88919a",
+    "inzet.achtergrond": "#f6f6f3",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#88919a",
+    "bron.kleur": "#88919a",
+    "profiel.lijnKleur": "#65798a",
+    "profiel.vulKleur": "#e0e6ea",
+    "statistieken.getalKleur": "#1d2a33",
+    "statistieken.labelKleur": "#88919a"
+  },
+  "_contrast": "4,0:1"
+}

@@ -166,5 +166,13 @@
       "notitie": "gestopt voor hotel"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "inzet": {
+        "dxMm": 8.26,
+        "dyMm": -240.44
+      }
+    }
+  }
 }

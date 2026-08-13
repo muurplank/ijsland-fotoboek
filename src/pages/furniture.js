@@ -84,11 +84,17 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
   }
 
   // ---------------------------------------------------------- inzetkaartje
+  //
+  // Een klein kaartje verdient dezelfde aandacht als een groot. Vandaar de
+  // ruimte rondom het eiland, de afgeronde hoeken, de zachte schaduw die het
+  // van de kaart tilt, en een kadertje met een lichte vulling in plaats van
+  // een harde rode doos.
   if (stijl['inzet.aan'] && silhouet) {
     const b = silhouet.bounds
-    const breedte = stijl['inzet.breedteMm']
+    const buitenBreedte = stijl['inzet.breedteMm']
+    const pad = stijl['inzet.padMm']
+    const breedte = Math.max(4, buitenBreedte - 2 * pad)
 
-    // hoogte volgt uit de verhouding van IJsland in deze projectie
     const hulp = MapView.fit(
       [[b.west, b.south], [b.east, b.north]],
       { widthMm: breedte, heightMm: breedte, paddingMm: 0 }
@@ -100,23 +106,38 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
     const doos = document.createElement('div')
     doos.className = 'inzet'
     doos.setAttribute('data-plek', 'inzet')
+    // hoger zetten dan de bronvermelding, anders lopen ze in elkaar
     inHoek(doos, stijl['inzet.hoek'], marge, maat)
-    doos.style.width = mm(breedte)
-    doos.style.height = mm(hoogte)
+    if (!stijl['inzet.hoek'].includes('boven') && stijl['bron.aan']) {
+      doos.style.bottom = mm(marge + stijl['bron.grootteMm'] + 2)
+    }
+
+    doos.style.width = mm(buitenBreedte)
+    doos.style.height = mm(hoogte + 2 * pad)
+    doos.style.padding = mm(pad)
+    doos.style.borderRadius = mm(stijl['inzet.afrondingMm'])
     doos.style.borderWidth = mm(stijl['inzet.randMm'])
     doos.style.borderColor = stijl['inzet.randKleur']
     doos.style.background = stijl['inzet.achtergrond']
+    if (stijl['inzet.schaduw']) {
+      doos.style.boxShadow =
+        `0 calc(0.3 * var(--mm)) calc(1.2 * var(--mm)) #00000018, ` +
+        `0 calc(0.08 * var(--mm)) calc(0.25 * var(--mm)) #0000000f`
+    }
 
-    // het eiland zelf
+    const binnen = document.createElement('div')
+    binnen.className = 'inzet-binnen'
+    binnen.style.width = mm(breedte)
+    binnen.style.height = mm(hoogte)
+
     const eiland = document.createElement('img')
     eiland.src = silhouet.url
     eiland.style.left = mm(Math.min(hoek0.x, hoek1.x))
     eiland.style.top = mm(Math.min(hoek0.y, hoek1.y))
     eiland.style.width = mm(Math.abs(hoek1.x - hoek0.x))
     eiland.style.height = mm(hoogte)
-    doos.append(eiland)
+    binnen.append(eiland)
 
-    // de route en het kadertje eroverheen
     const svg = document.createElementNS(SVG, 'svg')
     svg.setAttribute('viewBox', `0 0 ${breedte} ${hoogte}`)
 
@@ -126,29 +147,35 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
     )
 
     svg.append(maakSvg('path', {
-      d: padData(vereenvoudig(projecteer(gegevens.route.coordinates, view2), 0.05)),
+      d: padData(vereenvoudig(projecteer(gegevens.route.coordinates, view2), 0.04)),
       fill: 'none',
       stroke: stijl['inzet.routeKleur'],
-      'stroke-width': Math.max(0.15, breedte / 90),
+      'stroke-width': Math.max(0.18, breedte / 85),
       'stroke-linejoin': 'round',
       'stroke-linecap': 'round'
     }))
 
-    // kadertje om te laten zien welk stuk je op de grote kaart ziet
+    // het kadertje: afgerond, met een lichte vulling erbinnen
     const zicht = view.visibleBounds()
     const a = view2.project(zicht.west, zicht.north)
     const c = view2.project(zicht.east, zicht.south)
+    const kx = Math.min(a.x, c.x)
+    const ky = Math.min(a.y, c.y)
+    const kb = Math.abs(c.x - a.x)
+    const kh = Math.abs(c.y - a.y)
+
     svg.append(maakSvg('rect', {
-      x: Math.min(a.x, c.x),
-      y: Math.min(a.y, c.y),
-      width: Math.abs(c.x - a.x),
-      height: Math.abs(c.y - a.y),
-      fill: 'none',
+      x: kx, y: ky, width: kb, height: kh,
+      rx: Math.min(kb, kh) * 0.09,
+      fill: stijl['inzet.kaderKleur'],
+      'fill-opacity': stijl['inzet.kaderVulling'],
       stroke: stijl['inzet.kaderKleur'],
-      'stroke-width': stijl['inzet.kaderMm']
+      'stroke-width': stijl['inzet.kaderMm'],
+      'stroke-linejoin': 'round'
     }))
 
-    doos.append(svg)
+    binnen.append(svg)
+    doos.append(binnen)
     laag.append(doos)
   }
 

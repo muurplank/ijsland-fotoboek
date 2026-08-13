@@ -1,0 +1,37 @@
+{
+  "naam": "Wijnrood",
+  "beschrijving": "Diep en warm, past bij een fotoboek. Houdt overal ruim genoeg contrast, ook boven de bruine hooglanden.",
+  "voorbeeld": [
+    "#8c2f39",
+    "#fbf7f1",
+    "#3b3128"
+  ],
+  "stijl": {
+    "route.kleur": "#8c2f39",
+    "route.buitenKleur": "#fbf7f1",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#fbf7f1",
+    "pijltjes.randKleur": "#8c2f39",
+    "markers.stopVulling": "#fbf7f1",
+    "markers.stopRand": "#8c2f39",
+    "markers.slaapVulling": "#8c2f39",
+    "markers.slaapRand": "#fbf7f1",
+    "markers.viaVulling": "#8c2f39",
+    "labels.kleur": "#3b3128",
+    "labels.haloKleur": "#fbf7f1",
+    "eerdere.kleur": "#9c9184",
+    "titelblok.kleur": "#3b3128",
+    "inzet.kaderKleur": "#8c2f39",
+    "inzet.routeKleur": "#9c9184",
+    "inzet.achtergrond": "#fbf7f1",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#9c9184",
+    "bron.kleur": "#9c9184",
+    "profiel.lijnKleur": "#8a7568",
+    "profiel.vulKleur": "#ece4d8",
+    "statistieken.getalKleur": "#3b3128",
+    "statistieken.labelKleur": "#9c9184"
+  },
+  "_contrast": "3,4:1 op de moeilijkste ondergrond"
+}

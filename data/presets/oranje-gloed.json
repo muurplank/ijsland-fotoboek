@@ -1,0 +1,41 @@
+{
+  "naam": "Oranje gloed",
+  "beschrijving": "Donkere gebrande rand met een lichte, licht doorschijnende kern. De route gloeit op de kaart zonder het landschap dicht te plakken.",
+  "voorbeeld": [
+    "#f7b267",
+    "#7d3a12",
+    "#3b2f24"
+  ],
+  "stijl": {
+    "route.kleur": "#f7b267",
+    "route.dekking": 0.88,
+    "route.dikteMm": 1.0,
+    "route.buitenKleur": "#7d3a12",
+    "route.buitenExtraMm": 0.32,
+    "route.buitenDekking": 1,
+    "pijltjes.kleur": "#7d3a12",
+    "pijltjes.randKleur": "#f7b267",
+    "pijltjes.grootteMm": 1.7,
+    "markers.stopVulling": "#f7b267",
+    "markers.stopRand": "#7d3a12",
+    "markers.slaapVulling": "#7d3a12",
+    "markers.slaapRand": "#f7b267",
+    "markers.viaVulling": "#7d3a12",
+    "labels.kleur": "#3b2f24",
+    "labels.haloKleur": "#fdf6ec",
+    "eerdere.kleur": "#b9a189",
+    "titelblok.kleur": "#3b2f24",
+    "inzet.kaderKleur": "#a3480f",
+    "inzet.routeKleur": "#b9a189",
+    "inzet.achtergrond": "#fdf9f3",
+    "inzet.landKleur": "#ded5c6",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#8a7a68",
+    "bron.kleur": "#a3968a",
+    "profiel.lijnKleur": "#a3480f",
+    "profiel.vulKleur": "#f6e6d3",
+    "statistieken.getalKleur": "#3b2f24",
+    "statistieken.labelKleur": "#9a8b7b"
+  },
+  "_contrast": "buitenlijn 3,5:1 op de moeilijkste ondergrond; kern 3,5:1 tegen de buitenlijn"
+}

@@ -194,5 +194,13 @@
       "notitie": "gestopt voor camping"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "inzet": {
+        "dxMm": 5.86,
+        "dyMm": 4.99
+      }
+    }
+  }
 }

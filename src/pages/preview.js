@@ -24,6 +24,7 @@ const $ = id => document.getElementById(id)
 const pagina = $('pagina')
 const achtergrond = $('achtergrond')
 const tekening = $('tekening')
+const bovenlaag = $('bovenlaag')
 const opschriften = $('opschriften')
 const melding = $('melding')
 const maatinfo = $('maatinfo')
@@ -44,6 +45,7 @@ let silhouet = null
 let silhouetKleur = null
 let vorigeAchtergrondSleutel = null
 let boek = {}
+let presets = []
 
 /** ------------------------------------------------------------- hulpjes */
 
@@ -133,6 +135,20 @@ async function achtergrondNu () {
     achtergrond.style.width = `calc(${plaatsing.breedteMm} * var(--mm))`
     achtergrond.style.height = `calc(${plaatsing.hoogteMm} * var(--mm))`
 
+    // de uit de kaart geknipte plaatsnamen, op exact dezelfde plek
+    if (plaatsing.bovenlaag) {
+      const oudeBoven = bovenlaag.src
+      bovenlaag.src = `/api/bovenlaag?t=${Date.now()}`
+      if (oudeBoven.startsWith('blob:')) URL.revokeObjectURL(oudeBoven)
+      bovenlaag.style.left = achtergrond.style.left
+      bovenlaag.style.top = achtergrond.style.top
+      bovenlaag.style.width = achtergrond.style.width
+      bovenlaag.style.height = achtergrond.style.height
+      bovenlaag.style.display = ''
+    } else {
+      bovenlaag.style.display = 'none'
+    }
+
     if (!achtergrond.complete) {
       await new Promise(klaar => { achtergrond.onload = klaar; achtergrond.onerror = klaar })
     }
@@ -218,6 +234,7 @@ async function start () {
   zegt('schema laden…')
   schema = await (await fetch('/api/schema')).json()
   dagen = await (await fetch('/api/dagen')).json()
+  presets = await (await fetch('/api/presets')).json().catch(() => [])
 
   await laadDag(huidigeDag)
   stijl = { ...gegevens.stijl }
@@ -269,6 +286,7 @@ async function start () {
         k.classList.toggle('actief', k === knop)
       }
       $('dag').disabled = paginaType === 'overzicht'
+      paneel.zetPagina(paginaType)
       if (paginaType === 'overzicht') await laadReis()
 
       // De overzichtskaart hoort bij het boek, niet bij een losse dag: wissel
@@ -284,6 +302,16 @@ async function start () {
   paneel = bouwPaneel($('groepen'), schema, stijl, (key, waarde) => {
     stijl[key] = waarde
     hertekenAlles()
+  }, {
+    presets,
+    paginaType,
+    bijPreset: p => {
+      Object.assign(stijl, p.stijl)
+      for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+      vorigeAchtergrondSleutel = null
+      hertekenAlles()
+      zegt(`kleurenset "${p.naam}" toegepast (nog niet bewaard)`)
+    }
   })
 
   // ------ verslepen en teksten aanpassen

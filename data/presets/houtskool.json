@@ -1,0 +1,37 @@
+{
+  "naam": "Houtskool",
+  "beschrijving": "Bijna zwart, zonder eigen kleur. Vloekt met niets, dus veilig als je foto's zelf al veel kleur hebben.",
+  "voorbeeld": [
+    "#2e2a26",
+    "#ffffff",
+    "#2e2a26"
+  ],
+  "stijl": {
+    "route.kleur": "#2e2a26",
+    "route.buitenKleur": "#ffffff",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#ffffff",
+    "pijltjes.randKleur": "#2e2a26",
+    "markers.stopVulling": "#ffffff",
+    "markers.stopRand": "#2e2a26",
+    "markers.slaapVulling": "#2e2a26",
+    "markers.slaapRand": "#ffffff",
+    "markers.viaVulling": "#2e2a26",
+    "labels.kleur": "#2e2a26",
+    "labels.haloKleur": "#ffffff",
+    "eerdere.kleur": "#948e86",
+    "titelblok.kleur": "#2e2a26",
+    "inzet.kaderKleur": "#2e2a26",
+    "inzet.routeKleur": "#948e86",
+    "inzet.achtergrond": "#ffffff",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#948e86",
+    "bron.kleur": "#948e86",
+    "profiel.lijnKleur": "#7d776f",
+    "profiel.vulKleur": "#e7e5e1",
+    "statistieken.getalKleur": "#2e2a26",
+    "statistieken.labelKleur": "#948e86"
+  },
+  "_contrast": "5,9:1 - het hoogste van allemaal"
+}

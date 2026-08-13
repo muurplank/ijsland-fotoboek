@@ -1,0 +1,37 @@
+{
+  "naam": "Aubergine",
+  "beschrijving": "Ongewoon en elegant: donker paarsbruin. Werkt mooi tegen de groene laaglanden.",
+  "voorbeeld": [
+    "#4a2c45",
+    "#faf7f6",
+    "#332430"
+  ],
+  "stijl": {
+    "route.kleur": "#4a2c45",
+    "route.buitenKleur": "#faf7f6",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#faf7f6",
+    "pijltjes.randKleur": "#4a2c45",
+    "markers.stopVulling": "#faf7f6",
+    "markers.stopRand": "#4a2c45",
+    "markers.slaapVulling": "#4a2c45",
+    "markers.slaapRand": "#faf7f6",
+    "markers.viaVulling": "#4a2c45",
+    "labels.kleur": "#332430",
+    "labels.haloKleur": "#faf7f6",
+    "eerdere.kleur": "#968a92",
+    "titelblok.kleur": "#332430",
+    "inzet.kaderKleur": "#4a2c45",
+    "inzet.routeKleur": "#968a92",
+    "inzet.achtergrond": "#faf7f6",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#968a92",
+    "bron.kleur": "#968a92",
+    "profiel.lijnKleur": "#7f6c7a",
+    "profiel.vulKleur": "#e9e2e7",
+    "statistieken.getalKleur": "#332430",
+    "statistieken.labelKleur": "#968a92"
+  },
+  "_contrast": "5,0:1"
+}

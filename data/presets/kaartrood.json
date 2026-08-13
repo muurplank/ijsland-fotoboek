@@ -1,0 +1,37 @@
+{
+  "naam": "Kaartrood",
+  "beschrijving": "De klassieke kaartkleur die je van atlassen kent. Knalt het hardst, maar zit qua contrast net op de grens boven bruin terrein.",
+  "voorbeeld": [
+    "#9e2f24",
+    "#ffffff",
+    "#33302b"
+  ],
+  "stijl": {
+    "route.kleur": "#9e2f24",
+    "route.buitenKleur": "#ffffff",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#ffffff",
+    "pijltjes.randKleur": "#9e2f24",
+    "markers.stopVulling": "#ffffff",
+    "markers.stopRand": "#9e2f24",
+    "markers.slaapVulling": "#9e2f24",
+    "markers.slaapRand": "#ffffff",
+    "markers.viaVulling": "#9e2f24",
+    "labels.kleur": "#33302b",
+    "labels.haloKleur": "#ffffff",
+    "eerdere.kleur": "#9a938a",
+    "titelblok.kleur": "#33302b",
+    "inzet.kaderKleur": "#9e2f24",
+    "inzet.routeKleur": "#9a938a",
+    "inzet.achtergrond": "#ffffff",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#9a938a",
+    "bron.kleur": "#9a938a",
+    "profiel.lijnKleur": "#857b70",
+    "profiel.vulKleur": "#e9e5dd",
+    "statistieken.getalKleur": "#33302b",
+    "statistieken.labelKleur": "#9a938a"
+  },
+  "_contrast": "3,0:1 - de witte buitenlijn doet hier het werk"
+}

@@ -1,8 +1,15 @@
 /**
- * Bouwt het bedieningspaneel uit het instellingenschema.
+ * Het bedieningspaneel, opgebouwd uit het instellingenschema.
  *
- * Elke knop uit het schema wordt hier een besturing van het juiste soort. Een
- * knop toevoegen is dus alleen een regel in het schema; hier hoeft niets bij.
+ * Er zijn ruim honderdveertig knoppen, en die allemaal tegelijk tonen maakt het
+ * onwerkbaar. Daarom drie lagen:
+ *
+ *   1. Kleurensets bovenaan - een klik en het geheel klopt
+ *   2. "Snel" toont alleen de knoppen waar je normaal aan draait
+ *   3. "Alles" opent de volledige lijst voor wie wil fijnregelen
+ *
+ * Verder tonen we alleen de groepen die bij de pagina horen waar je naar kijkt:
+ * hoogtelijnkleuren zijn zinloos op de statistiekpagina.
  */
 
 const el = (tag, klasse, tekst) => {
@@ -24,7 +31,74 @@ function hexNaarRgb (hex) {
 const rgbNaarHex = (r, g, b) =>
   '#' + [r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
 
-/** Netjes leesbare weergave van een waarde, met eenheid. */
+/**
+ * De knoppen waar je in de praktijk aan draait. De rest staat onder "Alles".
+ */
+const SNEL = new Set([
+  'lagen.stijl',
+  'lagen.mapboxLabelMm',
+  'lagen.verbleking',
+  'lagen.ontzadiging',
+  'uitsnede.zoom',
+  'uitsnede.margeMm',
+  'relief.zonRichting',
+  'relief.overdrijving',
+  'relief.contrast',
+  'route.kleur',
+  'route.dikteMm',
+  'route.dekking',
+  'route.buitenKleur',
+  'route.buitenExtraMm',
+  'route.buitenDekking',
+  'route.streepjes',
+  'pijltjes.aan',
+  'pijltjes.afstandCm',
+  'pijltjes.grootteMm',
+  'markers.stopGrootteMm',
+  'markers.slaapGrootteMm',
+  'labels.aan',
+  'labels.grootteMm',
+  'labels.kleur',
+  'labels.haloMm',
+  'typografie.titelMm',
+  'typografie.tekstMm',
+  'titelblok.aan',
+  'inzet.aan',
+  'inzet.breedteMm',
+  'schaal.balkAan',
+  'profiel.hoogteMm',
+  'profiel.vulKleur',
+  'profiel.lijnKleur',
+  'statistieken.getalMm',
+  'statistieken.kolommen',
+  'pagina.breedteMm',
+  'pagina.hoogteMm',
+  'pagina.dpi'
+])
+
+/** Welke groepen bij welk paginatype horen. */
+const GROEPEN_PER_PAGINA = {
+  kaart: ['pagina', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
+    'pijltjes', 'eerdere', 'markers', 'labels', 'typografie', 'titelblok', 'inzet',
+    'schaal', 'bron'],
+  stats: ['pagina', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
+  overzicht: ['pagina', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
+    'markers', 'typografie', 'titelblok', 'schaal', 'bron']
+}
+
+/** Een handvol kleuren die vaak van pas komen, per soort knop. */
+const STALEN = {
+  standaard: ['#ffffff', '#f7f4ee', '#e8e4dd', '#b9b2a8', '#8a8279', '#55504a', '#2e2a26', '#000000'],
+  route: ['#8c2f39', '#9e2f24', '#f7b267', '#7d3a12', '#24405c', '#1c4966', '#4a2c45', '#2e2a26'],
+  terrein: ['#a8b894', '#c5c193', '#cbb287', '#c2a184', '#fbfbfa', '#eef2f4', '#d9d3c8', '#8a9b7a']
+}
+
+function stalenVoor (key) {
+  if (key.startsWith('terrein.') || key.includes('zeeKleur') || key.includes('landKleur')) return STALEN.terrein
+  if (key.startsWith('route.') || key.startsWith('markers.') || key.startsWith('pijltjes.')) return STALEN.route
+  return STALEN.standaard
+}
+
 function toon (knop, waarde) {
   if (knop.type === 'mm') return `${waarde} mm`
   if (knop.type === 'cm') return `${waarde} cm`
@@ -34,55 +108,122 @@ function toon (knop, waarde) {
 }
 
 /**
- * @param {HTMLElement} houder waar het paneel in komt
+ * @param {HTMLElement} houder
  * @param {{groepen: Array, knoppen: Array}} schema
  * @param {object} stijl huidige waarden
  * @param {(key: string, waarde: any) => void} bijWijziging
+ * @param {object} extra { presets, bijPreset, paginaType }
  */
-export function bouwPaneel (houder, schema, stijl, bijWijziging) {
+export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
   houder.replaceChildren()
 
   const besturingen = new Map()
+  let allesTonen = false
+  let paginaType = extra.paginaType ?? 'kaart'
 
+  // ------------------------------------------------------------ kleurensets
+  if (extra.presets?.length) {
+    const doos = el('div', 'presets')
+    doos.append(el('div', 'presets-kop', 'Kleurenset'))
+
+    const rij = el('div', 'presets-rij')
+    for (const p of extra.presets) {
+      const knop = el('button', 'preset')
+      knop.title = `${p.naam} — ${p.beschrijving}`
+
+      const staal = el('span', 'preset-staal')
+      for (const kleur of p.voorbeeld ?? []) {
+        const streep = el('span')
+        streep.style.background = kleur
+        staal.append(streep)
+      }
+
+      knop.append(staal, el('span', 'preset-naam', p.naam))
+      knop.addEventListener('click', () => extra.bijPreset?.(p))
+      rij.append(knop)
+    }
+
+    doos.append(rij)
+    houder.append(doos)
+  }
+
+  // --------------------------------------------------------- snel of alles
+  const schakelaar = el('div', 'weergave')
+  const snelKnop = el('button', 'actief', 'Snel')
+  const allesKnop = el('button', null, 'Alles')
+  schakelaar.append(snelKnop, allesKnop)
+  houder.append(schakelaar)
+
+  const groepenHouder = el('div', 'groepen-lijst')
+  houder.append(groepenHouder)
+
+  // --------------------------------------------------------------- groepen
   for (const groep of schema.groepen) {
     const knoppen = schema.knoppen.filter(k => k.groep === groep.id)
     if (!knoppen.length) continue
 
     const details = el('details', 'groep')
-    details.open = ['route', 'pijltjes', 'relief'].includes(groep.id)
+    details.dataset.groep = groep.id
+    details.open = ['route', 'lagen'].includes(groep.id)
 
     const kop = el('summary')
     kop.append(el('span', null, groep.label))
     details.append(kop)
 
     for (const knop of knoppen) {
-      const { node, zet } = maakBesturing(knop, stijl[knop.key], bijWijziging)
-      besturingen.set(knop.key, { node, zet, knop })
+      const { node, zet, isStandaard } = maakBesturing(knop, stijl[knop.key], bijWijziging)
+      node.dataset.snel = SNEL.has(knop.key) ? '1' : '0'
+      besturingen.set(knop.key, { node, zet, knop, isStandaard })
       details.append(node)
     }
 
-    houder.append(details)
+    groepenHouder.append(details)
   }
 
+  function ververs () {
+    for (const [, { node, knop }] of besturingen) {
+      const inWeergave = allesTonen || SNEL.has(knop.key)
+      const inPagina = GROEPEN_PER_PAGINA[paginaType]?.includes(knop.groep) ?? true
+      node.classList.toggle('verborgen', !(inWeergave && inPagina))
+    }
+    for (const details of groepenHouder.querySelectorAll('details.groep')) {
+      const zichtbaar = details.querySelectorAll('.knop:not(.verborgen)').length
+      details.style.display = zichtbaar ? '' : 'none'
+    }
+  }
+
+  snelKnop.addEventListener('click', () => {
+    allesTonen = false
+    snelKnop.classList.add('actief'); allesKnop.classList.remove('actief')
+    ververs()
+  })
+  allesKnop.addEventListener('click', () => {
+    allesTonen = true
+    allesKnop.classList.add('actief'); snelKnop.classList.remove('actief')
+    ververs()
+  })
+
+  ververs()
+
   return {
-    /** Zet een waarde in het paneel zonder een wijziging uit te lokken. */
     zet (key, waarde) { besturingen.get(key)?.zet(waarde) },
 
-    /** Toont alleen de knoppen die bij de zoekterm passen. */
+    zetPagina (type) { paginaType = type; ververs() },
+
     filter (term) {
       const t = term.trim().toLowerCase()
+      if (!t) { ververs(); return }
+
       for (const [key, { node, knop }] of besturingen) {
-        const past = !t ||
-          knop.label.toLowerCase().includes(t) ||
+        const past = knop.label.toLowerCase().includes(t) ||
           key.toLowerCase().includes(t) ||
           (knop.help ?? '').toLowerCase().includes(t)
         node.classList.toggle('verborgen', !past)
       }
-      // groepen zonder zichtbare knoppen inklappen weghalen
-      for (const details of houder.querySelectorAll('details.groep')) {
+      for (const details of groepenHouder.querySelectorAll('details.groep')) {
         const zichtbaar = details.querySelectorAll('.knop:not(.verborgen)').length
         details.style.display = zichtbaar ? '' : 'none'
-        if (t && zichtbaar) details.open = true
+        if (zichtbaar) details.open = true
       }
     }
   }
@@ -90,36 +231,50 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging) {
 
 function maakBesturing (knop, waarde, bijWijziging) {
   const node = el('div', 'knop')
+  const isStandaard = () => node.dataset.gewijzigd !== '1'
 
   const kop = el('div', 'knop-kop')
   const label = el('label', null, knop.label)
+  const rechts = el('span', 'knop-rechts')
   const waardeTekst = el('span', 'waarde')
-  kop.append(label, waardeTekst)
+
+  // een klein terugzetknopje, alleen zichtbaar als je iets veranderd hebt
+  const terug = el('button', 'terugzet')
+  terug.type = 'button'
+  terug.title = 'terug naar de standaardwaarde'
+  terug.textContent = '↺'
+  terug.addEventListener('click', () => {
+    zet(knop.standaard)
+    bijWijziging(knop.key, knop.standaard)
+    node.dataset.gewijzigd = '0'
+  })
+
+  rechts.append(waardeTekst, terug)
+  kop.append(label, rechts)
   node.append(kop)
 
-  let zet = () => {}
-
   const meld = v => {
-    waardeTekst.textContent = toon(knop, v)
+    node.dataset.gewijzigd = v === knop.standaard ? '0' : '1'
     bijWijziging(knop.key, v)
   }
 
+  let zet = () => {}
+
   // ------------------------------------------------------------ aan / uit
   if (knop.type === 'aanuit') {
-    // een vinkje heeft geen aparte koptekst nodig; het label staat ernaast
     const rij = el('div', 'aanuit')
     const vinkje = el('input')
     vinkje.type = 'checkbox'
     vinkje.checked = !!waarde
-    vinkje.addEventListener('change', () => bijWijziging(knop.key, vinkje.checked))
+    vinkje.addEventListener('change', () => meld(vinkje.checked))
 
-    rij.append(vinkje, el('label', null, knop.label))
+    rij.append(vinkje, el('label', null, knop.label), terug)
     node.replaceChildren(rij)
-
     zet = v => { vinkje.checked = !!v }
 
   // --------------------------------------------------------------- keuze
   } else if (knop.type === 'keuze') {
+    waardeTekst.remove()
     const rij = el('div', 'knop-regel')
     const kiezer = el('select')
     for (const optie of knop.opties) {
@@ -131,65 +286,100 @@ function maakBesturing (knop, waarde, bijWijziging) {
     kiezer.addEventListener('change', () => {
       const ruw = kiezer.value
       const getal = Number(ruw)
-      bijWijziging(knop.key, Number.isFinite(getal) && ruw.trim() !== '' ? getal : ruw)
+      meld(Number.isFinite(getal) && ruw.trim() !== '' ? getal : ruw)
     })
     rij.append(kiezer)
     node.append(rij)
-    waardeTekst.remove()
     zet = v => { kiezer.value = String(v) }
 
   // --------------------------------------------------------------- kleur
   } else if (knop.type === 'kleur') {
     waardeTekst.remove()
-    const doos = el('div', 'rgb')
-    const [r0, g0, b0] = hexNaarRgb(waarde)
-    const schuiven = []
 
-    for (const [naam, letter, start] of [['r', 'R', r0], ['g', 'G', g0], ['b', 'B', b0]]) {
-      const rij = el('div', `rgb-rij ${naam}`)
-      rij.append(el('span', null, letter))
-      const s = el('input')
-      s.type = 'range'; s.min = 0; s.max = 255; s.step = 1; s.value = start
-      rij.append(s)
-      doos.append(rij)
-      schuiven.push(s)
-    }
+    const rij = el('div', 'kleur-regel')
 
-    const onder = el('div', 'rgb-onder')
-    const staal = el('div', 'staal')
-    staal.style.background = waarde
-    const hexVeld = el('input')
+    // de systeemkiezer: veruit de prettigste manier om een kleur te kiezen
+    const kiezer = el('input')
+    kiezer.type = 'color'
+    kiezer.value = waarde
+
+    const hexVeld = el('input', 'hex')
     hexVeld.type = 'text'
     hexVeld.value = waarde
-    onder.append(staal, hexVeld)
-    doos.append(onder)
-    node.append(doos)
+    hexVeld.spellcheck = false
+
+    const fijn = el('button', 'fijnknop')
+    fijn.type = 'button'
+    fijn.title = 'rood, groen en blauw apart instellen'
+    fijn.textContent = 'RGB'
+
+    rij.append(kiezer, hexVeld, fijn)
+    node.append(rij)
+
+    // de stalen: een rij veelgebruikte kleuren, scheelt zoeken
+    const stalen = el('div', 'stalen')
+    for (const kleur of stalenVoor(knop.key)) {
+      const s = el('button', 'staal')
+      s.type = 'button'
+      s.style.background = kleur
+      s.title = kleur
+      s.addEventListener('click', () => { zet(kleur); meld(kleur) })
+      stalen.append(s)
+    }
+    node.append(stalen)
+
+    // de rgb-schuiven blijven bestaan, maar ingeklapt
+    const rgb = el('div', 'rgb verborgen')
+    const schuiven = []
+    const [r0, g0, b0] = hexNaarRgb(waarde)
+    for (const [naam, letter, start] of [['r', 'R', r0], ['g', 'G', g0], ['b', 'B', b0]]) {
+      const r = el('div', `rgb-rij ${naam}`)
+      r.append(el('span', null, letter))
+      const s = el('input')
+      s.type = 'range'; s.min = 0; s.max = 255; s.step = 1; s.value = start
+      r.append(s)
+      rgb.append(r)
+      schuiven.push(s)
+    }
+    node.append(rgb)
+
+    fijn.addEventListener('click', () => {
+      rgb.classList.toggle('verborgen')
+      fijn.classList.toggle('actief', !rgb.classList.contains('verborgen'))
+    })
 
     const vanSchuiven = () => {
       const hex = rgbNaarHex(+schuiven[0].value, +schuiven[1].value, +schuiven[2].value)
-      staal.style.background = hex
+      kiezer.value = hex
       hexVeld.value = hex
-      bijWijziging(knop.key, hex)
+      meld(hex)
     }
     schuiven.forEach(s => s.addEventListener('input', vanSchuiven))
+
+    kiezer.addEventListener('input', () => {
+      hexVeld.value = kiezer.value
+      const [r, g, b] = hexNaarRgb(kiezer.value)
+      schuiven[0].value = r; schuiven[1].value = g; schuiven[2].value = b
+      meld(kiezer.value)
+    })
 
     hexVeld.addEventListener('input', () => {
       const v = hexVeld.value.trim()
       if (!/^#[0-9a-f]{6}$/i.test(v)) return
+      kiezer.value = v
       const [r, g, b] = hexNaarRgb(v)
       schuiven[0].value = r; schuiven[1].value = g; schuiven[2].value = b
-      staal.style.background = v
-      bijWijziging(knop.key, v.toLowerCase())
+      meld(v.toLowerCase())
     })
 
     zet = v => {
+      kiezer.value = v
+      hexVeld.value = v
       const [r, g, b] = hexNaarRgb(v)
       schuiven[0].value = r; schuiven[1].value = g; schuiven[2].value = b
-      staal.style.background = v
-      hexVeld.value = v
     }
 
-  // ---------------------------------------------------- getal met schuifje
+  // -------------------------------------------------- getal met schuifje
   } else {
     const rij = el('div', 'knop-regel')
     const schuif = el('input')
@@ -204,12 +394,14 @@ function maakBesturing (knop, waarde, bijWijziging) {
 
     schuif.addEventListener('input', () => {
       veld.value = schuif.value
+      waardeTekst.textContent = toon(knop, Number(schuif.value))
       meld(Number(schuif.value))
     })
     veld.addEventListener('input', () => {
       const v = Number(veld.value)
       if (!Number.isFinite(v)) return
       schuif.value = v
+      waardeTekst.textContent = toon(knop, v)
       meld(v)
     })
 
@@ -217,10 +409,14 @@ function maakBesturing (knop, waarde, bijWijziging) {
     node.append(rij)
     waardeTekst.textContent = toon(knop, waarde)
 
-    zet = v => { schuif.value = v; veld.value = v; waardeTekst.textContent = toon(knop, v) }
+    zet = v => {
+      schuif.value = v; veld.value = v
+      waardeTekst.textContent = toon(knop, v)
+    }
   }
 
   if (knop.help) node.append(el('div', 'hulp', knop.help))
+  node.dataset.gewijzigd = waarde === knop.standaard ? '0' : '1'
 
-  return { node, zet }
+  return { node, zet, isStandaard }
 }

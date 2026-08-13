@@ -1,0 +1,37 @@
+{
+  "naam": "Inkt",
+  "beschrijving": "Rustig marineblauw. Koel tegen het warme terrein, en laat het landschap het woord doen.",
+  "voorbeeld": [
+    "#24405c",
+    "#f7f4ee",
+    "#22303f"
+  ],
+  "stijl": {
+    "route.kleur": "#24405c",
+    "route.buitenKleur": "#f7f4ee",
+    "route.buitenDekking": 0.92,
+    "pijltjes.kleur": "#f7f4ee",
+    "pijltjes.randKleur": "#24405c",
+    "markers.stopVulling": "#f7f4ee",
+    "markers.stopRand": "#24405c",
+    "markers.slaapVulling": "#24405c",
+    "markers.slaapRand": "#f7f4ee",
+    "markers.viaVulling": "#24405c",
+    "labels.kleur": "#22303f",
+    "labels.haloKleur": "#f7f4ee",
+    "eerdere.kleur": "#8d949c",
+    "titelblok.kleur": "#22303f",
+    "inzet.kaderKleur": "#24405c",
+    "inzet.routeKleur": "#8d949c",
+    "inzet.achtergrond": "#f7f4ee",
+    "inzet.landKleur": "#d9d3c8",
+    "inzet.randKleur": "#e6e2db",
+    "schaal.kleur": "#8d949c",
+    "bron.kleur": "#8d949c",
+    "profiel.lijnKleur": "#6d7c8a",
+    "profiel.vulKleur": "#e2e7ec",
+    "statistieken.getalKleur": "#22303f",
+    "statistieken.labelKleur": "#8d949c"
+  },
+  "_contrast": "4,4:1"
+}

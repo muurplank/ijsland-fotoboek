@@ -14,8 +14,9 @@ import { kleurKaart } from './colorize.js'
 import { kleurTerrein } from './terrain.js'
 import { fetchImagery } from '../fetch/imagery.js'
 import { fetchMapboxKaart } from '../fetch/mapbox.js'
+import { behandelSchilden, tilTekstOp } from './shields.js'
 import { expandBounds } from '../geo/viewport.js'
-import { metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
+import { lonLatToTile, metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
 
 /**
  * Waar een raster op de pagina belandt, gegeven waar het in de wereld ligt.
@@ -155,7 +156,7 @@ export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
  * en naar het wit van het papier toe verbleken - zodat het bij de rest van het
  * boek past en je routelijn ervoor knalt.
  */
-export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, onProgress }) {
+export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route, onProgress }) {
   const zicht = expandBounds(view.visibleBounds(), 0.04)
   const mPerMm = view.metersPerMm()
 
@@ -168,6 +169,35 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, onProg
   const doel = (mPerMm * stijl['lagen.mapboxLabelMm']) / LABEL_PX
 
   const beeld = await fetchMapboxKaart(zicht, { stijl: mapboxStijl, metersPerPixel: doel, onProgress })
+
+  // De witte wegnummer-badges die onder de route vallen zeggen niets - die weg
+  // volg je juist - en ze ogen rommelig. Ze worden weggepoetst of juist
+  // uitgeknipt om over de routelijn heen te leggen.
+  let bovenlaag = null
+  if (route?.length) {
+    const inPixels = routeInRaster(route, beeld, view)
+
+    // hoe breed de routelijn in dit raster is: millimeters op papier maal het
+    // aantal rasterpixels dat op een millimeter gaat
+    const rasterPxPerMm = mPerMm / beeld.metersPerPixel
+    const breedteMm = stijl['route.dikteMm'] + 2 * stijl['route.buitenExtraMm']
+    const dikteInPixels = Math.max(6, (breedteMm * rasterPxPerMm) / 2 + 4)
+
+    const raster = { ...beeld, kanalen: beeld.channels }
+
+    // Wegnummers weg: die weg volg je nu juist, dus het nummer zegt niets.
+    if (stijl['lagen.badgesWeg']) {
+      const uit = behandelSchilden(raster, inPixels, { wat: 'wissen', lijnDikte: dikteInPixels })
+      if (uit.aantal) onProgress?.(`${uit.aantal} wegnummer(s) onder de route weggehaald`)
+    }
+
+    // Plaatsnamen juist optillen: die wil je lezen, dus die horen boven de lijn.
+    if (stijl['lagen.tekstBoven']) {
+      const uit = tilTekstOp(raster, inPixels, { lijnDikte: dikteInPixels })
+      if (uit.aantal) onProgress?.(`${uit.aantal} plaatsnaam/namen boven de route getild`)
+      bovenlaag = uit.laag
+    }
+  }
 
   const opschaling = beeld.metersPerPixel / (mPerMm / (dpi / 25.4))
   if (opschaling > 3) {
@@ -187,7 +217,31 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, onProg
     .linear(1 - f, 255 * f)
 
   const uit = await naarPagina(pijp, plek, dpi, 0)
-  return { ...uit, bronvermelding: '© Mapbox, © OpenStreetMap' }
+
+  // de opgetilde badges als losse doorzichtige laag, om boven de route te leggen
+  let bovenPng = null
+  if (bovenlaag) {
+    bovenPng = await sharp(bovenlaag, {
+      raw: { width: beeld.width, height: beeld.height, channels: 4 }
+    })
+      .resize(uit.pixels.breedte, uit.pixels.hoogte, { kernel: 'lanczos3', fit: 'fill' })
+      .png({ compressionLevel: 9 })
+      .toBuffer()
+  }
+
+  return { ...uit, bovenPng, bronvermelding: '© Mapbox, © OpenStreetMap' }
+}
+
+/** De route omgerekend naar pixels binnen dit achtergrondraster. */
+function routeInRaster (route, raster, view) {
+  const schaal = raster.schaal ?? 1
+  return route.map(([lon, lat]) => {
+    const t = lonLatToTile(lon, lat, raster.z)
+    return {
+      x: (t.x * TILE_SIZE - raster.originPx) * schaal,
+      y: (t.y * TILE_SIZE - raster.originPy) * schaal
+    }
+  })
 }
 
 /**
@@ -197,7 +251,7 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, onProg
  * maar een paar kilometer beslaat heeft relief geen detail meer, en is
  * satellietbeeld de betere keuze.
  */
-export async function achtergrondVoorStijl ({ dem, view, stijl, dpi, onProgress }) {
+export async function achtergrondVoorStijl ({ dem, view, stijl, dpi, route, onProgress }) {
   const gekozen = stijl['lagen.stijl']
 
   if (gekozen === 'satelliet') {
@@ -206,7 +260,7 @@ export async function achtergrondVoorStijl ({ dem, view, stijl, dpi, onProgress 
 
   if (gekozen.startsWith('mapbox-')) {
     return mapboxAchtergrond({
-      view, stijl, dpi, onProgress,
+      view, stijl, dpi, route, onProgress,
       mapboxStijl: gekozen.slice('mapbox-'.length)
     })
   }
