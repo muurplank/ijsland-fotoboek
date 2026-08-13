@@ -134,10 +134,55 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
     }
 
     // --- het vlak onder de lijn
+    //
+    // Met het hoogteverloop aan volgt de kleur de hoogte: een staand verloop
+    // waarvan de stops op de echte hoogtes liggen. Zo blijft het dal rustig en
+    // springt een klim er meteen uit.
+    //
+    // De tinten zijn zo gekozen dat de helderheid bij elke stap daalt. Een
+    // gewone regenboog heeft in het midden juist het lichtste punt, en dan leest
+    // het verloop niet als "hoger" - zeker niet in grijstinten of voor wie
+    // kleuren slecht onderscheidt.
     const punten = profiel.map(p => `${xVan(p.afstandKm).toFixed(2)},${yVan(p.hoogteM).toFixed(2)}`)
+
+    let vulling = stijl['profiel.vulKleur']
+
+    if (stijl['profiel.verloopAan']) {
+      const trap = [
+        { m: 0, kleur: stijl['profiel.dal'] },
+        { m: stijl['profiel.laagM'], kleur: stijl['profiel.laag'] },
+        { m: stijl['profiel.middenM'], kleur: stijl['profiel.midden'] },
+        { m: stijl['profiel.hoogM'], kleur: stijl['profiel.hoog'] },
+        { m: stijl['profiel.piekM'], kleur: stijl['profiel.piek'] }
+      ]
+
+      const defs = maakSvg('defs')
+      const verloop = maakSvg('linearGradient', {
+        id: 'hoogteverloop',
+        gradientUnits: 'userSpaceOnUse',
+        x1: 0, y1: yVan(0), x2: 0, y2: yVan(bovenGrens)
+      })
+
+      let vorige = -1
+      for (const stap of trap) {
+        // stops moeten oplopen, ook als je de schuifjes door elkaar zet
+        const m = Math.max(stap.m, vorige + 1)
+        vorige = m
+        verloop.append(maakSvg('stop', {
+          offset: `${Math.min(100, (m / bovenGrens) * 100).toFixed(2)}%`,
+          'stop-color': stap.kleur
+        }))
+      }
+
+      defs.append(verloop)
+      svg.append(defs)
+      vulling = 'url(#hoogteverloop)'
+    }
+
     svg.append(maakSvg('polygon', {
       points: `${grafiekLinks},${grafiekOnder} ${punten.join(' ')} ${grafiekRechts},${grafiekOnder}`,
-      fill: stijl['profiel.vulKleur']
+      fill: vulling,
+      'fill-opacity': stijl['profiel.verloopAan'] ? stijl['profiel.verloopDekking'] : 1
     }))
 
     // --- de lijn zelf

@@ -104,6 +104,10 @@ async function achtergrondNu () {
   if (paginaType === 'stats') {
     achtergrond.removeAttribute('src')
     achtergrond.style.width = '0'
+    // ook de opgetilde plaatsnamen weg: die horen bij de kaart, en anders
+    // lekken Akureyri en Egilsstadir door op de statistiekpagina
+    bovenlaag.removeAttribute('src')
+    bovenlaag.style.display = 'none'
     vorigeAchtergrondSleutel = null
     return
   }

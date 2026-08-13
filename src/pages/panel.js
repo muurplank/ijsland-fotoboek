@@ -68,6 +68,8 @@ const SNEL = new Set([
   'inzet.breedteMm',
   'schaal.balkAan',
   'profiel.hoogteMm',
+  'profiel.verloopAan',
+  'profiel.verloopDekking',
   'profiel.vulKleur',
   'profiel.lijnKleur',
   'statistieken.getalMm',
