@@ -14,14 +14,16 @@
       "name": "Lava Car Rental",
       "lat": 63.996253,
       "lon": -22.585108,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "Hotel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "stop",
-      "notitie": "spullen opgehaald"
+      "notitie": "spullen opgehaald",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -33,7 +35,8 @@
       "name": "Boodschappen",
       "lat": 64.050661,
       "lon": -21.990006,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -64,13 +67,15 @@
       "name": "Gasfles",
       "lat": 64.154037,
       "lon": -21.952539,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "Kleding",
       "lat": 64.141967,
       "lon": -21.848082,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -162,7 +167,8 @@
       "name": "Kamperen",
       "lat": 63.842718,
       "lon": -17.952843,
-      "type": "overnight"
+      "type": "overnight",
+      "verblijf": "tent"
     }
   ],
   "stijl": {},

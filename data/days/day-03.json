@@ -63,13 +63,15 @@
       "name": "Tanken",
       "lat": 64.255527,
       "lon": -15.208707,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "Dekentje",
       "lat": 64.249346,
       "lon": -15.195117,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -167,7 +169,8 @@
       "name": "Hotel",
       "lat": 65.267142,
       "lon": -14.399015,
-      "type": "overnight"
+      "type": "overnight",
+      "verblijf": "hotel"
     }
   ],
   "stijl": {},

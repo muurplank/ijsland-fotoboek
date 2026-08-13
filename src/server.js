@@ -105,6 +105,43 @@ async function reisDem (stijl, view) {
   return dem
 }
 
+/**
+ * Past een hernoemde plek ook aan op de andere dagen.
+ *
+ * Twee punten zijn dezelfde plek als ze binnen ongeveer zestig meter van elkaar
+ * liggen: ruim genoeg voor een parkeerplaats of een hotelingang die je op twee
+ * dagen net iets anders hebt aangetikt, krap genoeg om niet per ongeluk de
+ * buurman te hernoemen.
+ */
+async function hernoemOveral (hernoemd, behalveDag) {
+  const GRENS_GRADEN = 0.0006 // ongeveer zestig meter
+  const aangepast = []
+
+  for (const dag of await alleDagen()) {
+    if (dag.dag === Number(behalveDag)) continue
+
+    let veranderd = false
+    for (const w of dag.waypoints) {
+      for (const { w: nieuw, oud } of hernoemd) {
+        if (w.name !== oud.name) continue
+        if (Math.abs(w.lat - nieuw.lat) > GRENS_GRADEN) continue
+        if (Math.abs(w.lon - nieuw.lon) > GRENS_GRADEN) continue
+        w.name = nieuw.name
+        veranderd = true
+      }
+    }
+
+    if (veranderd) {
+      const naam = String(dag.dag).padStart(2, '0')
+      await writeFile(join(ROOT, 'data', 'days', `day-${naam}.json`),
+        JSON.stringify(dag, null, 2) + '\n')
+      aangepast.push(dag.dag)
+    }
+  }
+
+  return aangepast
+}
+
 function json (res, waarde, status = 200) {
   const body = JSON.stringify(waarde)
   res.writeHead(status, { 'content-type': MIMES['.json'], 'content-length': Buffer.byteLength(body) })
@@ -274,12 +311,32 @@ const server = createServer(async (req, res) => {
       const bestandsnaam = join(ROOT, 'data', 'days', `day-${naam}.json`)
       const inhoud = JSON.parse(await readFile(bestandsnaam, 'utf8'))
 
+      const oudeWaypoints = inhoud.waypoints
+
       if (titel !== undefined) inhoud.titel = titel
       if (tekst !== undefined) inhoud.tekst = tekst
       if (waypoints) inhoud.waypoints = waypoints
       if (plaatsing) inhoud.plaatsing = plaatsing
 
       await writeFile(bestandsnaam, JSON.stringify(inhoud, null, 2) + '\n')
+
+      // Een plek die je hernoemt, hernoemen we overal.
+      //
+      // Dagen delen punten: het hotel waar dag 3 eindigt is waar dag 4 begint.
+      // Pas je die naam op één dag aan, dan hoort hij niet op de volgende dag
+      // nog de oude te heten.
+      if (waypoints) {
+        const hernoemd = waypoints
+          .map((w, i) => ({ w, oud: oudeWaypoints?.[i] }))
+          .filter(({ w, oud }) => oud && w.name !== oud.name)
+
+        if (hernoemd.length) {
+          const meegegaan = await hernoemOveral(hernoemd, dag)
+          if (meegegaan.length) {
+            console.log(`  ... naam ook aangepast op dag ${meegegaan.join(', ')}`)
+          }
+        }
+      }
 
       if (boek) {
         const boekBestand = join(ROOT, 'data', 'book.json')

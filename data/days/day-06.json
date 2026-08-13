@@ -16,7 +16,8 @@
       "lat": 64.544234,
       "lon": -21.909163,
       "type": "stop",
-      "notitie": "boodschappen ontbijt"
+      "notitie": "boodschappen ontbijt",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -159,11 +160,12 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "",
+      "name": "Hotel",
       "lat": 64.10074,
       "lon": -20.340038,
       "type": "overnight",
-      "notitie": "gestopt voor hotel"
+      "notitie": "gestopt voor hotel",
+      "verblijf": "hotel"
     }
   ],
   "stijl": {},

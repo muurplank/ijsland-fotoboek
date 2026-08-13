@@ -150,7 +150,7 @@ export const KNOPPEN = [
   { key: 'markers.slaapGrootteMm', groep: 'markers', label: 'Overnachting: grootte', type: 'mm', min: 0.5, max: 14, step: 0.1, standaard: 4.2 },
   { key: 'markers.slaapVulling', groep: 'markers', label: 'Overnachting: vulkleur', type: 'kleur', standaard: '#c1352b' },
   { key: 'markers.slaapRand', groep: 'markers', label: 'Overnachting: randkleur', type: 'kleur', standaard: '#ffffff' },
-  { key: 'markers.slaapVorm', groep: 'markers', label: 'Overnachting: vorm', type: 'keuze', opties: ['cirkel', 'ster', 'ruit', 'speld'], standaard: 'ster' },
+  { key: 'markers.slaapVorm', groep: 'markers', label: 'Overnachting: vorm', type: 'keuze', opties: ['tent', 'huisje', 'auto', 'cirkel', 'ster', 'ruit', 'speld'], standaard: 'tent', help: 'Wordt overschreven door wat er in het dagbestand staat: kamperen wordt een tent, een hotel een huisje' },
   { key: 'markers.nummers', groep: 'markers', label: 'Stops nummeren', type: 'aanuit', standaard: false },
 
   // ---------------------------------------------------------------- labels

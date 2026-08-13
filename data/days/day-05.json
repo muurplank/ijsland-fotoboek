@@ -16,7 +16,8 @@
       "lat": 65.688922,
       "lon": -18.101728,
       "type": "stop",
-      "notitie": "getanked"
+      "notitie": "getanked",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -170,7 +171,8 @@
       "lat": 64.543321,
       "lon": -21.912449,
       "type": "stop",
-      "notitie": "gestopt voor boodschappen en tanken"
+      "notitie": "gestopt voor boodschappen en tanken",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -187,11 +189,12 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "",
+      "name": "Kamperen",
       "lat": 64.700559,
       "lon": -21.619783,
       "type": "overnight",
-      "notitie": "gestopt voor camping"
+      "notitie": "gestopt voor camping",
+      "verblijf": "tent"
     }
   ],
   "stijl": {},

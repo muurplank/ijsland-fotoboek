@@ -16,14 +16,16 @@
       "lat": 63.996429,
       "lon": -22.584915,
       "type": "stop",
-      "notitie": "auto ingeleverd"
+      "notitie": "auto ingeleverd",
+      "toonLabel": false
     },
     {
       "name": "",
       "lat": 63.996711,
       "lon": -22.622345,
       "type": "end",
-      "notitie": "shuttle naar vliegveld"
+      "notitie": "shuttle naar vliegveld",
+      "toonLabel": false
     }
   ],
   "stijl": {

@@ -128,7 +128,8 @@
       "lat": 65.688012,
       "lon": -18.101622,
       "type": "stop",
-      "notitie": "gestopt voor dekentjes"
+      "notitie": "gestopt voor dekentjes",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -194,11 +195,12 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "",
+      "name": "Kamperen",
       "lat": 65.573769,
       "lon": -18.090847,
       "type": "overnight",
-      "notitie": "camping voor die nacht"
+      "notitie": "camping voor die nacht",
+      "verblijf": "tent"
     }
   ],
   "stijl": {},
@@ -209,8 +211,8 @@
         "dyMm": 9.35
       },
       "titelblok": {
-        "dxMm": -4.5,
-        "dyMm": -4.67
+        "dxMm": -3.3,
+        "dyMm": -2.43
       }
     }
   }

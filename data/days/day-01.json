@@ -23,7 +23,8 @@
       "lat": 63.998378,
       "lon": -22.632875,
       "type": "stop",
-      "notitie": "de oplichters"
+      "notitie": "de oplichters",
+      "toonLabel": false
     },
     {
       "name": "Keflavík Airport",
@@ -37,26 +38,30 @@
       "lat": 63.997976,
       "lon": -22.616099,
       "type": "stop",
-      "notitie": "stepjes opgepakt"
+      "notitie": "stepjes opgepakt",
+      "toonLabel": false
     },
     {
       "name": "Hotel",
       "lat": 64.008951,
       "lon": -22.562034,
       "type": "stop",
-      "notitie": "spullen weggelegd"
+      "notitie": "spullen weggelegd",
+      "toonLabel": false
     },
     {
       "name": "Bónus",
       "lat": 64.003459,
       "lon": -22.556763,
-      "type": "stop"
+      "type": "stop",
+      "toonLabel": false
     },
     {
       "name": "Hotel",
       "lat": 64.009072,
       "lon": -22.561895,
-      "type": "overnight"
+      "type": "overnight",
+      "verblijf": "hotel"
     }
   ],
   "stijl": {

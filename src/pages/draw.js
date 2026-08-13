@@ -54,6 +54,44 @@ function markerVorm (vorm, straal) {
          `C ${straal} ${-h} ${straal * 1.35} ${-h * 0.55} 0 0 Z`
     })
   }
+
+  // Iconen voor waar je sliep. Bewust hoekig en zonder details: op vier
+  // millimeter papier overleeft alleen de silhouetvorm, en juist die maakt in
+  // een oogopslag duidelijk of het een tent of een dak was.
+  if (vorm === 'tent') {
+    const s = straal
+    return maak('path', {
+      // driehoek met een V-vormige opening onderin, zoals een tentflap
+      d: `M ${-s * 1.05} ${s * 0.8} L 0 ${-s} L ${s * 1.05} ${s * 0.8} ` +
+         `L ${s * 0.3} ${s * 0.8} L 0 ${s * 0.02} L ${-s * 0.3} ${s * 0.8} Z`,
+      'stroke-linejoin': 'round'
+    })
+  }
+
+  if (vorm === 'huisje') {
+    const s = straal
+    return maak('path', {
+      // silhouet met een deuropening; evenodd maakt de deur een gat
+      d: `M ${-s * 0.88} ${s * 0.85} L ${-s * 0.88} ${-s * 0.08} L 0 ${-s} ` +
+         `L ${s * 0.88} ${-s * 0.08} L ${s * 0.88} ${s * 0.85} Z ` +
+         `M ${-s * 0.24} ${s * 0.85} L ${-s * 0.24} ${s * 0.26} ` +
+         `L ${s * 0.24} ${s * 0.26} L ${s * 0.24} ${s * 0.85} Z`,
+      'fill-rule': 'evenodd',
+      'stroke-linejoin': 'round'
+    })
+  }
+
+  if (vorm === 'auto') {
+    const s = straal
+    return maak('path', {
+      d: `M ${-s} ${s * 0.35} L ${-s * 0.82} ${-s * 0.12} L ${-s * 0.45} ${-s * 0.55} ` +
+         `L ${s * 0.45} ${-s * 0.55} L ${s * 0.82} ${-s * 0.12} L ${s} ${s * 0.35} ` +
+         `L ${s} ${s * 0.62} L ${s * 0.6} ${s * 0.62} L ${s * 0.6} ${s * 0.35} ` +
+         `L ${-s * 0.6} ${s * 0.35} L ${-s * 0.6} ${s * 0.62} L ${-s} ${s * 0.62} Z`,
+      'stroke-linejoin': 'round'
+    })
+  }
+
   return maak('circle', { cx: 0, cy: 0, r: straal })
 }
 
@@ -85,10 +123,16 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
   const d = padData(punten)
 
-  // Buitenlijn. Normaal ligt die als brede lijn onder de route; dan laat een
-  // doorzichtige binnenlijn dus de buitenlijn zien in plaats van de kaart.
-  // Met 'buitenAlsRand' wordt het midden eruit gemaskeerd, zodat de buitenlijn
-  // een echte omranding is en de kaart door je route heen schijnt.
+  // De hele routelijn komt in één groep, en de doorzichtigheid zit op die groep
+  // in plaats van op de lijnen zelf.
+  //
+  // Dat is het verschil tussen "elke lijn half doorzichtig" en "de route als
+  // geheel half doorzichtig". Reed je een weg heen én terug, dan liggen er twee
+  // lijnen over elkaar; met doorzichtigheid per lijn wordt dat stuk donkerder,
+  // alsof je er twee keer zo hard reed. Op de groep wordt alles eerst platgeslagen
+  // en pas daarna doorzichtig gemaakt, dus dubbel rijden telt niet dubbel.
+  const routeGroep = maak('g', { opacity: stijl['route.dekking'] })
+
   const buitenDikte = stijl['route.dikteMm'] + 2 * stijl['route.buitenExtraMm']
   if (stijl['route.buitenExtraMm'] > 0) {
     const buiten = maak('path', {
@@ -102,12 +146,13 @@ export function teken (svg, opschriften, gegevens, stijl) {
       'stroke-dasharray': streepjes
     })
 
+    // Met de buitenlijn als omranding wordt het midden eruit gemaskeerd, zodat
+    // de kaart door je route heen schijnt in plaats van dat je de buitenlijn ziet.
     if (stijl['route.buitenAlsRand']) {
       const maskerId = 'route-omranding'
       const defs = maak('defs')
       const masker = maak('mask', { id: maskerId, maskUnits: 'userSpaceOnUse' })
 
-      // wit is zichtbaar, zwart is weg: de brede lijn min de kern
       masker.append(maak('path', {
         d, fill: 'none', stroke: '#ffffff', 'stroke-width': buitenDikte,
         'stroke-linecap': UITEINDEN[stijl['route.uiteinden']], 'stroke-linejoin': 'round',
@@ -120,23 +165,24 @@ export function teken (svg, opschriften, gegevens, stijl) {
       }))
 
       defs.append(masker)
-      svg.append(defs)
+      routeGroep.append(defs)
       buiten.setAttribute('mask', `url(#${maskerId})`)
     }
 
-    svg.append(buiten)
+    routeGroep.append(buiten)
   }
 
-  svg.append(maak('path', {
+  routeGroep.append(maak('path', {
     d,
     fill: 'none',
     stroke: stijl['route.kleur'],
     'stroke-width': stijl['route.dikteMm'],
-    'stroke-opacity': stijl['route.dekking'],
     'stroke-linecap': UITEINDEN[stijl['route.uiteinden']],
     'stroke-linejoin': 'round',
     'stroke-dasharray': streepjes
   }))
+
+  svg.append(routeGroep)
 
   // -------------------------------------------------------------- pijltjes
   if (stijl['pijltjes.aan']) {
@@ -174,8 +220,14 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
     if (straal <= 0) continue
 
+    // Waar je sliep bepaalt het icoon: een tent voor kamperen, een huis voor
+    // een hotel, een auto voor de nacht op de parkeerplaats. Staat het niet in
+    // het dagbestand, dan valt hij terug op de ingestelde vorm.
+    const slaapVorm = { tent: 'tent', hotel: 'huisje', auto: 'auto' }[w.verblijf] ??
+      stijl['markers.slaapVorm']
+
     const vorm = markerVorm(
-      slaap ? stijl['markers.slaapVorm'] : via ? 'cirkel' : stijl['markers.stopVorm'],
+      slaap ? slaapVorm : via ? 'cirkel' : stijl['markers.stopVorm'],
       straal
     )
 
@@ -208,10 +260,16 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
   // ---------------------------------------------------------------- labels
   if (stijl['labels.aan']) {
+    // Dezelfde naam twee keer op één kaart is altijd fout: reed je heen en weer
+    // langs het vliegveld, dan hoort er één keer "Keflavík Airport" te staan.
+    const alGetoond = new Set()
+
     for (const [i, w] of gegevens.dag.waypoints.entries()) {
       if (w.type === 'via' && !w.label) continue
       if (w.toonLabel === false) continue
       if (!w.name) continue
+      if (alGetoond.has(w.name)) continue
+      alGetoond.add(w.name)
 
       const p = view.project(w.lon, w.lat)
       const verschuivingX = w.labelDxMm ?? 0

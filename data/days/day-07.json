@@ -16,7 +16,8 @@
       "lat": 63.937366,
       "lon": -21.002562,
       "type": "stop",
-      "notitie": "gestopt voor eclipse glassess"
+      "notitie": "gestopt voor eclipse glassess",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -135,7 +136,8 @@
       "lat": 64.544501,
       "lon": -21.908047,
       "type": "stop",
-      "notitie": "gestopt voor eten"
+      "notitie": "gestopt voor eten",
+      "toonLabel": false
     },
     {
       "name": "",
@@ -180,11 +182,12 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "",
+      "name": "In de auto",
       "lat": 63.973295,
       "lon": -22.543382,
       "type": "overnight",
-      "notitie": "gestopt voor de nacht"
+      "notitie": "gestopt voor de nacht",
+      "verblijf": "auto"
     }
   ],
   "stijl": {}
