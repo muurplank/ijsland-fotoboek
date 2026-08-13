@@ -50,6 +50,7 @@ const SNEL = new Set([
   'route.buitenKleur',
   'route.buitenExtraMm',
   'route.buitenDekking',
+  'route.buitenAlsRand',
   'route.streepjes',
   'pijltjes.aan',
   'pijltjes.afstandCm',

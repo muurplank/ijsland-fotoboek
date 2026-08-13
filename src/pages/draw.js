@@ -85,10 +85,13 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
   const d = padData(punten)
 
-  // buitenlijn eronder: die maakt de route los van de achtergrond
+  // Buitenlijn. Normaal ligt die als brede lijn onder de route; dan laat een
+  // doorzichtige binnenlijn dus de buitenlijn zien in plaats van de kaart.
+  // Met 'buitenAlsRand' wordt het midden eruit gemaskeerd, zodat de buitenlijn
+  // een echte omranding is en de kaart door je route heen schijnt.
   const buitenDikte = stijl['route.dikteMm'] + 2 * stijl['route.buitenExtraMm']
   if (stijl['route.buitenExtraMm'] > 0) {
-    svg.append(maak('path', {
+    const buiten = maak('path', {
       d,
       fill: 'none',
       stroke: stijl['route.buitenKleur'],
@@ -97,7 +100,31 @@ export function teken (svg, opschriften, gegevens, stijl) {
       'stroke-linecap': UITEINDEN[stijl['route.uiteinden']],
       'stroke-linejoin': 'round',
       'stroke-dasharray': streepjes
-    }))
+    })
+
+    if (stijl['route.buitenAlsRand']) {
+      const maskerId = 'route-omranding'
+      const defs = maak('defs')
+      const masker = maak('mask', { id: maskerId, maskUnits: 'userSpaceOnUse' })
+
+      // wit is zichtbaar, zwart is weg: de brede lijn min de kern
+      masker.append(maak('path', {
+        d, fill: 'none', stroke: '#ffffff', 'stroke-width': buitenDikte,
+        'stroke-linecap': UITEINDEN[stijl['route.uiteinden']], 'stroke-linejoin': 'round',
+        'stroke-dasharray': streepjes
+      }))
+      masker.append(maak('path', {
+        d, fill: 'none', stroke: '#000000', 'stroke-width': stijl['route.dikteMm'],
+        'stroke-linecap': UITEINDEN[stijl['route.uiteinden']], 'stroke-linejoin': 'round',
+        'stroke-dasharray': streepjes
+      }))
+
+      defs.append(masker)
+      svg.append(defs)
+      buiten.setAttribute('mask', `url(#${maskerId})`)
+    }
+
+    svg.append(buiten)
   }
 
   svg.append(maak('path', {

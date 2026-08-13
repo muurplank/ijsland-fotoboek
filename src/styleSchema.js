@@ -117,6 +117,7 @@ export const KNOPPEN = [
   { key: 'route.buitenKleur', groep: 'route', label: 'Kleur buitenlijn', type: 'kleur', standaard: '#ffffff' },
   { key: 'route.buitenExtraMm', groep: 'route', label: 'Buitenlijn extra dik', type: 'mm', min: 0, max: 4, step: 0.05, standaard: 0.7, help: 'Hoeveel de buitenlijn aan elke kant buiten de binnenlijn uitsteekt' },
   { key: 'route.buitenDekking', groep: 'route', label: 'Dekking buitenlijn', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.9 },
+  { key: 'route.buitenAlsRand', groep: 'route', label: 'Buitenlijn als omranding', type: 'aanuit', standaard: false, help: 'Normaal ligt de buitenlijn als brede lijn onder de route. Dan laat een doorzichtige binnenlijn die buitenlijn zien, niet de kaart. Met deze aan wordt de buitenlijn een echte rand eromheen, en schijnt de kaart door je route heen' },
   { key: 'route.uiteinden', groep: 'route', label: 'Lijnuiteinden', type: 'keuze', opties: ['rond', 'plat', 'vierkant'], standaard: 'rond' },
   { key: 'route.streepjes', groep: 'route', label: 'Streepjeslijn', type: 'aanuit', standaard: false },
   { key: 'route.streepMm', groep: 'route', label: 'Streeplengte', type: 'mm', min: 0.2, max: 20, step: 0.1, standaard: 3 },
