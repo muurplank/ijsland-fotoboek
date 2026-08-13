@@ -8,3 +8,6 @@ cache/
 out/
 
 .DS_Store
+
+# Toegangssleutels: horen niet in git, ook publieke niet.
+data/secrets.json

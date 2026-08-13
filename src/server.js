@@ -170,7 +170,13 @@ const server = createServer(async (req, res) => {
       const d = await dagGegevens(nummer)
       return json(res, {
         dag: d.dag,
-        boek: { titel: d.boek.titel, ondertitel: d.boek.ondertitel },
+        boek: {
+          titel: d.boek.titel,
+          ondertitel: d.boek.ondertitel,
+          plaatsing: d.boek.plaatsing,
+          overzicht: d.boek.overzicht,
+          bron: d.boek.bron
+        },
         stijl: d.stijl,
         // zonder de afwijkingen van deze dag: de overzichtskaart hoort niet de
         // satellietstijl van dag 1 over te nemen
@@ -230,6 +236,37 @@ const server = createServer(async (req, res) => {
         'cache-control': 'no-store'
       })
       return res.end(silhouet.png)
+    }
+
+    // ----------------------------------------------------------- opmaak opslaan
+    //
+    // Verschoven onderdelen en aangepaste teksten gaan terug naar het dagbestand,
+    // zodat ze een herstart overleven en gewoon in git staan.
+    if (pad === '/api/opmaak' && req.method === 'POST') {
+      const { dag, titel, tekst, waypoints, plaatsing, boek } = await leesBody(req)
+
+      const naam = String(dag).padStart(2, '0')
+      const bestandsnaam = join(ROOT, 'data', 'days', `day-${naam}.json`)
+      const inhoud = JSON.parse(await readFile(bestandsnaam, 'utf8'))
+
+      if (titel !== undefined) inhoud.titel = titel
+      if (tekst !== undefined) inhoud.tekst = tekst
+      if (waypoints) inhoud.waypoints = waypoints
+      if (plaatsing) inhoud.plaatsing = plaatsing
+
+      await writeFile(bestandsnaam, JSON.stringify(inhoud, null, 2) + '\n')
+
+      if (boek) {
+        const boekBestand = join(ROOT, 'data', 'book.json')
+        const b = JSON.parse(await readFile(boekBestand, 'utf8'))
+        if (boek.plaatsing) b.plaatsing = boek.plaatsing
+        if (boek.overzicht) b.overzicht = boek.overzicht
+        if (boek.bron) b.bron = boek.bron
+        await writeFile(boekBestand, JSON.stringify(b, null, 2) + '\n')
+      }
+
+      dagCache.clear()
+      return json(res, { opgeslagen: true })
     }
 
     // ------------------------------------------------------- instellingen opslaan

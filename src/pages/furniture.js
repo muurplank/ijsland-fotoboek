@@ -55,6 +55,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
   if (stijl['titelblok.aan']) {
     const blok = document.createElement('div')
     blok.className = 'titelblok'
+    blok.setAttribute('data-plek', 'titelblok')
     inHoek(blok, stijl['titelblok.positie'], marge, maat)
 
     blok.style.textAlign = stijl['titelblok.uitlijning']
@@ -74,6 +75,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
 
     const titel = document.createElement('div')
     titel.className = 'titel-hoofd'
+    titel.setAttribute('data-tekst', 'titel')
     titel.style.fontSize = mm(stijl['typografie.titelMm'])
     titel.textContent = gegevens.dag.titel
 
@@ -97,6 +99,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
 
     const doos = document.createElement('div')
     doos.className = 'inzet'
+    doos.setAttribute('data-plek', 'inzet')
     inHoek(doos, stijl['inzet.hoek'], marge, maat)
     doos.style.width = mm(breedte)
     doos.style.height = mm(hoogte)
@@ -158,6 +161,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
 
     const balk = document.createElement('div')
     balk.className = 'schaalbalk'
+    balk.setAttribute('data-plek', 'schaalbalk')
     inHoek(balk, stijl['schaal.positie'], marge, maat)
     balk.style.color = stijl['schaal.kleur']
     balk.style.fontSize = mm(2.2)
@@ -179,6 +183,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
   if (stijl['schaal.noordpijlAan']) {
     const pijl = document.createElement('div')
     pijl.className = 'noordpijl'
+    pijl.setAttribute('data-plek', 'noordpijl')
     pijl.style.color = stijl['schaal.kleur']
     pijl.style.fontSize = mm(3)
     pijl.textContent = 'N'
@@ -192,6 +197,8 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
   if (stijl['bron.aan']) {
     const bron = document.createElement('div')
     bron.className = 'bronvermelding'
+    bron.setAttribute('data-plek', 'bron')
+    bron.setAttribute('data-tekst', 'bron')
     bron.style.position = 'absolute'
     bron.style.right = mm(marge)
     bron.style.bottom = mm(maat.afloopMm + 1.5)

@@ -13,6 +13,7 @@ import { hillshade } from './hillshade.js'
 import { kleurKaart } from './colorize.js'
 import { kleurTerrein } from './terrain.js'
 import { fetchImagery } from '../fetch/imagery.js'
+import { fetchMapboxKaart } from '../fetch/mapbox.js'
 import { expandBounds } from '../geo/viewport.js'
 import { metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
 
@@ -22,10 +23,14 @@ import { metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/
  * kaartuitsnede, dus dit is een simpele omrekening van de twee hoeken.
  */
 function plaatsing (raster, view) {
+  // Bij dubbele resolutie zijn de beeldpixels half zo groot als de tegelpixels.
+  // Zonder deze deling zou de achtergrond twee keer zo groot geplaatst worden.
+  const schaal = raster.schaal ?? 1
+
   const linksboven = tileToLonLat(raster.originPx / TILE_SIZE, raster.originPy / TILE_SIZE, raster.z)
   const rechtsonder = tileToLonLat(
-    (raster.originPx + raster.width) / TILE_SIZE,
-    (raster.originPy + raster.height) / TILE_SIZE,
+    (raster.originPx + raster.width / schaal) / TILE_SIZE,
+    (raster.originPy + raster.height / schaal) / TILE_SIZE,
     raster.z
   )
   const a = view.project(linksboven.lon, linksboven.lat)
@@ -144,6 +149,48 @@ export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
 }
 
 /**
+ * Een kant-en-klare Mapbox-stijl als achtergrond.
+ *
+ * Het beeld gaat door dezelfde behandeling als de andere stijlen - ontzadigen
+ * en naar het wit van het papier toe verbleken - zodat het bij de rest van het
+ * boek past en je routelijn ervoor knalt.
+ */
+export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, onProgress }) {
+  const zicht = expandBounds(view.visibleBounds(), 0.04)
+  const mPerMm = view.metersPerMm()
+
+  // Hun plaatsnamen zitten met een vaste pixelgrootte in het beeld (ongeveer 14
+  // pixels hoog). Zouden we het zoomniveau kiezen op de drukresolutie, dan werd
+  // die tekst op 600 dpi nog geen millimeter hoog en dus onleesbaar. Daarom
+  // bepaalt de gewenste tekstgrootte op papier welk niveau we ophalen, en wordt
+  // het beeld daarna opgeschaald naar de drukmaat.
+  const LABEL_PX = 14
+  const doel = (mPerMm * stijl['lagen.mapboxLabelMm']) / LABEL_PX
+
+  const beeld = await fetchMapboxKaart(zicht, { stijl: mapboxStijl, metersPerPixel: doel, onProgress })
+
+  const opschaling = beeld.metersPerPixel / (mPerMm / (dpi / 25.4))
+  if (opschaling > 3) {
+    onProgress?.(
+      `achtergrond wordt ${opschaling.toFixed(1)}x opgeschaald en dus zacht; ` +
+      'zet "Mapbox: tekstgrootte" lager voor een scherpere kaart met kleinere plaatsnamen'
+    )
+  }
+  const plek = plaatsing(beeld, view)
+
+  const f = stijl['lagen.verbleking']
+  const pijp = sharp(beeld.data, {
+    raw: { width: beeld.width, height: beeld.height, channels: beeld.channels }
+  })
+    .removeAlpha()
+    .modulate({ saturation: 1 - stijl['lagen.ontzadiging'] })
+    .linear(1 - f, 255 * f)
+
+  const uit = await naarPagina(pijp, plek, dpi, 0)
+  return { ...uit, bronvermelding: '© Mapbox, © OpenStreetMap' }
+}
+
+/**
  * De achtergrond voor de ingestelde kaartstijl.
  *
  * Waarschuwt als het hoogtemodel te grof is voor deze uitsnede: bij een dag die
@@ -151,8 +198,17 @@ export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
  * satellietbeeld de betere keuze.
  */
 export async function achtergrondVoorStijl ({ dem, view, stijl, dpi, onProgress }) {
-  if (stijl['lagen.stijl'] === 'satelliet') {
+  const gekozen = stijl['lagen.stijl']
+
+  if (gekozen === 'satelliet') {
     return satellietAchtergrond({ view, stijl, dpi, onProgress })
+  }
+
+  if (gekozen.startsWith('mapbox-')) {
+    return mapboxAchtergrond({
+      view, stijl, dpi, onProgress,
+      mapboxStijl: gekozen.slice('mapbox-'.length)
+    })
   }
 
   const nodigPerPixel = view.metersPerMm() / (dpi / 25.4)

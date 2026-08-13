@@ -119,6 +119,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
 
       const nr = document.createElement('div')
       nr.className = 'dagnummer'
+      nr.setAttribute('data-plek', `dagnummer:${dag.dag}`)
       nr.style.left = mm(p.x)
       nr.style.top = mm(p.y)
       nr.style.fontSize = mm(stijl['markers.slaapGrootteMm'] * 0.62)
@@ -130,6 +131,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   // ------------------------------------------------------------- titelblok
   const blok = document.createElement('div')
   blok.className = 'titelblok'
+  blok.setAttribute('data-plek', 'titelblok')
   blok.style.position = 'absolute'
   blok.style.left = mm(marge)
   blok.style.top = mm(marge)
@@ -143,6 +145,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
 
   const titel = document.createElement('div')
   titel.className = 'titel-hoofd'
+  titel.setAttribute('data-tekst', 'overzichtstitel')
   titel.style.fontSize = mm(stijl['typografie.titelMm'])
   titel.textContent = 'De hele reis'
 
@@ -154,6 +157,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   // de richting ertussen is genoeg om het te lezen.
   const legenda = document.createElement('div')
   legenda.className = 'legenda'
+  legenda.setAttribute('data-plek', 'legenda')
   legenda.style.left = mm(marge)
   legenda.style.bottom = mm(marge)
   legenda.style.fontSize = mm(2.4)

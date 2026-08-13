@@ -68,6 +68,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
   // ------------------------------------------------------------- titelblok
   const blok = document.createElement('div')
   blok.className = 'titelblok'
+  blok.setAttribute('data-plek', 'titelblok')
   blok.style.position = 'absolute'
   blok.style.left = mm(marge)
   blok.style.top = mm(marge)
@@ -80,6 +81,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
 
   const titel = document.createElement('div')
   titel.className = 'titel-hoofd'
+  titel.setAttribute('data-tekst', 'titel')
   titel.style.fontSize = mm(stijl['typografie.titelMm'])
   titel.textContent = gegevens.dag.titel
 
@@ -172,6 +174,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
 
         const naam = document.createElement('div')
         naam.className = 'profiel-stop'
+        naam.setAttribute('data-plek', `profielstop:${stop.naam}`)
         naam.style.left = mm(x)
         naam.style.top = mm(grafiekOnder + 2.6)
         naam.style.maxHeight = mm(naamBandMm)
@@ -245,6 +248,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
 
   const rij = document.createElement('div')
   rij.className = 'cijferrij'
+  rij.setAttribute('data-plek', 'cijferrij')
   rij.style.left = mm(marge)
   rij.style.top = mm(grafiekOnder + naamBandMm + 16)
   rij.style.width = mm(maat.breedteMm - 2 * marge)
@@ -285,6 +289,8 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
   if (gegevens.dag.tekst) {
     const tekst = document.createElement('div')
     tekst.className = 'dagtekst'
+    tekst.setAttribute('data-plek', 'dagtekst')
+    tekst.setAttribute('data-tekst', 'tekst')
     tekst.style.left = mm(marge)
     tekst.style.top = mm(grafiekOnder + naamBandMm + 16 + 34)
     tekst.style.width = mm(Math.min(180, maat.breedteMm - 2 * marge))

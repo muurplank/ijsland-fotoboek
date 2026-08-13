@@ -181,9 +181,10 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
   // ---------------------------------------------------------------- labels
   if (stijl['labels.aan']) {
-    for (const w of gegevens.dag.waypoints) {
+    for (const [i, w] of gegevens.dag.waypoints.entries()) {
       if (w.type === 'via' && !w.label) continue
       if (w.toonLabel === false) continue
+      if (!w.name) continue
 
       const p = view.project(w.lon, w.lat)
       const verschuivingX = w.labelDxMm ?? 0
@@ -191,6 +192,8 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
       const naam = document.createElement('div')
       naam.className = 'plaatsnaam'
+      naam.setAttribute('data-plek', `label:${i}`)
+      naam.setAttribute('data-tekst', `waypoint:${i}`)
       naam.textContent = w.name
       naam.style.left = `calc(${(p.x + verschuivingX)} * var(--mm))`
       naam.style.top = `calc(${(p.y + verschuivingY)} * var(--mm))`

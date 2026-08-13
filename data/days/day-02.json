@@ -165,5 +165,13 @@
       "type": "overnight"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "label:2": {
+        "dxMm": 16.78,
+        "dyMm": -10.07
+      }
+    }
+  }
 }

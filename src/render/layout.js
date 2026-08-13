@@ -50,6 +50,7 @@ export const ACHTERGROND_KNOPPEN = [
   'uitsnede.panXMm',
   'uitsnede.panYMm',
   'uitsnede.margeMm',
+  'lagen.mapboxLabelMm',
   'lagen.zeeKleur',
   'lagen.verbleking',
   'lagen.ontzadiging',

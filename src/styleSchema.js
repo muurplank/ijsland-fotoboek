@@ -64,7 +64,7 @@ export const KNOPPEN = [
   { key: 'kaartvorm.randDikteMm', groep: 'kaartvorm', label: 'Randlijndikte', type: 'mm', min: 0, max: 3, step: 0.05, standaard: 0 },
 
   // ----------------------------------------------------------------- lagen
-  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['terrein', 'relief', 'satelliet'], standaard: 'terrein', help: 'terrein = hoogtekleuren met schaduw (atlasstijl) · relief = eenkleurig schaduwrelief · satelliet = luchtfoto' },
+  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['terrein', 'relief', 'satelliet', 'mapbox-outdoors', 'mapbox-satelliet-straten', 'mapbox-licht', 'mapbox-straten'], standaard: 'terrein', help: 'terrein = eigen hoogtekleuren met schaduw · relief = eenkleurig · satelliet = luchtfoto · de mapbox-stijlen zijn kant-en-klare kaarten met hoogtelijnen, paden en plaatsnamen (rasterbeeld, jouw route blijft vector)' },
   { key: 'lagen.zeeAan', groep: 'lagen', label: 'Zee', type: 'aanuit', standaard: true },
   { key: 'lagen.zeeKleur', groep: 'lagen', label: 'Zeekleur', type: 'kleur', standaard: '#eef2f4' },
   { key: 'lagen.landKleur', groep: 'lagen', label: 'Landkleur', type: 'kleur', standaard: '#f6f4f0' },
@@ -78,6 +78,7 @@ export const KNOPPEN = [
   { key: 'lagen.hoogtelijnenAan', groep: 'lagen', label: 'Hoogtelijnen', type: 'aanuit', standaard: false },
   { key: 'lagen.hoogtelijnenStapM', groep: 'lagen', label: 'Hoogte per lijn', type: 'getal', min: 25, max: 500, step: 25, standaard: 100, eenheid: 'm' },
   { key: 'lagen.hoogtelijnenKleur', groep: 'lagen', label: 'Hoogtelijnkleur', type: 'kleur', standaard: '#c9c2b6' },
+  { key: 'lagen.mapboxLabelMm', groep: 'lagen', label: 'Mapbox: tekstgrootte', type: 'mm', min: 1.5, max: 9, step: 0.1, standaard: 3, help: 'Alleen voor de mapbox-stijlen. Hun plaatsnamen zitten met een vaste pixelgrootte in het beeld, dus dit bepaalt tegelijk hoe scherp de achtergrond wordt: grotere tekst betekent een zachtere kaart eronder' },
   { key: 'lagen.achtergrondDekking', groep: 'lagen', label: 'Dekking achtergrond', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 1 },
   { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken naar wit', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.05, help: 'Trekt de achtergrond richting het wit van het papier, zodat je route ervoor knalt' },
   { key: 'lagen.ontzadiging', groep: 'lagen', label: 'Ontzadigen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.3, help: 'Haalt kleur uit de achtergrond zodat hij niet vloekt met je foto\'s' },

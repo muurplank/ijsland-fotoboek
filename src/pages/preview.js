@@ -16,7 +16,8 @@ import { teken } from './draw.js'
 import { tekenBijwerk } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
-import { achtergrondSleutel, maakView, paginaMaat } from '../render/layout.js'
+import { maakBewerkbaar, pasPlaatsingToe } from './editable.js'
+import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
 
 const $ = id => document.getElementById(id)
 
@@ -42,6 +43,7 @@ let paginaType = params.get('pagina') ?? 'kaart'
 let silhouet = null
 let silhouetKleur = null
 let vorigeAchtergrondSleutel = null
+let boek = {}
 
 /** ------------------------------------------------------------- hulpjes */
 
@@ -167,18 +169,23 @@ function tekenPagina () {
   if (paginaType === 'overzicht') {
     if (!reis) return
     tekenOverzicht(tekening, opschriften, reis, stijl)
+  } else if (!gegevens) {
     return
-  }
-
-  if (!gegevens) return
-
-  if (paginaType === 'stats') {
+  } else if (paginaType === 'stats') {
     tekenStatistieken(tekening, opschriften, gegevens, stijl)
-    return
+  } else {
+    const view = teken(tekening, opschriften, gegevens, stijl)
+    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
   }
 
-  const view = teken(tekening, opschriften, gegevens, stijl)
-  tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
+  // de handmatige verschuivingen liggen over de standaardopmaak heen
+  pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+}
+
+/** De verschuivingen die bij dit paginatype horen. */
+function plaatsingVoorPagina () {
+  if (paginaType === 'overzicht') return boek.plaatsing?.overzicht ?? {}
+  return gegevens?.dag.plaatsing?.[paginaType] ?? {}
 }
 
 function hertekenAlles () {
@@ -214,6 +221,7 @@ async function start () {
 
   await laadDag(huidigeDag)
   stijl = { ...gegevens.stijl }
+  boek = gegevens.boek ?? {}
 
   if (paginaType === 'overzicht') {
     await laadReis()
@@ -278,6 +286,23 @@ async function start () {
     hertekenAlles()
   })
 
+  // ------ verslepen en teksten aanpassen
+  maakBewerkbaar(pagina, {
+    huidigePlaatsing: plaatsingVoorPagina,
+    bijVerschuiven: (id, dxMm, dyMm) => {
+      const doel = paginaType === 'overzicht'
+        ? (boek.plaatsing ??= {}).overzicht ??= {}
+        : ((gegevens.dag.plaatsing ??= {})[paginaType] ??= {})
+      doel[id] = { dxMm, dyMm }
+      bewaarOpmaak(`verplaatst: ${id}`)
+    },
+    bijTekst: (id, tekst) => {
+      pasTekstToe(id, tekst)
+      bewaarOpmaak(`tekst aangepast`)
+      tekenPagina()
+    }
+  })
+
   $('zoek').addEventListener('input', e => paneel.filter(e.target.value))
   window.addEventListener('resize', ontdubbel(() => { schaalPagina(); tekenPagina() }, 120))
 
@@ -291,6 +316,41 @@ async function start () {
     zegt(`let op: onbekende instellingen overgeslagen: ${gegevens.genegeerd.join(', ')}`)
   }
 }
+
+/** Zet een aangepaste tekst op de plek waar hij hoort. */
+function pasTekstToe (id, tekst) {
+  if (id === 'titel') { gegevens.dag.titel = tekst; return }
+  if (id === 'tekst') { gegevens.dag.tekst = tekst; return }
+  if (id === 'overzichtstitel') { (boek.overzicht ??= {}).titel = tekst; return }
+  if (id === 'bron') { (boek.bron ??= {}).tekst = tekst; return }
+
+  const waypoint = id.match(/^waypoint:(\d+)$/)
+  if (waypoint) {
+    const w = gegevens.dag.waypoints[Number(waypoint[1])]
+    if (w) w.name = tekst
+  }
+}
+
+/** Bewaart de opmaak van deze dag; ontdubbeld, want slepen levert veel wijzigingen op. */
+const bewaarOpmaak = ontdubbel(async melding => {
+  try {
+    const antwoord = await fetch('/api/opmaak', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        dag: huidigeDag,
+        titel: gegevens.dag.titel,
+        tekst: gegevens.dag.tekst,
+        waypoints: gegevens.dag.waypoints,
+        plaatsing: gegevens.dag.plaatsing,
+        boek: paginaType === 'overzicht' ? boek : undefined
+      })
+    })
+    zegt(antwoord.ok ? `${melding} · bewaard` : 'bewaren mislukt')
+  } catch (fout) {
+    zegt(`bewaren mislukt: ${fout.message}`)
+  }
+}, 600)
 
 async function bewaar (niveau) {
   zegt('bewaren…')

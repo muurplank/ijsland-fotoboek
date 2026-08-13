@@ -214,7 +214,7 @@ button.stil:hover { background: #e6e3df; color: #2b2926; }
 /* --------------------------------------------- opschriften op de kaart */
 
 .plaatsnaam {
-  transform: translate(-50%, -100%);
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-100% + var(--dy, 0px)));
   white-space: nowrap;
   font-size: var(--labelgrootte);
   letter-spacing: var(--letterafstand);
@@ -278,14 +278,14 @@ body.exporteren #pagina { box-shadow: none; }
 
 .profiel-stop {
   writing-mode: vertical-rl;
+  transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
   letter-spacing: .01em;
-  transform: translateX(-50%);
 }
-.profiel-top { transform: translateX(-50%); font-weight: 650; white-space: nowrap; }
+.profiel-top { transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px)); font-weight: 650; white-space: nowrap; }
 
 .cijferrij { display: grid; }
 .cijfer-groot {
@@ -301,9 +301,36 @@ body.exporteren #pagina { box-shadow: none; }
 /* -------------------------------------------------------- overzichtskaart */
 
 .dagnummer {
-  transform: translate(-50%, -50%);
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
   color: #fff; font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .legenda { display: flex; align-items: center; gap: .6em; }
 .legenda-balk { border-radius: 99px; }
+
+/* --------------------------------------------- verslepen en tekst aanpassen */
+
+/* Alles wat je kunt verplaatsen krijgt de verschuiving via --dx en --dy, zodat
+   de standaardopmaak leidend blijft en jouw correctie er alleen overheen ligt. */
+#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer) {
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+}
+
+/* De aanwijzingen alleen in de bedieningspagina, nooit in de export. */
+body:not(.exporteren) #pagina [data-plek] { cursor: grab; }
+body:not(.exporteren) #pagina [data-plek]:hover {
+  outline: 1px dashed #7a513899;
+  outline-offset: 2px;
+}
+body:not(.exporteren) #pagina [data-tekst]:hover { outline-color: #2b6cb099; }
+body:not(.exporteren) #pagina [data-plek].sleept {
+  cursor: grabbing;
+  outline: 1px solid #7a5138;
+  opacity: .9;
+}
+body:not(.exporteren) #pagina [contenteditable].bewerkt {
+  outline: 2px solid #2b6cb0;
+  outline-offset: 2px;
+  cursor: text;
+  background: #ffffff44;
+}
