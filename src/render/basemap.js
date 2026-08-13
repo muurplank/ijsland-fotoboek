@@ -11,6 +11,7 @@
 import sharp from 'sharp'
 import { hillshade } from './hillshade.js'
 import { kleurKaart } from './colorize.js'
+import { kleurTerrein } from './terrain.js'
 import { fetchImagery } from '../fetch/imagery.js'
 import { expandBounds } from '../geo/viewport.js'
 import { metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
@@ -30,6 +31,28 @@ function plaatsing (raster, view) {
   const a = view.project(linksboven.lon, linksboven.lat)
   const b = view.project(rechtsonder.lon, rechtsonder.lat)
   return { xMm: a.x, yMm: a.y, breedteMm: b.x - a.x, hoogteMm: b.y - a.y }
+}
+
+/**
+ * De hoogtetrap uit de instellingen: welke kleur hoort bij welke hoogte.
+ * De hoogtes worden oplopend gehouden, zodat door elkaar gezette schuifjes geen
+ * onzin opleveren.
+ */
+function hoogteTrap (stijl) {
+  const punten = [
+    { m: 0, kleur: stijl['terrein.kust'] },
+    { m: stijl['terrein.laagM'], kleur: stijl['terrein.laag'] },
+    { m: stijl['terrein.middenM'], kleur: stijl['terrein.midden'] },
+    { m: stijl['terrein.hoogM'], kleur: stijl['terrein.hoog'] },
+    { m: stijl['terrein.topM'], kleur: stijl['terrein.top'] }
+  ]
+
+  let vorige = -Infinity
+  return punten.map(p => {
+    const m = Math.max(p.m, vorige + 1)
+    vorige = m
+    return { m, kleur: p.kleur }
+  })
 }
 
 /** Schaalt een raster naar de drukmaat en maakt er een PNG van. */
@@ -96,12 +119,22 @@ export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
     contrast: stijl['relief.contrast']
   })
 
-  const rgb = kleurKaart(grijs, dem.data, {
-    zeeKleur: stijl['lagen.zeeKleur'],
-    schaduwKleur: stijl['relief.schaduwKleur'],
-    verbleking: stijl['lagen.verbleking'],
-    ontzadiging: stijl['lagen.ontzadiging']
-  })
+  const rgb = stijl['lagen.stijl'] === 'terrein'
+    ? kleurTerrein(grijs, dem.data, {
+        zeeKleur: stijl['lagen.zeeKleur'],
+        trap: hoogteTrap(stijl),
+        // wat het schaduwrelief op kaarsvlak land oplevert; daar draait de
+        // schaduw omheen, zodat vlak land precies zijn hoogtekleur houdt
+        vlakkeHelderheid: Math.cos((90 - stijl['relief.zonHoogte']) * Math.PI / 180) * 255,
+        verbleking: stijl['lagen.verbleking'],
+        ontzadiging: stijl['lagen.ontzadiging']
+      })
+    : kleurKaart(grijs, dem.data, {
+        zeeKleur: stijl['lagen.zeeKleur'],
+        schaduwKleur: stijl['relief.schaduwKleur'],
+        verbleking: stijl['lagen.verbleking'],
+        ontzadiging: stijl['lagen.ontzadiging']
+      })
 
   const plek = plaatsing(dem, view)
   const pijp = sharp(rgb, { raw: { width: dem.width, height: dem.height, channels: 3 } })

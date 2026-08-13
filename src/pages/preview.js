@@ -1,15 +1,22 @@
 /**
- * De preview: knoopt het paneel, de pagina en de server aan elkaar.
+ * De bedieningspagina: knoopt het paneel, de pagina en de server aan elkaar.
  *
- * De pagina die je hier ziet is exact wat er geprint wordt. Alle maten staan in
+ * Wat je hier ziet is exact wat er geprint wordt. Alle maten staan in
  * millimeters; --mm bepaalt hoeveel schermpixels een millimeter is, en dat is
  * het enige verschil tussen scherm en druk.
+ *
+ * Drie paginatypes delen dezelfde opmaakmachine:
+ *   kaart      - de dagkaart met route
+ *   stats      - hoogteprofiel en kerncijfers
+ *   overzicht  - de hele reis op een kaart
  */
 
 import { bouwPaneel } from './panel.js'
 import { teken } from './draw.js'
 import { tekenBijwerk } from './furniture.js'
-import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
+import { tekenStatistieken } from './statspage.js'
+import { tekenOverzicht } from './overview.js'
+import { achtergrondSleutel, maakView, paginaMaat } from '../render/layout.js'
 
 const $ = id => document.getElementById(id)
 
@@ -20,23 +27,23 @@ const opschriften = $('opschriften')
 const melding = $('melding')
 const maatinfo = $('maatinfo')
 
-let schema
-let gegevens
-let stijl
-let paneel
-let vorigeAchtergrondSleutel = null
-
-/**
- * Exportmodus: dezelfde pagina, maar zonder paneel en op de exacte drukmaat.
- * Dit is waarom wat je ziet ook echt is wat je print - het is letterlijk
- * dezelfde opmaakcode, alleen met een andere waarde voor een millimeter.
- */
 const params = new URLSearchParams(location.search)
-const EXPORT = params.get('export')          // 'png' | 'pdf' | null
-const huidigeDag = Number(params.get('dag') ?? 1)
+const EXPORT = params.get('export')            // 'png' | 'pdf' | null
 const EXPORT_MM = Number(params.get('mm') ?? 0)
 
-/** ------------------------------------------------------------ hulpjes */
+let schema
+let stijl
+let paneel
+let gegevens = null      // van de huidige dag
+let reis = null          // alle dagen, voor de overzichtskaart
+let dagen = []
+let huidigeDag = Number(params.get('dag') ?? 1)
+let paginaType = params.get('pagina') ?? 'kaart'
+let silhouet = null
+let silhouetKleur = null
+let vorigeAchtergrondSleutel = null
+
+/** ------------------------------------------------------------- hulpjes */
 
 function zegt (tekst) { melding.textContent = tekst }
 
@@ -48,21 +55,18 @@ function ontdubbel (fn, ms) {
   }
 }
 
-/** ------------------------------------------------- pagina op schaal zetten */
+/** ---------------------------------------------------- pagina op schaal */
 
 function schaalPagina () {
   const maat = paginaMaat(stijl)
   const doek = $('doek')
 
-  let mm
-  if (EXPORT_MM > 0) {
-    // exportmodus: de aanroeper rekent uit hoeveel css-pixels een millimeter is
-    mm = EXPORT_MM
-  } else {
-    const beschikbaarBreed = doek.clientWidth - 56
-    const beschikbaarHoog = doek.clientHeight - 56
-    mm = Math.min(beschikbaarBreed / maat.breedteMm, beschikbaarHoog / maat.hoogteMm)
-  }
+  const mm = EXPORT_MM > 0
+    ? EXPORT_MM
+    : Math.min(
+        (doek.clientWidth - 56) / maat.breedteMm,
+        (doek.clientHeight - 56) / maat.hoogteMm
+      )
 
   pagina.style.setProperty('--mm', `${mm}px`)
   pagina.style.width = `calc(${maat.breedteMm} * var(--mm))`
@@ -76,8 +80,6 @@ function schaalPagina () {
     `${dpi} dpi · export ${px(maat.breedteMm)} × ${px(maat.hoogteMm)} px`
 }
 
-/** --------------------------------------------------- typografie doorgeven */
-
 function zetTypografie () {
   const p = pagina.style
   p.setProperty('--labelkleur', stijl['labels.kleur'])
@@ -86,24 +88,36 @@ function zetTypografie () {
   p.setProperty('--halo', `calc(${stijl['labels.haloMm']} * var(--mm))`)
   p.setProperty('--letterafstand', `${stijl['labels.letterafstand']}em`)
   p.setProperty('--hoofdletters', stijl['labels.hoofdletters'] ? 'uppercase' : 'none')
+  p.fontFamily = stijl['typografie.lettertype'] === 'systeem-schreef'
+    ? 'Georgia, "Times New Roman", serif'
+    : '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'
 }
 
-/** ------------------------------------------------------- achtergrond halen */
+/** ------------------------------------------------------- achtergrond */
 
 async function achtergrondNu () {
-  const sleutel = achtergrondSleutel(stijl)
+  // de statistiekpagina heeft geen kaartachtergrond
+  if (paginaType === 'stats') {
+    achtergrond.removeAttribute('src')
+    achtergrond.style.width = '0'
+    vorigeAchtergrondSleutel = null
+    return
+  }
+
+  const sleutel = `${paginaType}:${huidigeDag}:${achtergrondSleutel(stijl)}`
   if (sleutel === vorigeAchtergrondSleutel) return
   vorigeAchtergrondSleutel = sleutel
 
-  zegt('reliëf berekenen…')
+  zegt('achtergrond berekenen…')
 
-  // in exportmodus op volle drukresolutie, in de preview zuiniger
   const dpi = EXPORT ? `&dpi=${stijl['pagina.dpi']}` : ''
-  const url = `/api/achtergrond?dag=${huidigeDag}${dpi}&stijl=${encodeURIComponent(JSON.stringify(stijl))}`
+  const wat = paginaType === 'overzicht' ? '&overzicht=1' : ''
+  const url = `/api/achtergrond?dag=${huidigeDag}${dpi}${wat}` +
+    `&stijl=${encodeURIComponent(JSON.stringify(stijl))}`
 
   try {
     const antwoord = await fetch(url)
-    if (!antwoord.ok) throw new Error(await antwoord.text())
+    if (!antwoord.ok) throw new Error((await antwoord.text()).slice(0, 200))
 
     const plaatsing = JSON.parse(antwoord.headers.get('x-plaatsing'))
     const blob = await antwoord.blob()
@@ -117,80 +131,146 @@ async function achtergrondNu () {
     achtergrond.style.width = `calc(${plaatsing.breedteMm} * var(--mm))`
     achtergrond.style.height = `calc(${plaatsing.hoogteMm} * var(--mm))`
 
-    // wacht tot de browser hem echt getekend heeft, anders schiet de export
-    // hem voorbij en krijg je een lege achtergrond
     if (!achtergrond.complete) {
-      await new Promise(klaar => {
-        achtergrond.onload = klaar
-        achtergrond.onerror = klaar
-      })
+      await new Promise(klaar => { achtergrond.onload = klaar; achtergrond.onerror = klaar })
     }
     await achtergrond.decode().catch(() => {})
 
     zegt('klaar')
   } catch (fout) {
-    zegt(`reliëf mislukt: ${fout.message}`)
+    zegt(`achtergrond mislukt: ${fout.message}`)
   }
 }
 
 const haalAchtergrond = ontdubbel(achtergrondNu, 260)
 
-/** ------------------------------------------------------------- hertekenen */
-
-function hertekenAlles () {
-  schaalPagina()
-  zetTypografie()
-  const view = teken(tekening, opschriften, gegevens, stijl)
-  tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
-  haalAchtergrond()
-  haalSilhouet()
-}
-
 /** Het silhouet van IJsland voor het inzetkaartje; hoeft maar een keer. */
-let silhouet = null
-let silhouetKleur = null
-
 async function haalSilhouet () {
   const kleur = stijl['inzet.landKleur']
-  if (!stijl['inzet.aan'] || kleur === silhouetKleur) return
+  if (!stijl['inzet.aan'] || paginaType !== 'kaart' || kleur === silhouetKleur) return
   silhouetKleur = kleur
 
   try {
     const antwoord = await fetch(`/api/inzet?kleur=${encodeURIComponent(kleur)}`)
     if (!antwoord.ok) throw new Error(await antwoord.text())
     const bounds = JSON.parse(antwoord.headers.get('x-bounds'))
-    const blob = await antwoord.blob()
-    silhouet = { url: URL.createObjectURL(blob), bounds }
-    const view = teken(tekening, opschriften, gegevens, stijl)
-    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
+    silhouet = { url: URL.createObjectURL(await antwoord.blob()), bounds }
+    tekenPagina()
   } catch (fout) {
     zegt(`inzetkaartje mislukt: ${fout.message}`)
   }
 }
 
-/** ------------------------------------------------------------------ start */
+/** ------------------------------------------------------- de pagina zelf */
+
+function tekenPagina () {
+  if (paginaType === 'overzicht') {
+    if (!reis) return
+    tekenOverzicht(tekening, opschriften, reis, stijl)
+    return
+  }
+
+  if (!gegevens) return
+
+  if (paginaType === 'stats') {
+    tekenStatistieken(tekening, opschriften, gegevens, stijl)
+    return
+  }
+
+  const view = teken(tekening, opschriften, gegevens, stijl)
+  tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
+}
+
+function hertekenAlles () {
+  schaalPagina()
+  zetTypografie()
+  tekenPagina()
+  haalAchtergrond()
+  haalSilhouet()
+}
+
+/** ------------------------------------------------------- gegevens laden */
+
+async function laadDag (nummer) {
+  zegt(`dag ${nummer} ophalen (eerste keer kan even duren)…`)
+  gegevens = await (await fetch(`/api/dag?dag=${nummer}`)).json()
+  if (gegevens.fout) throw new Error(gegevens.fout)
+  huidigeDag = nummer
+  document.title = `Dag ${gegevens.dag.dag} — ${gegevens.dag.titel}`
+}
+
+async function laadReis () {
+  if (reis) return
+  zegt('alle dagen ophalen voor de overzichtskaart…')
+  reis = await (await fetch('/api/reis')).json()
+}
+
+/** ------------------------------------------------------------- start */
 
 async function start () {
   zegt('schema laden…')
   schema = await (await fetch('/api/schema')).json()
+  dagen = await (await fetch('/api/dagen')).json()
 
-  zegt('daggegevens ophalen (eerste keer kan even duren)…')
-  gegevens = await (await fetch(`/api/dag?dag=${huidigeDag}`)).json()
+  await laadDag(huidigeDag)
   stijl = { ...gegevens.stijl }
 
-  // Exportmodus: geen paneel, alleen de pagina, en pas klaarmelden als alles
-  // echt getekend is. build.js wacht op window.klaarVoorExport.
+  if (paginaType === 'overzicht') {
+    await laadReis()
+    stijl = { ...gegevens.boekStijl }
+  }
+
+  // ------ exportmodus: geen paneel, en pas klaarmelden als alles getekend is
   if (EXPORT) {
     document.body.classList.add('exporteren')
     schaalPagina()
     zetTypografie()
     await haalSilhouet()
-    const view = teken(tekening, opschriften, gegevens, stijl)
-    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
+    tekenPagina()
     await achtergrondNu()
     await document.fonts.ready
     window.klaarVoorExport = true
     return
+  }
+
+  // ------ dagkiezer
+  const kiezer = $('dag')
+  for (const d of dagen) {
+    const optie = document.createElement('option')
+    optie.value = String(d.dag)
+    optie.textContent = `${d.dag} — ${d.titel}`
+    kiezer.append(optie)
+  }
+  kiezer.value = String(huidigeDag)
+  kiezer.addEventListener('change', async () => {
+    try {
+      await laadDag(Number(kiezer.value))
+      // instellingen van de nieuwe dag overnemen, maar het paneel bijwerken
+      stijl = { ...gegevens.stijl }
+      for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+      vorigeAchtergrondSleutel = null
+      hertekenAlles()
+    } catch (fout) { zegt(`dag laden mislukt: ${fout.message}`) }
+  })
+
+  // ------ paginakiezer
+  for (const knop of $('paginakiezer').querySelectorAll('button')) {
+    knop.addEventListener('click', async () => {
+      paginaType = knop.dataset.pagina
+      for (const k of $('paginakiezer').querySelectorAll('button')) {
+        k.classList.toggle('actief', k === knop)
+      }
+      $('dag').disabled = paginaType === 'overzicht'
+      if (paginaType === 'overzicht') await laadReis()
+
+      // De overzichtskaart hoort bij het boek, niet bij een losse dag: wissel
+      // daarom naar de boekinstellingen en terug.
+      stijl = { ...(paginaType === 'overzicht' ? gegevens.boekStijl : gegevens.stijl) }
+      for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+
+      vorigeAchtergrondSleutel = null
+      hertekenAlles()
+    })
   }
 
   paneel = bouwPaneel($('groepen'), schema, stijl, (key, waarde) => {
@@ -199,18 +279,11 @@ async function start () {
   })
 
   $('zoek').addEventListener('input', e => paneel.filter(e.target.value))
-  window.addEventListener('resize', ontdubbel(() => {
-    schaalPagina()
-    const view = teken(tekening, opschriften, gegevens, stijl)
-    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
-  }, 120))
+  window.addEventListener('resize', ontdubbel(() => { schaalPagina(); tekenPagina() }, 120))
 
   $('bewaar-boek').addEventListener('click', () => bewaar('boek'))
   $('bewaar-dag').addEventListener('click', () => bewaar('dag'))
   $('herstel').addEventListener('click', herstel)
-
-  document.title = `Dag ${gegevens.dag.dag} — ${gegevens.dag.titel}`
-  $('dagkiezer').textContent = `Dag ${gegevens.dag.dag} — ${gegevens.dag.titel}`
 
   hertekenAlles()
 
@@ -227,14 +300,14 @@ async function bewaar (niveau) {
     body: JSON.stringify({ niveau, dag: huidigeDag, stijl })
   })
   zegt(antwoord.ok
-    ? (niveau === 'dag' ? 'bewaard voor deze dag' : 'bewaard voor het hele boek')
+    ? (niveau === 'dag' ? `bewaard voor dag ${huidigeDag}` : 'bewaard voor het hele boek')
     : 'bewaren mislukt')
 }
 
 function herstel () {
-  const standaard = Object.fromEntries(schema.knoppen.map(k => [k.key, k.standaard]))
-  stijl = standaard
+  stijl = Object.fromEntries(schema.knoppen.map(k => [k.key, k.standaard]))
   for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+  vorigeAchtergrondSleutel = null
   hertekenAlles()
   zegt('terug naar de standaardinstellingen (nog niet bewaard)')
 }

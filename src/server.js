@@ -13,14 +13,17 @@
  */
 
 import { createServer } from 'node:http'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { extname, join, normalize, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { buildDay } from './dayData.js'
+import { fetchRoute } from './fetch/route.js'
 import { achtergrondVoorStijl } from './render/basemap.js'
 import { ijslandSilhouet } from './render/inset.js'
 import { maakView } from './render/layout.js'
+import { fetchDem } from './fetch/elevation.js'
+import { expandBounds } from './geo/viewport.js'
 import { mergeStijl } from './style.js'
 import { GROEPEN, KNOPPEN } from './styleSchema.js'
 
@@ -51,6 +54,52 @@ async function dagGegevens (nummer, stijlOverschrijving) {
     }))
   }
   return dagCache.get(sleutel)
+}
+
+/** Alle dagbestanden, op volgorde. */
+async function alleDagen () {
+  const bestanden = (await readdir(join(ROOT, 'data', 'days')))
+    .filter(b => /^day-\d+\.json$/.test(b))
+    .sort()
+
+  const uit = []
+  for (const b of bestanden) {
+    uit.push(JSON.parse(await readFile(join(ROOT, 'data', 'days', b), 'utf8')))
+  }
+  return uit
+}
+
+/** De routepunten van de hele reis achter elkaar. */
+let reisCoordsCache = null
+async function heleReisCoords () {
+  if (reisCoordsCache) return reisCoordsCache
+  const coords = []
+  for (const dag of await alleDagen()) {
+    const route = await fetchRoute(dag.waypoints)
+    coords.push(...route.coordinates)
+  }
+  reisCoordsCache = coords
+  return coords
+}
+
+/** Het hoogteraster voor de overzichtskaart, over de hele reis. */
+let reisDemCache = null
+async function reisDem (stijl, view) {
+  const detail = stijl['relief.detailZoom']
+  if (reisDemCache?.detail === detail) return reisDemCache.dem
+
+  const zicht = expandBounds(view.visibleBounds(), 0.05)
+  const metersPerPixel = view.metersPerMm() / (stijl['pagina.dpi'] / 25.4)
+
+  const dem = await fetchDem(zicht, {
+    metersPerPixel,
+    maxZoom: detail,
+    onProgress: (n, totaal) =>
+      process.stdout.write(`  ... overzicht (${typeof n === 'string' ? n : `${n}/${totaal}`})\n`)
+  })
+
+  reisDemCache = { detail, dem }
+  return dem
 }
 
 function json (res, waarde, status = 200) {
@@ -92,6 +141,29 @@ const server = createServer(async (req, res) => {
     // ---------------------------------------------------------------- schema
     if (pad === '/api/schema') return json(res, { groepen: GROEPEN, knoppen: KNOPPEN })
 
+    // ------------------------------------------------------- welke dagen zijn er
+    if (pad === '/api/dagen') {
+      const dagen = (await alleDagen()).map(d => ({ dag: d.dag, datum: d.datum, titel: d.titel }))
+      return json(res, dagen)
+    }
+
+    // ------------------------------------------------- de hele reis in een keer
+    if (pad === '/api/reis') {
+      const uit = []
+      for (const dag of await alleDagen()) {
+        const route = await fetchRoute(dag.waypoints)
+        uit.push({
+          dag: dag.dag,
+          datum: dag.datum,
+          titel: dag.titel,
+          coordinates: route.coordinates,
+          afstandKm: route.distanceKm,
+          waypoints: dag.waypoints.filter(w => w.type !== 'via')
+        })
+      }
+      return json(res, uit)
+    }
+
     // ------------------------------------------------------------ daggegevens
     if (pad === '/api/dag') {
       const nummer = Number(url.searchParams.get('dag') ?? 1)
@@ -100,6 +172,9 @@ const server = createServer(async (req, res) => {
         dag: d.dag,
         boek: { titel: d.boek.titel, ondertitel: d.boek.ondertitel },
         stijl: d.stijl,
+        // zonder de afwijkingen van deze dag: de overzichtskaart hoort niet de
+        // satellietstijl van dag 1 over te nemen
+        boekStijl: mergeStijl(d.boek.stijl).stijl,
         route: { coordinates: d.route.coordinates, legs: d.route.legs },
         statistieken: d.statistieken,
         weer: d.weer,
@@ -117,9 +192,15 @@ const server = createServer(async (req, res) => {
       const eigen = JSON.parse(url.searchParams.get('stijl') ?? '{}')
       const { stijl } = mergeStijl(d.boek.stijl, d.dag.stijl, eigen)
 
-      const view = maakView(d.route.coordinates, stijl)
+      // de overzichtskaart beslaat de hele reis, dus een eigen uitsnede en
+      // een eigen, ruimer hoogteraster
+      const overzicht = url.searchParams.get('overzicht') === '1'
+      const coords = overzicht ? await heleReisCoords() : d.route.coordinates
+      const view = maakView(coords, stijl)
+      const dem = overzicht ? await reisDem(stijl, view) : d.dem
+
       const r = await achtergrondVoorStijl({
-        dem: d.dem, view, stijl, dpi,
+        dem, view, stijl, dpi,
         onProgress: b => process.stdout.write(`  ... ${typeof b === 'string' ? b : ''}\n`)
       })
 

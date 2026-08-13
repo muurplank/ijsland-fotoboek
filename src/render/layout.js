@@ -59,7 +59,16 @@ export const ACHTERGROND_KNOPPEN = [
   'relief.contrast',
   'relief.zachtheid',
   'relief.schaduwKleur',
-  'relief.detailZoom'
+  'relief.detailZoom',
+  'terrein.kust',
+  'terrein.laag',
+  'terrein.laagM',
+  'terrein.midden',
+  'terrein.middenM',
+  'terrein.hoog',
+  'terrein.hoogM',
+  'terrein.top',
+  'terrein.topM'
 ]
 
 /** Een korte, stabiele beschrijving van de achtergrond-instellingen. */

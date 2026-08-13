@@ -256,3 +256,54 @@ body.exporteren #pagina { box-shadow: none; }
 
 .noordpijl { font-weight: 700; letter-spacing: .04em; }
 .bronvermelding { letter-spacing: .01em; }
+
+/* ------------------------------------------------------ kiezers in het paneel */
+
+.kiezer { margin-top: 9px; display: flex; gap: 8px; align-items: center; }
+.kiezer label { font-size: 11.5px; color: #6b655d; }
+.kiezer select {
+  flex: 1; padding: 4px 6px; font: inherit; font-size: 12px;
+  border: 1px solid #d5d0ca; border-radius: 6px; background: #fff;
+}
+
+.tabs { display: flex; gap: 3px; margin-top: 9px; }
+.tabs button {
+  flex: 1; padding: 5px 4px; font-size: 11px; font-weight: 550;
+  background: #e8e5e0; color: #57524b; border-radius: 5px;
+}
+.tabs button:hover { background: #ddd9d3; }
+.tabs button.actief { background: #7a5138; color: #fff; }
+
+/* ---------------------------------------------- statistiekpagina op de pagina */
+
+.profiel-stop {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  letter-spacing: .01em;
+  transform: translateX(-50%);
+}
+.profiel-top { transform: translateX(-50%); font-weight: 650; white-space: nowrap; }
+
+.cijferrij { display: grid; }
+.cijfer-groot {
+  font-weight: 680; letter-spacing: -.02em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.cijfer-eenheid { font-weight: 500; margin-left: .12em; opacity: .65; }
+.cijfer-label { margin-top: .5em; letter-spacing: .04em; }
+.cijfer.metlijn { border-top: 1px solid #e0dcd5; padding-top: .6em; }
+
+.dagtekst { white-space: pre-wrap; }
+
+/* -------------------------------------------------------- overzichtskaart */
+
+.dagnummer {
+  transform: translate(-50%, -50%);
+  color: #fff; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.legenda { display: flex; align-items: center; gap: .6em; }
+.legenda-balk { border-radius: 99px; }

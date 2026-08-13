@@ -22,6 +22,7 @@ export const GROEPEN = [
   { id: 'kaartvorm', label: 'Kaartvorm' },
   { id: 'lagen', label: 'Lagen' },
   { id: 'relief', label: 'Reliëf' },
+  { id: 'terrein', label: 'Hoogtekleuren' },
   { id: 'route', label: 'Routelijn' },
   { id: 'pijltjes', label: 'Richtingspijltjes' },
   { id: 'eerdere', label: 'Eerdere dagen' },
@@ -63,7 +64,7 @@ export const KNOPPEN = [
   { key: 'kaartvorm.randDikteMm', groep: 'kaartvorm', label: 'Randlijndikte', type: 'mm', min: 0, max: 3, step: 0.05, standaard: 0 },
 
   // ----------------------------------------------------------------- lagen
-  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['vector', 'relief', 'topo', 'satelliet'], standaard: 'relief' },
+  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['terrein', 'relief', 'satelliet'], standaard: 'terrein', help: 'terrein = hoogtekleuren met schaduw (atlasstijl) · relief = eenkleurig schaduwrelief · satelliet = luchtfoto' },
   { key: 'lagen.zeeAan', groep: 'lagen', label: 'Zee', type: 'aanuit', standaard: true },
   { key: 'lagen.zeeKleur', groep: 'lagen', label: 'Zeekleur', type: 'kleur', standaard: '#eef2f4' },
   { key: 'lagen.landKleur', groep: 'lagen', label: 'Landkleur', type: 'kleur', standaard: '#f6f4f0' },
@@ -90,6 +91,20 @@ export const KNOPPEN = [
   { key: 'relief.zachtheid', groep: 'relief', label: 'Zachtheid', type: 'getal', min: 0, max: 5, step: 0.1, standaard: 0.6 },
   { key: 'relief.schaduwKleur', groep: 'relief', label: 'Kleurzweem schaduw', type: 'kleur', standaard: '#6b6459' },
   { key: 'relief.detailZoom', groep: 'relief', label: 'Detail hoogtemodel', type: 'keuze', opties: [10, 11, 12, 13], standaard: 12, help: 'Het hoogtemodel heeft voor IJsland ongeveer 30 m echt detail (niveau 11). Niveau 12 geeft een vloeiender reliëf; 13 downloadt vier keer zoveel zonder dat er detail bij komt' },
+
+  // -------------------------------------------------------------- terrein
+  // De hoogtetrap van de terreinkaart. Elke kleur hoort bij een hoogte; ertussen
+  // wordt vloeiend gemengd. IJsland loopt van zeeniveau tot 2110 m, en de
+  // gletsjers liggen boven de 700 m - vandaar dat het wit daar al begint.
+  { key: 'terrein.kust', groep: 'terrein', label: 'Zeeniveau', type: 'kleur', standaard: '#a8b894' },
+  { key: 'terrein.laag', groep: 'terrein', label: 'Laagland', type: 'kleur', standaard: '#c5c193' },
+  { key: 'terrein.laagM', groep: 'terrein', label: 'Laagland op hoogte', type: 'getal', min: 20, max: 600, step: 10, standaard: 180, eenheid: 'm' },
+  { key: 'terrein.midden', groep: 'terrein', label: 'Heuvelland', type: 'kleur', standaard: '#cbb287' },
+  { key: 'terrein.middenM', groep: 'terrein', label: 'Heuvelland op hoogte', type: 'getal', min: 100, max: 1200, step: 20, standaard: 420, eenheid: 'm' },
+  { key: 'terrein.hoog', groep: 'terrein', label: 'Bergen', type: 'kleur', standaard: '#c2a184' },
+  { key: 'terrein.hoogM', groep: 'terrein', label: 'Bergen op hoogte', type: 'getal', min: 300, max: 2000, step: 50, standaard: 800, eenheid: 'm' },
+  { key: 'terrein.top', groep: 'terrein', label: 'Toppen en gletsjers', type: 'kleur', standaard: '#fbfbfa' },
+  { key: 'terrein.topM', groep: 'terrein', label: 'Toppen vanaf', type: 'getal', min: 500, max: 3000, step: 50, standaard: 1250, eenheid: 'm' },
 
   // ----------------------------------------------------------------- route
   { key: 'route.kleur', groep: 'route', label: 'Kleur binnenlijn', type: 'kleur', standaard: '#c1352b' },

@@ -25,8 +25,16 @@
 
 <aside id="paneel">
   <header>
-    <h1>Bedieningspaneel</h1>
-    <div id="dagkiezer"></div>
+    <h1>IJsland fotoboek</h1>
+    <div class="kiezer">
+      <label for="dag">Dag</label>
+      <select id="dag"></select>
+    </div>
+    <div id="paginakiezer" class="tabs">
+      <button data-pagina="kaart" class="actief">Kaart</button>
+      <button data-pagina="stats">Statistieken</button>
+      <button data-pagina="overzicht">Hele reis</button>
+    </div>
   </header>
 
   <div id="zoekbalk">
