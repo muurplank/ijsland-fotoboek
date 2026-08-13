@@ -42,6 +42,7 @@ export function maakView (coords, stijl) {
  * typografie - passen direct in de browser aan, zonder wachten.
  */
 export const ACHTERGROND_KNOPPEN = [
+  'lagen.stijl',
   'pagina.breedteMm',
   'pagina.hoogteMm',
   'pagina.afloopMm',

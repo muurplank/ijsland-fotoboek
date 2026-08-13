@@ -9,16 +9,18 @@
 import sharp from 'sharp'
 import { cached, fetchWithRetry } from './cache.js'
 import { DemGrid, decodeTerrarium } from '../geo/dem.js'
-import { TILE_SIZE, tilesForBounds, zoomForResolution } from '../geo/tiles.js'
+import { TILE_SIZE, tilesForBounds, zoomBinnenBudget, zoomForResolution } from '../geo/tiles.js'
 import { mapLimit } from './parallel.js'
 
 const BRON = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium'
 
 /**
- * Boven dit aantal tegels waarschuwen we voordat we gaan downloaden. Elke tegel
- * is ongeveer 70 kB, dus dit is grofweg een halve gigabyte aan verkeer.
+ * Hoeveel tegels we hoogstens ophalen voor een kaart. Elke tegel is ongeveer
+ * 70 kB, dus dit is zo'n 60 MB per uitsnede. Boven deze grens gaat het
+ * zoomniveau omlaag: een dag van vierhonderd kilometer heeft op papier toch
+ * geen detail van zestien meter.
  */
-const VEEL_TEGELS = 1500
+const TEGELBUDGET = 900
 
 async function fetchTile ({ x, y, z }) {
   return cached('dem', ['terrarium', z, x, y], async () => {
@@ -33,13 +35,14 @@ async function fetchTile ({ x, y, z }) {
  */
 export async function fetchDem (bounds, { metersPerPixel = 60, maxZoom = 12, onProgress } = {}) {
   const middenLat = (bounds.north + bounds.south) / 2
-  const z = zoomForResolution(metersPerPixel, middenLat, { maxZoom })
+  const gewenst = zoomForResolution(metersPerPixel, middenLat, { maxZoom })
+  const z = zoomBinnenBudget(bounds, gewenst, TEGELBUDGET)
   const tegels = tilesForBounds(bounds, z)
 
-  if (tegels.length > VEEL_TEGELS) {
+  if (z < gewenst) {
     onProgress?.(
-      `let op: ${tegels.length} hoogtetegels nodig (~${Math.round(tegels.length * 0.07)} MB). ` +
-      'Zet het detailniveau van het reliëf lager als dit te lang duurt'
+      `uitsnede is te groot voor detailniveau ${gewenst}; teruggeschaald naar ${z} ` +
+      `(${tegels.length} tegels in plaats van ${tilesForBounds(bounds, gewenst).length})`
     )
   }
 

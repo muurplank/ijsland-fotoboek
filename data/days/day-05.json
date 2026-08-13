@@ -1,0 +1,198 @@
+{
+  "dag": 5,
+  "datum": "2026-08-10",
+  "titel": "Noordkust en de Westfjorden-rand",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "",
+      "lat": 65.573769,
+      "lon": -18.090847,
+      "type": "start",
+      "notitie": "gestart van deze camping"
+    },
+    {
+      "name": "",
+      "lat": 65.688922,
+      "lon": -18.101728,
+      "type": "stop",
+      "notitie": "getanked"
+    },
+    {
+      "name": "",
+      "lat": 65.732326,
+      "lon": -18.187602,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "Dalvík",
+      "lat": 65.949434,
+      "lon": -18.474374,
+      "type": "stop",
+      "notitie": "viewpoint dalvik waar we ontbeten hebben"
+    },
+    {
+      "name": "",
+      "lat": 66.003799,
+      "lon": -18.525219,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "Walvissen spotten",
+      "lat": 66.073117,
+      "lon": -18.538055,
+      "type": "stop",
+      "notitie": "kort gestop voor walvissen proberen te spotten"
+    },
+    {
+      "name": "",
+      "lat": 66.084449,
+      "lon": -18.604301,
+      "type": "via",
+      "notitie": "langsgereden (na tunnel)"
+    },
+    {
+      "name": "",
+      "lat": 66.070896,
+      "lon": -18.656833,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 66.102313,
+      "lon": -18.812692,
+      "type": "via",
+      "notitie": "langs gereden"
+    },
+    {
+      "name": "",
+      "lat": 66.131662,
+      "lon": -18.906108,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 66.184124,
+      "lon": -18.920689,
+      "type": "via",
+      "notitie": "langsgeredem"
+    },
+    {
+      "name": "",
+      "lat": 65.745142,
+      "lon": -19.629787,
+      "type": "stop",
+      "notitie": "gestopt voor strand, tegenvaller"
+    },
+    {
+      "name": "",
+      "lat": 65.763087,
+      "lon": -19.664582,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.881274,
+      "lon": -19.736947,
+      "type": "via",
+      "notitie": "naartoe gereden, maar helaas verkeerd dus omgekeerd"
+    },
+    {
+      "name": "",
+      "lat": 65.762302,
+      "lon": -19.66728,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 66.049964,
+      "lon": -20.022849,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 66.098895,
+      "lon": -20.232595,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 66.016854,
+      "lon": -20.394617,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "Vuurtoren",
+      "lat": 66.017832,
+      "lon": -20.428427,
+      "type": "stop",
+      "notitie": "gestopt voor lighthgouse"
+    },
+    {
+      "name": "",
+      "lat": 66.01099,
+      "lon": -20.393879,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.638547,
+      "lon": -20.295394,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.326432,
+      "lon": -20.906801,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.71214,
+      "lon": -21.616663,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.543321,
+      "lon": -21.912449,
+      "type": "stop",
+      "notitie": "gestopt voor boodschappen en tanken"
+    },
+    {
+      "name": "",
+      "lat": 64.669856,
+      "lon": -21.684054,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.70108,
+      "lon": -21.629649,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.700559,
+      "lon": -21.619783,
+      "type": "overnight",
+      "notitie": "gestopt voor camping"
+    }
+  ],
+  "stijl": {}
+}

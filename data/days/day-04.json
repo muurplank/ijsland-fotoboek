@@ -1,0 +1,205 @@
+{
+  "dag": 4,
+  "datum": "2026-08-09",
+  "titel": "Waterval, Myvatn en Godafoss",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "",
+      "lat": 65.267142,
+      "lon": -14.399015,
+      "type": "start",
+      "notitie": "hotel stop"
+    },
+    {
+      "name": "",
+      "lat": 65.430994,
+      "lon": -14.602012,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "Waterval",
+      "lat": 65.331282,
+      "lon": -15.073594,
+      "type": "stop",
+      "notitie": "gestopt voor mega waterval"
+    },
+    {
+      "name": "",
+      "lat": 65.335861,
+      "lon": -15.378481,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.648872,
+      "lon": -16.725699,
+      "type": "via",
+      "notitie": "langsgeredne"
+    },
+    {
+      "name": "Mývatn Nature Baths",
+      "lat": 65.642373,
+      "lon": -16.803336,
+      "type": "stop",
+      "notitie": "gestopt voor de hot springs"
+    },
+    {
+      "name": "",
+      "lat": 65.639282,
+      "lon": -16.878996,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 65.658628,
+      "lon": -16.965326,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 65.593827,
+      "lon": -17.122174,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "Goðafoss",
+      "lat": 65.685482,
+      "lon": -17.545502,
+      "type": "stop",
+      "notitie": "gestopt voor mega waterval"
+    },
+    {
+      "name": "",
+      "lat": 65.693104,
+      "lon": -17.565554,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 65.746885,
+      "lon": -17.900214,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 65.75086,
+      "lon": -17.912659,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.81328,
+      "lon": -18.006494,
+      "type": "via",
+      "notitie": "lansgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.752261,
+      "lon": -18.074434,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.690349,
+      "lon": -18.052996,
+      "type": "via",
+      "notitie": "langsregeden, weer de 1 op. hiervoor dus langs de 83 weg"
+    },
+    {
+      "name": "",
+      "lat": 65.670378,
+      "lon": -18.081224,
+      "type": "via",
+      "notitie": "lanbgsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.688012,
+      "lon": -18.101622,
+      "type": "stop",
+      "notitie": "gestopt voor dekentjes"
+    },
+    {
+      "name": "",
+      "lat": 65.687138,
+      "lon": -18.096491,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.664888,
+      "lon": -18.079947,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.570753,
+      "lon": -18.089722,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.466152,
+      "lon": -18.18234,
+      "type": "via",
+      "notitie": "langsreden"
+    },
+    {
+      "name": "",
+      "lat": 65.310476,
+      "lon": -18.25844,
+      "type": "via",
+      "notitie": "f road opgegeaan"
+    },
+    {
+      "name": "",
+      "lat": 65.270382,
+      "lon": -18.242303,
+      "type": "via",
+      "notitie": "llangsgerdeen"
+    },
+    {
+      "name": "Keerpunt F-weg",
+      "lat": 65.160292,
+      "lon": -18.18798,
+      "type": "stop",
+      "notitie": "waar we izjn omgekeerd op f road"
+    },
+    {
+      "name": "",
+      "lat": 65.311637,
+      "lon": -18.258798,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.418648,
+      "lon": -18.238492,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 65.573769,
+      "lon": -18.090847,
+      "type": "overnight",
+      "notitie": "camping voor die nacht"
+    }
+  ],
+  "stijl": {}
+}

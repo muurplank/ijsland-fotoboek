@@ -11,7 +11,69 @@
 import sharp from 'sharp'
 import { hillshade } from './hillshade.js'
 import { kleurKaart } from './colorize.js'
+import { fetchImagery } from '../fetch/imagery.js'
+import { expandBounds } from '../geo/viewport.js'
 import { metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
+
+/**
+ * Waar een raster op de pagina belandt, gegeven waar het in de wereld ligt.
+ * Zowel het relief als het satellietbeeld staat in Web Mercator, net als de
+ * kaartuitsnede, dus dit is een simpele omrekening van de twee hoeken.
+ */
+function plaatsing (raster, view) {
+  const linksboven = tileToLonLat(raster.originPx / TILE_SIZE, raster.originPy / TILE_SIZE, raster.z)
+  const rechtsonder = tileToLonLat(
+    (raster.originPx + raster.width) / TILE_SIZE,
+    (raster.originPy + raster.height) / TILE_SIZE,
+    raster.z
+  )
+  const a = view.project(linksboven.lon, linksboven.lat)
+  const b = view.project(rechtsonder.lon, rechtsonder.lat)
+  return { xMm: a.x, yMm: a.y, breedteMm: b.x - a.x, hoogteMm: b.y - a.y }
+}
+
+/** Schaalt een raster naar de drukmaat en maakt er een PNG van. */
+async function naarPagina (pijp, plek, dpi, zachtheid = 0) {
+  const doelBreedte = Math.max(1, Math.round((plek.breedteMm / 25.4) * dpi))
+  const doelHoogte = Math.max(1, Math.round((plek.hoogteMm / 25.4) * dpi))
+
+  const png = await pijp
+    .resize(doelBreedte, doelHoogte, { kernel: 'lanczos3', fit: 'fill' })
+    .blur(zachtheid > 0 ? zachtheid : false)
+    .png({ compressionLevel: 6 })
+    .toBuffer()
+
+  return { png, ...plek, pixels: { breedte: doelBreedte, hoogte: doelHoogte } }
+}
+
+/**
+ * Satellietbeeld als achtergrond, licht verbleekt en ontzadigd zodat de
+ * routelijn ervoor knalt en het niet vloekt met je eigen foto's.
+ */
+export async function satellietAchtergrond ({ view, stijl, dpi, onProgress }) {
+  const zicht = expandBounds(view.visibleBounds(), 0.04)
+  const doel = view.metersPerMm() / (dpi / 25.4)
+
+  const beeld = await fetchImagery(zicht, { metersPerPixel: doel, onProgress })
+  const plek = plaatsing(beeld, view)
+
+  // Verbleken naar het wit van het papier is per pixel: uit = in * (1-f) + 255 * f.
+  //
+  // Bewust géén witte laag eroverheen samenvoegen: sharp voert resize altijd uit
+  // voor composite, ongeacht de volgorde waarin je ze aanroept. De witte laag zou
+  // dan groter zijn dan het inmiddels geschaalde beeld, en dat weigert sharp.
+  const f = stijl['lagen.verbleking']
+
+  const pijp = sharp(beeld.data, {
+    raw: { width: beeld.width, height: beeld.height, channels: beeld.channels }
+  })
+    .removeAlpha()
+    .modulate({ saturation: 1 - stijl['lagen.ontzadiging'] })
+    .linear(1 - f, 255 * f)
+
+  const uit = await naarPagina(pijp, plek, dpi, 0)
+  return { ...uit, bronvermelding: 'Luchtfoto: Esri, Maxar, Earthstar Geographics' }
+}
 
 /**
  * Maakt de reliefachtergrond voor deze kaart.
@@ -41,37 +103,36 @@ export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
     ontzadiging: stijl['lagen.ontzadiging']
   })
 
-  // waar de hoeken van het hoogteraster op de pagina belanden
-  const linksboven = tileToLonLat(dem.originPx / TILE_SIZE, dem.originPy / TILE_SIZE, dem.z)
-  const rechtsonder = tileToLonLat(
-    (dem.originPx + dem.width) / TILE_SIZE,
-    (dem.originPy + dem.height) / TILE_SIZE,
+  const plek = plaatsing(dem, view)
+  const pijp = sharp(rgb, { raw: { width: dem.width, height: dem.height, channels: 3 } })
+
+  const uit = await naarPagina(pijp, plek, dpi, stijl['relief.zachtheid'])
+  return { ...uit, bronvermelding: 'Hoogtegegevens: Terrain Tiles' }
+}
+
+/**
+ * De achtergrond voor de ingestelde kaartstijl.
+ *
+ * Waarschuwt als het hoogtemodel te grof is voor deze uitsnede: bij een dag die
+ * maar een paar kilometer beslaat heeft relief geen detail meer, en is
+ * satellietbeeld de betere keuze.
+ */
+export async function achtergrondVoorStijl ({ dem, view, stijl, dpi, onProgress }) {
+  if (stijl['lagen.stijl'] === 'satelliet') {
+    return satellietAchtergrond({ view, stijl, dpi, onProgress })
+  }
+
+  const nodigPerPixel = view.metersPerMm() / (dpi / 25.4)
+  const kanBron = gronddekking(
+    tileToLonLat((dem.originPx + dem.width / 2) / TILE_SIZE, (dem.originPy + dem.height / 2) / TILE_SIZE, dem.z).lat,
     dem.z
   )
-  const a = view.project(linksboven.lon, linksboven.lat)
-  const b = view.project(rechtsonder.lon, rechtsonder.lat)
-
-  const breedteMm = b.x - a.x
-  const hoogteMm = b.y - a.y
-
-  // schaal alvast naar de drukmaat, zodat de browser alleen nog hoeft te plaatsen
-  const doelBreedte = Math.max(1, Math.round((breedteMm / 25.4) * dpi))
-  const doelHoogte = Math.max(1, Math.round((hoogteMm / 25.4) * dpi))
-
-  const afbeelding = await sharp(rgb, {
-    raw: { width: dem.width, height: dem.height, channels: 3 }
-  })
-    .resize(doelBreedte, doelHoogte, { kernel: 'lanczos3', fit: 'fill' })
-    .blur(stijl['relief.zachtheid'] > 0 ? stijl['relief.zachtheid'] : false)
-    .png({ compressionLevel: 6 })
-    .toBuffer()
-
-  return {
-    png: afbeelding,
-    xMm: a.x,
-    yMm: a.y,
-    breedteMm,
-    hoogteMm,
-    pixels: { breedte: doelBreedte, hoogte: doelHoogte }
+  if (kanBron > nodigPerPixel * 3) {
+    onProgress?.(
+      `het hoogtemodel is ${Math.round(kanBron / nodigPerPixel)}x te grof voor deze uitsnede; ` +
+      'satellietbeeld geeft hier een veel scherper resultaat'
+    )
   }
+
+  return reliefAchtergrond({ dem, view, stijl, dpi })
 }

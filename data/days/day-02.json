@@ -1,0 +1,169 @@
+{
+  "dag": 2,
+  "datum": "2026-08-07",
+  "titel": "Keflavík → de zuidkust",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "Hotel",
+      "lat": 64.009072,
+      "lon": -22.561895,
+      "type": "start"
+    },
+    {
+      "name": "Lava Car Rental",
+      "lat": 63.996253,
+      "lon": -22.585108,
+      "type": "stop"
+    },
+    {
+      "name": "Hotel",
+      "lat": 64.009072,
+      "lon": -22.561895,
+      "type": "stop",
+      "notitie": "spullen opgehaald"
+    },
+    {
+      "name": "",
+      "lat": 64.009215,
+      "lon": -22.195436,
+      "type": "via"
+    },
+    {
+      "name": "Boodschappen",
+      "lat": 64.050661,
+      "lon": -21.990006,
+      "type": "stop"
+    },
+    {
+      "name": "",
+      "lat": 64.083806,
+      "lon": -21.943383,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 64.147526,
+      "lon": -21.893424,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 64.148712,
+      "lon": -21.935929,
+      "type": "via"
+    },
+    {
+      "name": "Reykjavík",
+      "lat": 64.149174,
+      "lon": -21.943769,
+      "type": "stop",
+      "notitie": "geparkeerd"
+    },
+    {
+      "name": "Gasfles",
+      "lat": 64.154037,
+      "lon": -21.952539,
+      "type": "stop"
+    },
+    {
+      "name": "Kleding",
+      "lat": 64.141967,
+      "lon": -21.848082,
+      "type": "stop"
+    },
+    {
+      "name": "",
+      "lat": 64.124463,
+      "lon": -21.844374,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 64.132414,
+      "lon": -21.764103,
+      "type": "via",
+      "notitie": "verkeerd gereden, hier omgekeerd"
+    },
+    {
+      "name": "",
+      "lat": 64.122482,
+      "lon": -21.784493,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 64.058844,
+      "lon": -21.515663,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 64.002692,
+      "lon": -21.225727,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.937615,
+      "lon": -21.003962,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.944254,
+      "lon": -20.772155,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.831876,
+      "lon": -20.393521,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.613459,
+      "lon": -20.005544,
+      "type": "via"
+    },
+    {
+      "name": "Seljalandsfoss",
+      "lat": 63.616024,
+      "lon": -19.993687,
+      "type": "stop"
+    },
+    {
+      "name": "",
+      "lat": 63.671878,
+      "lon": -18.401659,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.762803,
+      "lon": -18.118721,
+      "type": "via"
+    },
+    {
+      "name": "",
+      "lat": 63.774337,
+      "lon": -18.158265,
+      "type": "via",
+      "notitie": "omgekeerd"
+    },
+    {
+      "name": "",
+      "lat": 63.762749,
+      "lon": -18.11858,
+      "type": "via"
+    },
+    {
+      "name": "Kamperen",
+      "lat": 63.842718,
+      "lon": -17.952843,
+      "type": "overnight"
+    }
+  ],
+  "stijl": {}
+}

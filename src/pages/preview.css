@@ -243,7 +243,6 @@ body.exporteren #pagina { box-shadow: none; }
 .inzet {
   overflow: hidden;
   border-style: solid;
-  background: #ffffffcc;
 }
 .inzet img { position: absolute; display: block; }
 .inzet svg { position: absolute; inset: 0; width: 100%; height: 100%; }

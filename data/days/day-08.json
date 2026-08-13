@@ -1,0 +1,42 @@
+{
+  "dag": 8,
+  "datum": "2026-08-13",
+  "titel": "Naar huis",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "",
+      "lat": 63.973295,
+      "lon": -22.543382,
+      "type": "start",
+      "notitie": "weggereden van parkeer plaats"
+    },
+    {
+      "name": "",
+      "lat": 63.996429,
+      "lon": -22.584915,
+      "type": "stop",
+      "notitie": "auto ingeleverd"
+    },
+    {
+      "name": "",
+      "lat": 63.996711,
+      "lon": -22.622345,
+      "type": "end",
+      "notitie": "shuttle naar vliegveld"
+    }
+  ],
+  "stijl": {
+    "lagen.stijl": "satelliet",
+    "uitsnede.margeMm": 18,
+    "labels.kleur": "#ffffff",
+    "labels.haloKleur": "#1a1815",
+    "labels.haloMm": 0.45,
+    "labels.grootteMm": 3.4,
+    "titelblok.kleur": "#ffffff",
+    "route.dikteMm": 1.4,
+    "pijltjes.afstandCm": 1.5,
+    "schaal.kleur": "#ffffff",
+    "bron.kleur": "#ffffffcc"
+  }
+}

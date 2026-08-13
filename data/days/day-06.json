@@ -1,0 +1,170 @@
+{
+  "dag": 6,
+  "datum": "2026-08-11",
+  "titel": "De Gouden Cirkel",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "",
+      "lat": 64.700559,
+      "lon": -21.619783,
+      "type": "start",
+      "notitie": "gestart van deze camping"
+    },
+    {
+      "name": "",
+      "lat": 64.544234,
+      "lon": -21.909163,
+      "type": "stop",
+      "notitie": "boodschappen ontbijt"
+    },
+    {
+      "name": "",
+      "lat": 64.524626,
+      "lon": -21.856514,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.579854,
+      "lon": -21.60269,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.512243,
+      "lon": -21.291231,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.282058,
+      "lon": -21.090264,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.275571,
+      "lon": -21.074321,
+      "type": "via",
+      "notitie": "lansgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.195013,
+      "lon": -20.903957,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.226255,
+      "lon": -20.632419,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "Geysir",
+      "lat": 64.308492,
+      "lon": -20.30207,
+      "type": "stop",
+      "notitie": "gestopt voor geizer"
+    },
+    {
+      "name": "",
+      "lat": 64.310451,
+      "lon": -20.300359,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.314442,
+      "lon": -20.150671,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "Gullfoss",
+      "lat": 64.324976,
+      "lon": -20.130092,
+      "type": "stop",
+      "notitie": "stop voor gullfoss waterval"
+    },
+    {
+      "name": "",
+      "lat": 64.211356,
+      "lon": -20.378867,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 64.004381,
+      "lon": -20.546602,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 63.885677,
+      "lon": -20.522744,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 63.62123,
+      "lon": -20.027264,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "Vliegtuigwrak",
+      "lat": 63.649756,
+      "lon": -19.931944,
+      "type": "stop",
+      "notitie": "gestopt voor airplane wreck"
+    },
+    {
+      "name": "",
+      "lat": 63.617234,
+      "lon": -20.017663,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 63.807143,
+      "lon": -20.333157,
+      "type": "via",
+      "notitie": "langsgreden"
+    },
+    {
+      "name": "",
+      "lat": 63.921616,
+      "lon": -20.654047,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 64.032321,
+      "lon": -20.467721,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.10074,
+      "lon": -20.340038,
+      "type": "overnight",
+      "notitie": "gestopt voor hotel"
+    }
+  ],
+  "stijl": {}
+}

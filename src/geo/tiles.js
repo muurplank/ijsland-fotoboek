@@ -50,6 +50,21 @@ export function zoomForResolution (targetMetersPerPixel, lat, { maxZoom = 22, mi
   return maxZoom
 }
 
+/**
+ * Het hoogste zoomniveau waarvoor dit gebied binnen het tegelbudget blijft.
+ *
+ * Nodig omdat de schaal van een dag enorm verschilt: een dag rond het vliegveld
+ * is vijf kilometer breed, een dag door de oostfjorden vierhonderd. Zonder deze
+ * grens vraagt zo'n lange dag duizenden tegels aan, en dat kost minuten
+ * downloaden voor detail dat op papier toch niet te zien is.
+ */
+export function zoomBinnenBudget (bounds, gevraagdeZoom, maxTegels, minZoom = 3) {
+  for (let z = gevraagdeZoom; z > minZoom; z--) {
+    if (tilesForBounds(bounds, z).length <= maxTegels) return z
+  }
+  return minZoom
+}
+
 /** Alle tegels die nodig zijn om dit gebied te bedekken. */
 export function tilesForBounds (bounds, z) {
   const n = 2 ** z

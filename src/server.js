@@ -18,7 +18,7 @@ import { extname, join, normalize, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { buildDay } from './dayData.js'
-import { reliefAchtergrond } from './render/basemap.js'
+import { achtergrondVoorStijl } from './render/basemap.js'
 import { ijslandSilhouet } from './render/inset.js'
 import { maakView } from './render/layout.js'
 import { mergeStijl } from './style.js'
@@ -118,12 +118,16 @@ const server = createServer(async (req, res) => {
       const { stijl } = mergeStijl(d.boek.stijl, d.dag.stijl, eigen)
 
       const view = maakView(d.route.coordinates, stijl)
-      const r = await reliefAchtergrond({ dem: d.dem, view, stijl, dpi })
+      const r = await achtergrondVoorStijl({
+        dem: d.dem, view, stijl, dpi,
+        onProgress: b => process.stdout.write(`  ... ${typeof b === 'string' ? b : ''}\n`)
+      })
 
       res.writeHead(200, {
         'content-type': 'image/png',
         'x-plaatsing': JSON.stringify({
-          xMm: r.xMm, yMm: r.yMm, breedteMm: r.breedteMm, hoogteMm: r.hoogteMm
+          xMm: r.xMm, yMm: r.yMm, breedteMm: r.breedteMm, hoogteMm: r.hoogteMm,
+          bronvermelding: r.bronvermelding
         }),
         'cache-control': 'no-store'
       })

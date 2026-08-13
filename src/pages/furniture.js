@@ -102,6 +102,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
     doos.style.height = mm(hoogte)
     doos.style.borderWidth = mm(stijl['inzet.randMm'])
     doos.style.borderColor = stijl['inzet.randKleur']
+    doos.style.background = stijl['inzet.achtergrond']
 
     // het eiland zelf
     const eiland = document.createElement('img')

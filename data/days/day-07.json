@@ -1,0 +1,191 @@
+{
+  "dag": 7,
+  "datum": "2026-08-12",
+  "titel": "Snaefellsnes en de zonsverduistering",
+  "tekst": "",
+  "waypoints": [
+    {
+      "name": "",
+      "lat": 64.10074,
+      "lon": -20.340038,
+      "type": "start",
+      "notitie": "gestart vanaf hotel"
+    },
+    {
+      "name": "",
+      "lat": 63.937366,
+      "lon": -21.002562,
+      "type": "stop",
+      "notitie": "gestopt voor eclipse glassess"
+    },
+    {
+      "name": "",
+      "lat": 64.124407,
+      "lon": -21.784701,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.308115,
+      "lon": -21.913693,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.560051,
+      "lon": -21.923376,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.840115,
+      "lon": -22.579708,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.84301,
+      "lon": -23.345648,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.83531,
+      "lon": -23.403798,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "Búðakirkja",
+      "lat": 64.82187,
+      "lon": -23.384625,
+      "type": "stop",
+      "notitie": "gestopt voor zwarte kerk"
+    },
+    {
+      "name": "",
+      "lat": 64.816685,
+      "lon": -23.577165,
+      "type": "via",
+      "notitie": "lansgereden"
+    },
+    {
+      "name": "Zonsverduistering",
+      "lat": 64.754097,
+      "lon": -23.668269,
+      "type": "stop",
+      "notitie": "gestopt voor eclipse"
+    },
+    {
+      "name": "",
+      "lat": 64.738735,
+      "lon": -23.784515,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.892887,
+      "lon": -23.96027,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.891803,
+      "lon": -23.617054,
+      "type": "via",
+      "notitie": "langsgerden"
+    },
+    {
+      "name": "",
+      "lat": 64.867192,
+      "lon": -23.567421,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.829447,
+      "lon": -23.255203,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.841536,
+      "lon": -22.637273,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.560082,
+      "lon": -21.922035,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.544501,
+      "lon": -21.908047,
+      "type": "stop",
+      "notitie": "gestopt voor eten"
+    },
+    {
+      "name": "",
+      "lat": 64.452041,
+      "lon": -21.960117,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.322829,
+      "lon": -21.876354,
+      "type": "via",
+      "notitie": "lansggereden"
+    },
+    {
+      "name": "",
+      "lat": 64.248795,
+      "lon": -21.82949,
+      "type": "via",
+      "notitie": "lansgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.124227,
+      "lon": -21.80799,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.104929,
+      "lon": -21.866011,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 64.03913,
+      "lon": -22.050221,
+      "type": "via",
+      "notitie": "langsgereden"
+    },
+    {
+      "name": "",
+      "lat": 63.973295,
+      "lon": -22.543382,
+      "type": "overnight",
+      "notitie": "gestopt voor de nacht"
+    }
+  ],
+  "stijl": {}
+}

@@ -1,22 +1,75 @@
 {
-  "_LET_OP": "Dit is een VOORBEELDDAG met verzonnen coördinaten (de Gouden Cirkel), zodat er iets te renderen valt tot jouw echte route erin staat. Vervang de waypoints, datum, titel en tekst door die van jullie dag 1.",
-
   "dag": 1,
-  "datum": "2025-07-15",
-  "titel": "Reykjavík → Hvolsvöllur",
-  "tekst": "De eerste dag: vanuit Reykjavík de Gouden Cirkel rond, met een lange stop bij Gullfoss waar de wind de nevel over het pad blies. 's Avonds doorgereden naar Hvolsvöllur.",
-
+  "datum": "2026-08-06",
+  "titel": "Aankomst",
+  "tekst": "",
   "_types": "start | via (alleen langsgereden) | stop (echt uitgestapt) | overnight (hier geslapen) | end",
   "waypoints": [
-    { "name": "Reykjavík", "lat": 64.1466, "lon": -21.9426, "type": "start" },
-    { "name": "Þingvellir", "lat": 64.2559, "lon": -21.1300, "type": "stop" },
-    { "name": "Geysir", "lat": 64.3104, "lon": -20.3024, "type": "stop" },
-    { "name": "Gullfoss", "lat": 64.3271, "lon": -20.1199, "type": "stop" },
-    { "name": "Kerið", "lat": 64.0411, "lon": -20.8853, "type": "via" },
-    { "name": "Selfoss", "lat": 63.9330, "lon": -20.9986, "type": "via" },
-    { "name": "Hvolsvöllur", "lat": 63.7500, "lon": -20.2200, "type": "overnight" }
+    {
+      "name": "Keflavík Airport",
+      "lat": 63.99661,
+      "lon": -22.622687,
+      "type": "start"
+    },
+    {
+      "name": "",
+      "lat": 63.999297,
+      "lon": -22.628111,
+      "type": "via",
+      "notitie": "onderweg naar de autoverhuur"
+    },
+    {
+      "name": "Autoverhuur",
+      "lat": 63.998378,
+      "lon": -22.632875,
+      "type": "stop",
+      "notitie": "de oplichters"
+    },
+    {
+      "name": "Keflavík Airport",
+      "lat": 63.996711,
+      "lon": -22.622731,
+      "type": "stop",
+      "notitie": "terug naar het vliegveld"
+    },
+    {
+      "name": "",
+      "lat": 63.997976,
+      "lon": -22.616099,
+      "type": "stop",
+      "notitie": "stepjes opgepakt"
+    },
+    {
+      "name": "Hotel",
+      "lat": 64.008951,
+      "lon": -22.562034,
+      "type": "stop",
+      "notitie": "spullen weggelegd"
+    },
+    {
+      "name": "Bónus",
+      "lat": 64.003459,
+      "lon": -22.556763,
+      "type": "stop"
+    },
+    {
+      "name": "Hotel",
+      "lat": 64.009072,
+      "lon": -22.561895,
+      "type": "overnight"
+    }
   ],
-
-  "_stijl": "Hier kun je instellingen zetten die alleen voor deze dag anders moeten zijn.",
-  "stijl": {}
+  "stijl": {
+    "lagen.stijl": "satelliet",
+    "uitsnede.margeMm": 18,
+    "labels.kleur": "#ffffff",
+    "labels.haloKleur": "#1a1815",
+    "labels.haloMm": 0.45,
+    "labels.grootteMm": 3.4,
+    "titelblok.kleur": "#ffffff",
+    "route.dikteMm": 1.4,
+    "pijltjes.afstandCm": 1.5,
+    "schaal.kleur": "#ffffff",
+    "bron.kleur": "#ffffffcc"
+  }
 }
