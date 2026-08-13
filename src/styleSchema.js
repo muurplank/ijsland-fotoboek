@@ -78,17 +78,17 @@ export const KNOPPEN = [
   { key: 'lagen.hoogtelijnenStapM', groep: 'lagen', label: 'Hoogte per lijn', type: 'getal', min: 25, max: 500, step: 25, standaard: 100, eenheid: 'm' },
   { key: 'lagen.hoogtelijnenKleur', groep: 'lagen', label: 'Hoogtelijnkleur', type: 'kleur', standaard: '#c9c2b6' },
   { key: 'lagen.achtergrondDekking', groep: 'lagen', label: 'Dekking achtergrond', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 1 },
-  { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken naar wit', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.25, help: 'Trekt de achtergrond richting het wit van het papier, zodat je route ervoor knalt' },
+  { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken naar wit', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.05, help: 'Trekt de achtergrond richting het wit van het papier, zodat je route ervoor knalt' },
   { key: 'lagen.ontzadiging', groep: 'lagen', label: 'Ontzadigen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.3, help: 'Haalt kleur uit de achtergrond zodat hij niet vloekt met je foto\'s' },
 
   // ---------------------------------------------------------------- relief
   { key: 'relief.aan', groep: 'relief', label: 'Schaduwreliëf', type: 'aanuit', standaard: true },
   { key: 'relief.zonRichting', groep: 'relief', label: 'Richting van de zon', type: 'graden', min: 0, max: 360, step: 1, standaard: 315, help: 'Cartografen zetten de zon linksboven, anders lijken bergen dalen' },
   { key: 'relief.zonHoogte', groep: 'relief', label: 'Hoogte van de zon', type: 'getal', min: 5, max: 89, step: 1, standaard: 42, eenheid: '°' },
-  { key: 'relief.overdrijving', groep: 'relief', label: 'Hoogtes overdrijven', type: 'getal', min: 0.2, max: 6, step: 0.1, standaard: 1.6 },
-  { key: 'relief.contrast', groep: 'relief', label: 'Contrast', type: 'getal', min: 0, max: 2, step: 0.05, standaard: 0.85 },
+  { key: 'relief.overdrijving', groep: 'relief', label: 'Hoogtes overdrijven', type: 'getal', min: 0.2, max: 6, step: 0.1, standaard: 2 },
+  { key: 'relief.contrast', groep: 'relief', label: 'Contrast', type: 'getal', min: 0, max: 2, step: 0.05, standaard: 1.15 },
   { key: 'relief.zachtheid', groep: 'relief', label: 'Zachtheid', type: 'getal', min: 0, max: 5, step: 0.1, standaard: 0.6 },
-  { key: 'relief.schaduwKleur', groep: 'relief', label: 'Kleurzweem schaduw', type: 'kleur', standaard: '#8d8778' },
+  { key: 'relief.schaduwKleur', groep: 'relief', label: 'Kleurzweem schaduw', type: 'kleur', standaard: '#6b6459' },
   { key: 'relief.detailZoom', groep: 'relief', label: 'Detail hoogtemodel', type: 'keuze', opties: [10, 11, 12, 13], standaard: 12, help: 'Het hoogtemodel heeft voor IJsland ongeveer 30 m echt detail (niveau 11). Niveau 12 geeft een vloeiender reliëf; 13 downloadt vier keer zoveel zonder dat er detail bij komt' },
 
   // ----------------------------------------------------------------- route

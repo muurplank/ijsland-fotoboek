@@ -29,14 +29,24 @@ test('verlicht vlak land volgens de hoogte van de zon', () => {
 })
 
 test('maakt een helling naar de zon toe lichter dan een helling ervan af', () => {
-  // zon uit het noordwesten (315 graden): een helling die naar het westen afloopt
-  // vangt licht, een helling die naar het oosten afloopt ligt in de schaduw
-  const naarWesten = hillshade(raster(16, 16, x => x * 10), OPTIES) // loopt op naar het oosten
-  const naarOosten = hillshade(raster(16, 16, x => -x * 10), OPTIES)
+  // De zon staat in het noordwesten (315 graden).
+  //
+  // Een raster dat oploopt naar het oosten is een helling die naar het WESTEN
+  // kijkt - de afdaling wijst naar het westen. Die vangt dus het licht.
+  // Een raster dat afloopt naar het oosten kijkt naar het oosten, van de zon af,
+  // en ligt in de schaduw.
+  const kijktNaarWesten = hillshade(raster(16, 16, x => x * 10), OPTIES)
+  const kijktNaarOosten = hillshade(raster(16, 16, x => -x * 10), OPTIES)
 
   const midden = 8 * 16 + 8
-  assert.ok(naarWesten[midden] < naarOosten[midden],
-    'de van de zon afgekeerde helling hoort donkerder te zijn')
+  assert.ok(kijktNaarWesten[midden] > kijktNaarOosten[midden],
+    `de naar de zon gekeerde helling hoort lichter te zijn ` +
+    `(${kijktNaarWesten[midden]} vs ${kijktNaarOosten[midden]})`)
+
+  // en de vlakke vlakte hoort er precies tussenin te liggen
+  const vlak = hillshade(raster(16, 16, () => 0), OPTIES)[midden]
+  assert.ok(kijktNaarOosten[midden] < vlak && vlak < kijktNaarWesten[midden],
+    'vlak land hoort tussen de belichte en de beschaduwde helling te liggen')
 })
 
 test('vergroot het hoogteverschil als je de overdrijving opvoert', () => {
