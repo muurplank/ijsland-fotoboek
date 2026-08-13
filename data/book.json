@@ -1,0 +1,7 @@
+{
+  "titel": "IJsland",
+  "ondertitel": "Een roadtrip rond het eiland",
+
+  "_uitleg": "Alles onder 'stijl' geldt voor het hele boek en overschrijft de standaardwaarden uit src/styleSchema.js. Een losse dag kan hier weer van afwijken via zijn eigen dagbestand.",
+  "stijl": {}
+}

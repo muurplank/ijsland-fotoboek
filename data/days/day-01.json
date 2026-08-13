@@ -1,0 +1,22 @@
+{
+  "_LET_OP": "Dit is een VOORBEELDDAG met verzonnen coördinaten (de Gouden Cirkel), zodat er iets te renderen valt tot jouw echte route erin staat. Vervang de waypoints, datum, titel en tekst door die van jullie dag 1.",
+
+  "dag": 1,
+  "datum": "2025-07-15",
+  "titel": "Reykjavík → Hvolsvöllur",
+  "tekst": "De eerste dag: vanuit Reykjavík de Gouden Cirkel rond, met een lange stop bij Gullfoss waar de wind de nevel over het pad blies. 's Avonds doorgereden naar Hvolsvöllur.",
+
+  "_types": "start | via (alleen langsgereden) | stop (echt uitgestapt) | overnight (hier geslapen) | end",
+  "waypoints": [
+    { "name": "Reykjavík", "lat": 64.1466, "lon": -21.9426, "type": "start" },
+    { "name": "Þingvellir", "lat": 64.2559, "lon": -21.1300, "type": "stop" },
+    { "name": "Geysir", "lat": 64.3104, "lon": -20.3024, "type": "stop" },
+    { "name": "Gullfoss", "lat": 64.3271, "lon": -20.1199, "type": "stop" },
+    { "name": "Kerið", "lat": 64.0411, "lon": -20.8853, "type": "via" },
+    { "name": "Selfoss", "lat": 63.9330, "lon": -20.9986, "type": "via" },
+    { "name": "Hvolsvöllur", "lat": 63.7500, "lon": -20.2200, "type": "overnight" }
+  ],
+
+  "_stijl": "Hier kun je instellingen zetten die alleen voor deze dag anders moeten zijn.",
+  "stijl": {}
+}

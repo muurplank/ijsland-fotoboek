@@ -1,0 +1,17 @@
+{
+  "name": "ijsland-fotoboek",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Genereert kaarten, hoogteprofielen en statistieken op drukkwaliteit voor een zelfontworpen IJsland-fotoboek",
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "dev": "node src/server.js",
+    "build": "node src/build.js"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "playwright": "^1.49.0",
+    "sharp": "^0.35.3"
+  }
+}

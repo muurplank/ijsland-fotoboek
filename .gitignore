@@ -1,0 +1,10 @@
+node_modules/
+
+# Opgehaalde kaartgegevens: altijd opnieuw op te halen, en soms honderden MB.
+# Staat normaal in ~/Library/Caches/ijsland-fotoboek, maar voor de zekerheid.
+cache/
+
+# De gerenderde pagina's. Die maak je opnieuw met een commando, en ze zijn groot.
+out/
+
+.DS_Store
