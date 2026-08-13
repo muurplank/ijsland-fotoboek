@@ -170,5 +170,29 @@
       "type": "overnight"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "label:5": {
+        "dxMm": 15.15,
+        "dyMm": 5.68
+      },
+      "label:10": {
+        "dxMm": 0.86,
+        "dyMm": 9.64
+      },
+      "label:9": {
+        "dxMm": 22.37,
+        "dyMm": -14.63
+      },
+      "label:0": {
+        "dxMm": -3.61,
+        "dyMm": 7.23
+      },
+      "label:3": {
+        "dxMm": -12.56,
+        "dyMm": 5.34
+      }
+    }
+  }
 }

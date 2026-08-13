@@ -1,6 +1,6 @@
 {
   "naam": "Markeerstift",
-  "beschrijving": "Doorschijnende kern met een dekkende rand eromheen, als een markeerstift over de kaart. Je ziet het landschap door je route heen, en de rand houdt hem toch scherp begrensd.",
+  "beschrijving": "Doorschijnende kern met een dekkende rand eromheen, als een markeerstift over de kaart. Je ziet het landschap door je route heen, en de brede rand houdt hem toch scherp begrensd.",
   "voorbeeld": [
     "#fc4c02",
     "#ffb38a",
@@ -8,16 +8,16 @@
   ],
   "stijl": {
     "route.kleur": "#fc4c02",
-    "route.dekking": 0.42,
-    "route.dikteMm": 2.2,
+    "route.dekking": 0.47,
+    "route.dikteMm": 1.55,
     "route.buitenKleur": "#fc4c02",
-    "route.buitenExtraMm": 0.28,
+    "route.buitenExtraMm": 0.8,
     "route.buitenDekking": 1,
     "route.buitenAlsRand": true,
     "route.uiteinden": "rond",
     "lagen.verbleking": 0.12,
     "lagen.ontzadiging": 0.3,
-    "pijltjes.aan": true,
+    "pijltjes.aan": false,
     "pijltjes.kleur": "#ffffff",
     "pijltjes.randKleur": "#fc4c02",
     "pijltjes.randMm": 0.15,
@@ -45,6 +45,7 @@
     "profiel.lijnKleur": "#fc4c02",
     "profiel.vulKleur": "#ffe8dc",
     "statistieken.getalKleur": "#2b2926",
-    "statistieken.labelKleur": "#8b847c"
+    "statistieken.labelKleur": "#8b847c",
+    "route.streepjes": false
   }
 }

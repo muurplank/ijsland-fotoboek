@@ -215,6 +215,14 @@
       "schaalbalk": {
         "dxMm": 8.26,
         "dyMm": -1.03
+      },
+      "label:7": {
+        "dxMm": -0.52,
+        "dyMm": -4.47
+      },
+      "label:6": {
+        "dxMm": -9.98,
+        "dyMm": -0.52
       }
     }
   }

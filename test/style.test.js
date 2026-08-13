@@ -6,8 +6,12 @@ import { KNOPPEN, GROEPEN } from '../src/styleSchema.js'
 test('geeft voor elke knop uit het schema een standaardwaarde', () => {
   const s = standaardStijl()
   assert.equal(Object.keys(s).length, KNOPPEN.length)
-  assert.equal(s['route.kleur'], '#c1352b')
-  assert.equal(s['pagina.dpi'], 600)
+
+  // niet tegen vaste waarden aanleggen: standaardwaarden mogen veranderen als
+  // je het ontwerp bijstelt, en dan moet de test niet omvallen
+  for (const k of KNOPPEN) {
+    assert.equal(s[k.key], k.standaard, `${k.key} kwam niet uit het schema`)
+  }
 })
 
 test('elke knop hoort bij een bestaande groep', () => {
@@ -56,7 +60,8 @@ test('zoekt de definitie van een knop op', () => {
 test('legt eigen instellingen over de standaardwaarden heen', () => {
   const { stijl } = mergeStijl({ 'route.kleur': '#0000ff' })
   assert.equal(stijl['route.kleur'], '#0000ff')
-  assert.equal(stijl['route.dikteMm'], 1.1, 'de rest blijft standaard')
+  assert.equal(stijl['route.dikteMm'], knop('route.dikteMm').standaard,
+    'wat je niet zelf zet, blijft de standaardwaarde')
 })
 
 test('laat een latere laag winnen van een eerdere', () => {
