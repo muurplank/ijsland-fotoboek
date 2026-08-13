@@ -106,7 +106,7 @@ export const KNOPPEN = [
   // -------------------------------------------------------------- pijltjes
   { key: 'pijltjes.aan', groep: 'pijltjes', label: 'Richtingspijltjes', type: 'aanuit', standaard: true },
   { key: 'pijltjes.afstandCm', groep: 'pijltjes', label: 'Om de hoeveel cm', type: 'cm', min: 0.3, max: 15, step: 0.1, standaard: 2.5, help: 'Gemeten op papier, dus dit blijft kloppen als je van formaat wisselt' },
-  { key: 'pijltjes.grootteMm', groep: 'pijltjes', label: 'Grootte', type: 'mm', min: 0.5, max: 12, step: 0.1, standaard: 2.6 },
+  { key: 'pijltjes.grootteMm', groep: 'pijltjes', label: 'Grootte', type: 'mm', min: 0.5, max: 12, step: 0.1, standaard: 2 },
   { key: 'pijltjes.kleur', groep: 'pijltjes', label: 'Kleur', type: 'kleur', standaard: '#ffffff' },
   { key: 'pijltjes.vorm', groep: 'pijltjes', label: 'Vorm', type: 'keuze', opties: ['driehoek', 'chevron'], standaard: 'driehoek' },
   { key: 'pijltjes.randKleur', groep: 'pijltjes', label: 'Randje', type: 'kleur', standaard: '#c1352b' },

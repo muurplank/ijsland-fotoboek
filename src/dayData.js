@@ -11,7 +11,8 @@ import { fetchRoute } from './fetch/route.js'
 import { fetchDem } from './fetch/elevation.js'
 import { fetchWeather } from './fetch/weather.js'
 import { climb, pointAtDistance, totalDistance } from './geo/measure.js'
-import { boundsOf, expandBounds, MapView } from './geo/viewport.js'
+import { boundsOf, expandBounds } from './geo/viewport.js'
+import { maakView } from './render/layout.js'
 import { mergeStijl } from './style.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -52,23 +53,16 @@ export function sampleProfile (coords, dem, aantal = 400) {
  * Haalt alles op voor een dag. De zware onderdelen komen uit de cache zodra ze
  * een keer opgehaald zijn.
  */
-export async function buildDay (nummer, { onProgress = () => {} } = {}) {
+export async function buildDay (nummer, { onProgress = () => {}, stijlOverschrijving } = {}) {
   const boek = await loadBook()
   const dag = await loadDay(nummer)
-  const { stijl, genegeerd } = mergeStijl(boek.stijl, dag.stijl)
+  const { stijl, genegeerd } = mergeStijl(boek.stijl, dag.stijl, stijlOverschrijving)
 
   onProgress('route berekenen over de weg')
   const route = await fetchRoute(dag.waypoints)
 
   // Bepaal de uitsnede eerst, want daaruit volgt hoe fijn de hoogtes moeten zijn
-  const view = MapView.fit(route.coordinates, {
-    widthMm: stijl['pagina.breedteMm'],
-    heightMm: stijl['pagina.hoogteMm'],
-    paddingMm: stijl['uitsnede.margeMm'],
-    zoom: stijl['uitsnede.zoom'],
-    panXMm: stijl['uitsnede.panXMm'],
-    panYMm: stijl['uitsnede.panYMm']
-  })
+  const view = maakView(route.coordinates, stijl)
 
   // Genoeg hoogtepunten voor een vloeiend relief op drukresolutie
   const metersPerMm = view.metersPerMm()

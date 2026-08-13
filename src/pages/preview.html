@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>IJsland fotoboek</title>
+<link rel="stylesheet" href="/src/pages/preview.css">
+</head>
+<body>
+
+<div id="werkblad">
+  <div id="doek">
+    <!-- Dit is de pagina zoals hij geprint wordt. Alles erbinnen rekent in millimeters. -->
+    <div id="pagina">
+      <img id="achtergrond" alt="">
+      <svg id="tekening" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="opschriften"></div>
+      <div id="snijtekens"></div>
+    </div>
+  </div>
+  <div id="onderbalk">
+    <span id="melding">bezig met laden…</span>
+    <span id="maatinfo"></span>
+  </div>
+</div>
+
+<aside id="paneel">
+  <header>
+    <h1>Bedieningspaneel</h1>
+    <div id="dagkiezer"></div>
+  </header>
+
+  <div id="zoekbalk">
+    <input type="search" id="zoek" placeholder="knop zoeken…" autocomplete="off">
+  </div>
+
+  <div id="groepen"></div>
+
+  <footer>
+    <button id="bewaar-boek" title="Geldt voor alle dagen">Bewaren voor het boek</button>
+    <button id="bewaar-dag" title="Alleen voor deze dag">Alleen deze dag</button>
+    <button id="herstel" class="stil">Alles terug naar standaard</button>
+  </footer>
+</aside>
+
+<script type="module" src="/src/pages/preview.js"></script>
+</body>
+</html>
