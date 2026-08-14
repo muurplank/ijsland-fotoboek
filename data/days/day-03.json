@@ -8,169 +8,196 @@
       "name": "Kamperen",
       "lat": 63.842718,
       "lon": -17.952843,
-      "type": "start"
+      "type": "start",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.006255,
       "lon": -16.930931,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 63.994278,
       "lon": -16.38506,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "Fjallsárlón",
       "lat": 64.01099,
       "lon": -16.38794,
       "type": "stop",
-      "notitie": "de gletsjerlagune (Jökulsárlón ligt 10 km verderop)"
+      "notitie": "de gletsjerlagune (Jökulsárlón ligt 10 km verderop)",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 63.999835,
       "lon": -16.3746,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "Diamond Beach",
       "lat": 64.042531,
       "lon": -16.182599,
-      "type": "stop"
+      "type": "stop",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.054335,
       "lon": -16.154484,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.280311,
       "lon": -15.472239,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.277577,
       "lon": -15.204265,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "Tanken",
       "lat": 64.255527,
       "lon": -15.208707,
       "type": "stop",
-      "toonLabel": false
+      "toonLabel": false,
+      "fweg": false
     },
     {
       "name": "Dekentje",
       "lat": 64.249346,
       "lon": -15.195117,
       "type": "stop",
-      "toonLabel": false
+      "toonLabel": false,
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.279464,
       "lon": -15.193389,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.660761,
       "lon": -14.306179,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 64.791082,
       "lon": -14.516041,
       "type": "via",
-      "notitie": "de F-weg op"
+      "notitie": "de F-weg op",
+      "fweg": true
     },
     {
       "name": "",
       "lat": 64.814523,
       "lon": -14.638372,
-      "type": "via"
+      "type": "via",
+      "fweg": true
     },
     {
       "name": "",
       "lat": 64.902163,
       "lon": -14.636397,
       "type": "via",
-      "notitie": "van de F-weg af"
+      "notitie": "van de F-weg af",
+      "fweg": true
     },
     {
       "name": "",
       "lat": 65.040091,
       "lon": -14.604678,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.262582,
       "lon": -14.406861,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.282046,
       "lon": -14.425626,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.430753,
       "lon": -14.603642,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.313134,
       "lon": -15.140118,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.306582,
       "lon": -15.161018,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "Stuðlagil",
       "lat": 65.163606,
       "lon": -15.309972,
-      "type": "stop"
+      "type": "stop",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.306582,
       "lon": -15.161018,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.313134,
       "lon": -15.140118,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "",
       "lat": 65.269773,
       "lon": -14.40747,
-      "type": "via"
+      "type": "via",
+      "fweg": false
     },
     {
       "name": "Hotel",
       "lat": 65.267142,
       "lon": -14.399015,
       "type": "overnight",
-      "verblijf": "hotel"
+      "verblijf": "hotel",
+      "fweg": false
     }
   ],
   "stijl": {}

@@ -21,6 +21,46 @@ const maak = (tag, eigenschappen = {}) => {
 
 const UITEINDEN = { rond: 'round', plat: 'butt', vierkant: 'square' }
 
+/**
+ * De stukken van de route die op een F-weg liggen, als losse puntenreeksen.
+ *
+ * De etappelengtes vertellen waar elke etappe begint en eindigt op de route.
+ * Staat het waypoint aan het begin van een etappe als F-weg gemarkeerd, dan
+ * hoort die hele etappe erbij.
+ */
+function fwegStukken (gegevens, punten) {
+  const waypoints = gegevens.dag.waypoints
+  const legs = gegevens.route.legs ?? []
+  if (!waypoints.some(w => w.fweg)) return []
+
+  // de afgelegde afstand op elk punt van de getekende lijn
+  const langs = [0]
+  for (let i = 1; i < punten.length; i++) {
+    langs.push(langs[i - 1] + Math.hypot(punten[i].x - punten[i - 1].x, punten[i].y - punten[i - 1].y))
+  }
+  const totaalMm = langs.at(-1)
+  const totaalKm = legs.reduce((s, l) => s + l.distanceKm, 0)
+  if (!totaalKm || !totaalMm) return []
+
+  const stukken = []
+  let km = 0
+
+  for (const [i, leg] of legs.entries()) {
+    const vanKm = km
+    km += leg.distanceKm
+
+    if (!waypoints[i]?.fweg) continue
+
+    const vanMm = (vanKm / totaalKm) * totaalMm
+    const totMm = (km / totaalKm) * totaalMm
+
+    const stuk = punten.filter((_, j) => langs[j] >= vanMm && langs[j] <= totMm)
+    if (stuk.length > 1) stukken.push(stuk)
+  }
+
+  return stukken
+}
+
 /** Het pijltje als pad, wijzend naar rechts, met de punt in de oorsprong. */
 function pijlPad (vorm, grootte) {
   const l = grootte
@@ -181,6 +221,26 @@ export function teken (svg, opschriften, gegevens, stijl) {
     'stroke-linejoin': 'round',
     'stroke-dasharray': streepjes
   }))
+
+  // De F-wegen als stippellijn erbovenop.
+  //
+  // De routelijn is een doorlopend pad, dus we knippen hem niet op. In plaats
+  // daarvan komt er een stippellijn overheen op de stukken waar je op een F-weg
+  // reed - het onverharde hooglandwerk. Waar die stukken liggen volgt uit de
+  // etappelengtes: elke etappe loopt van waypoint naar waypoint.
+  if (stijl['route.fwegStippels']) {
+    const stukken = fwegStukken(gegevens, punten)
+    for (const stuk of stukken) {
+      routeGroep.append(maak('path', {
+        d: padData(stuk),
+        fill: 'none',
+        stroke: stijl['route.buitenKleur'],
+        'stroke-width': stijl['route.dikteMm'] * 0.55,
+        'stroke-dasharray': `${stijl['route.fwegStreepMm']} ${stijl['route.fwegGatMm']}`,
+        'stroke-linecap': 'round'
+      }))
+    }
+  }
 
   svg.append(routeGroep)
 

@@ -302,7 +302,9 @@ body.exporteren #pagina { box-shadow: none; }
 
 /* Alles wat je kunt verplaatsen krijgt de verschuiving via --dx en --dy, zodat
    de standaardopmaak leidend blijft en jouw correctie er alleen overheen ligt. */
-#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer) {
+/* Alles wat zijn eigen uitlijning heeft (gecentreerd, rechts uitgelijnd) regelt
+   de verschuiving zelf; deze regel is voor de rest. */
+#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
   transform: translate(var(--dx, 0px), var(--dy, 0px));
 }
 
@@ -437,3 +439,60 @@ body:not(.exporteren) #pagina [data-plek].sleept { outline: none; opacity: 1; }
 
 /* teksten die je ook kunt aanpassen krijgen een andere tint aanwijzing */
 body:not(.exporteren) #pagina [data-tekst]:hover::before { outline-color: #2b6cb0aa; }
+
+.legenda-dag { border-radius: 2px; flex: none; }
+.legenda-nr { margin-right: .5em; margin-left: .15em; font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------- reiscijfer-pagina */
+
+.reisdag-nummer {
+  position: absolute;
+  transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px));
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.reistabel { display: grid; }
+.reistabel-rij {
+  display: grid;
+  grid-template-columns: 1.8em 4.6em minmax(0, 1fr) 4.6em 4.4em 4.4em minmax(0, 1.15fr);
+  gap: .4em;
+  padding: .42em 0;
+  border-bottom: 1px solid #ece9e3;
+  align-items: baseline;
+}
+.reistabel-rij > span:nth-child(n+4) { font-variant-numeric: tabular-nums; }
+.reistabel-rij > span:first-child { font-weight: 650; }
+.reistabel-rij > span:nth-child(2),
+.reistabel-rij > span:last-child { color: var(--labelkleur-tabel); }
+.reistabel-kop {
+  border-bottom-width: 1px;
+  border-bottom-color: #d8d3cb;
+  font-size: .82em;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--labelkleur-tabel);
+  padding-bottom: .5em;
+}
+.reistabel-kop > span:first-child { font-weight: 500; }
+
+/* ---------------------------------------------------------- voortgangsbalk */
+
+.voortgang-naam {
+  position: absolute;
+  transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px));
+  white-space: nowrap;
+  font-weight: 620;
+}
+.voortgang-km {
+  position: absolute;
+  transform: translate(calc(-100% + var(--dx, 0px)), var(--dy, 0px));
+  white-space: nowrap;
+}
+.voortgang-dag {
+  position: absolute;
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+  white-space: nowrap;
+  letter-spacing: .03em;
+}
+.kiezer.verborgen { display: none; }

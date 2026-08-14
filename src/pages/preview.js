@@ -16,6 +16,8 @@ import { teken } from './draw.js'
 import { tekenBijwerk } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
+import { tekenReisCijfers } from './tripstats.js'
+import { tekenVoortgang, stopsMetAfstand, voortgangMaat } from './progress.js'
 import { maakBewerkbaar, pasPlaatsingToe } from './editable.js'
 import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
 
@@ -38,6 +40,8 @@ let stijl
 let paneel
 let gegevens = null      // van de huidige dag
 let reis = null          // alle dagen, voor de overzichtskaart
+let reisCijfers = null   // per dag de statistieken en het profiel
+let stopIndex = null     // tot welke stop de voortgangsbalk gevuld is
 let dagen = []
 let huidigeDag = Number(params.get('dag') ?? 1)
 let paginaType = params.get('pagina') ?? 'kaart'
@@ -62,7 +66,9 @@ function ontdubbel (fn, ms) {
 /** ---------------------------------------------------- pagina op schaal */
 
 function schaalPagina () {
-  const maat = paginaMaat(stijl)
+  // het voortgangsstrookje is paginabreed maar veel lager: het hoort onder
+  // een foto, niet op een eigen bladzijde
+  const maat = paginaType === 'voortgang' ? voortgangMaat(stijl) : paginaMaat(stijl)
   const doek = $('doek')
 
   const mm = EXPORT_MM > 0
@@ -101,7 +107,7 @@ function zetTypografie () {
 
 async function achtergrondNu () {
   // de statistiekpagina heeft geen kaartachtergrond
-  if (paginaType === 'stats') {
+  if (paginaType === 'stats' || paginaType === 'reiscijfers' || paginaType === 'voortgang') {
     achtergrond.removeAttribute('src')
     achtergrond.style.width = '0'
     // ook de opgetilde plaatsnamen weg: die horen bij de kaart, en anders
@@ -109,6 +115,8 @@ async function achtergrondNu () {
     bovenlaag.removeAttribute('src')
     bovenlaag.style.display = 'none'
     vorigeAchtergrondSleutel = null
+    // deze pagina's hebben geen kaartachtergrond, dus hier is het al klaar
+    zegt('klaar')
     return
   }
 
@@ -186,6 +194,20 @@ async function haalSilhouet () {
 /** ------------------------------------------------------- de pagina zelf */
 
 function tekenPagina () {
+  if (paginaType === 'voortgang') {
+    if (!gegevens) return
+    tekenVoortgang(tekening, opschriften, gegevens, stijl, stopIndex)
+    pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+    return
+  }
+
+  if (paginaType === 'reiscijfers') {
+    if (!reisCijfers) return
+    tekenReisCijfers(tekening, opschriften, reisCijfers, stijl)
+    pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+    return
+  }
+
   if (paginaType === 'overzicht') {
     if (!reis) return
     tekenOverzicht(tekening, opschriften, reis, stijl)
@@ -232,6 +254,12 @@ async function laadReis () {
   reis = await (await fetch('/api/reis')).json()
 }
 
+async function laadReisCijfers () {
+  if (reisCijfers) return
+  zegt('cijfers van alle acht dagen verzamelen (eerste keer duurt even)…')
+  reisCijfers = await (await fetch('/api/reis-cijfers')).json()
+}
+
 /** ------------------------------------------------------------- start */
 
 async function start () {
@@ -246,6 +274,10 @@ async function start () {
 
   if (paginaType === 'overzicht') {
     await laadReis()
+    stijl = { ...gegevens.boekStijl }
+  }
+  if (paginaType === 'reiscijfers') {
+    await laadReisCijfers()
     stijl = { ...gegevens.boekStijl }
   }
 
@@ -277,9 +309,32 @@ async function start () {
       // instellingen van de nieuwe dag overnemen, maar het paneel bijwerken
       stijl = { ...gegevens.stijl }
       for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+      stopIndex = null
+      if (paginaType === 'voortgang') vulStopkiezer()
       vorigeAchtergrondSleutel = null
       hertekenAlles()
     } catch (fout) { zegt(`dag laden mislukt: ${fout.message}`) }
+  })
+
+  // ------ stopkiezer, alleen voor de voortgangsbalk
+  function vulStopkiezer () {
+    const kiezer = $('stop')
+    kiezer.replaceChildren()
+    if (!gegevens) return
+    const { stops } = stopsMetAfstand(gegevens)
+    for (const stop of stops) {
+      const o = document.createElement('option')
+      o.value = String(stop.index)
+      o.textContent = `${stop.naam || '(naamloos)'} · ${stop.km.toFixed(0)} km`
+      kiezer.append(o)
+    }
+    if (stopIndex === null && stops.length) stopIndex = stops[0].index
+    kiezer.value = String(stopIndex ?? stops[0]?.index ?? 0)
+  }
+
+  $('stop').addEventListener('change', e => {
+    stopIndex = Number(e.target.value)
+    hertekenAlles()
   })
 
   // ------ paginakiezer
@@ -289,13 +344,18 @@ async function start () {
       for (const k of $('paginakiezer').querySelectorAll('button')) {
         k.classList.toggle('actief', k === knop)
       }
-      $('dag').disabled = paginaType === 'overzicht'
+      $('dag').disabled = paginaType === 'overzicht' || paginaType === 'reiscijfers'
       paneel.zetPagina(paginaType)
       if (paginaType === 'overzicht') await laadReis()
+      if (paginaType === 'reiscijfers') await laadReisCijfers()
+
+      $('stopkiezer-rij').classList.toggle('verborgen', paginaType !== 'voortgang')
+      if (paginaType === 'voortgang') vulStopkiezer()
 
       // De overzichtskaart hoort bij het boek, niet bij een losse dag: wissel
       // daarom naar de boekinstellingen en terug.
-      stijl = { ...(paginaType === 'overzicht' ? gegevens.boekStijl : gegevens.stijl) }
+      stijl = { ...(paginaType === 'overzicht' || paginaType === 'reiscijfers'
+        ? gegevens.boekStijl : gegevens.stijl) }
       for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
 
       vorigeAchtergrondSleutel = null

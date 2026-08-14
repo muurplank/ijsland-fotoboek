@@ -112,7 +112,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
 
     // --- raster: terughoudend, alleen horizontaal
     if (stijl['profiel.rasterAan']) {
-      const stap = asStap(bovenGrens)
+      const stap = asStap(bovenGrens, Math.round(stijl['profiel.rasterFijnheid'] * 0.6))
       for (let h = 0; h <= bovenGrens; h += stap) {
         svg.append(maakSvg('line', {
           x1: grafiekLinks, x2: grafiekRechts, y1: yVan(h), y2: yVan(h),
@@ -257,6 +257,17 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
       x1: grafiekLinks, x2: grafiekRechts, y1: kmY - 2.6, y2: kmY - 2.6,
       stroke: '#e0dcd5', 'stroke-width': 0.15
     }))
+
+    // verticale rasterlijnen op dezelfde plek als de kilometerschaal
+    if (stijl['profiel.rasterAan'] && stijl['profiel.rasterVerticaal']) {
+      const stap = asStap(maxKm, stijl['profiel.rasterFijnheid'])
+      for (let km = stap; km < maxKm; km += stap) {
+        svg.append(maakSvg('line', {
+          x1: xVan(km), x2: xVan(km), y1: grafiekBoven, y2: grafiekOnder,
+          stroke: '#e0dcd5', 'stroke-width': 0.1
+        }))
+      }
+    }
 
     const kmStap = asStap(maxKm, 5)
     for (let km = 0; km <= maxKm; km += kmStap) {

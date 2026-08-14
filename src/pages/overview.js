@@ -11,6 +11,7 @@
 import { maakView, paginaMaat } from '../render/layout.js'
 import { boundsOf } from '../geo/viewport.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
+import { Bezetting, langsElkaar } from '../render/parallel.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -39,6 +40,20 @@ const naarHex = ([r, g, b]) =>
  * De lichtste stap blijft donker genoeg om op wit papier te zien te zijn, en de
  * donkerste stap blijft licht genoeg om niet in zwart te verdwijnen.
  */
+/**
+ * Acht kleuren die zo goed mogelijk uit elkaar te houden zijn.
+ *
+ * Eerlijk gezegd: acht kleuren die je állemaal onderling kunt onderscheiden
+ * bestaan niet. Deze reeks haalt de helderheidsband, de kleurkracht en het
+ * contrast met het papier, maar het zwakste paar blijft lastig bij
+ * kleurenblindheid. Op deze kaart is dat opgevangen doordat de dagnummers op de
+ * route staan en gedeelde wegen naast elkaar liggen: twee signalen naast kleur.
+ */
+export const DAGKLEUREN = [
+  '#b86580', '#b96c49', '#9d8026', '#66924c',
+  '#049886', '#1990b5', '#697fc5', '#9c6eb0'
+]
+
 export function dagKleuren (aantal, basis) {
   const [r, g, b] = hexNaarRgb(basis)
   const uit = []
@@ -75,17 +90,33 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   svg.replaceChildren()
   opschriften.replaceChildren()
 
-  const kleuren = dagKleuren(reis.length, stijl['route.kleur'])
+  const kleuren = stijl['overzicht.dagkleuren']
+    ? reis.map((_, i) => DAGKLEUREN[i % DAGKLEUREN.length])
+    : dagKleuren(reis.length, stijl['route.kleur'])
+
+  // Waar twee dagen dezelfde weg deelden verdwijnt de ene lijn onder de andere.
+  // Ze worden daarom naast elkaar gelegd, met de weg zelf als middellijn.
+  const bezetting = new Bezetting(stijl['overzicht.tussenruimteMm'] * 1.6)
+
+  const paden = reis.map(dag => {
+    const punten = vereenvoudig(projecteer(dag.coordinates, view), 0.05)
+    return stijl['overzicht.langsElkaar']
+      ? langsElkaar(punten, bezetting, { afstandMm: stijl['overzicht.tussenruimteMm'] })
+      : punten
+  })
 
   // buitenlijnen eerst, allemaal onder de routes door: anders snijdt de
   // buitenlijn van dag 5 door de route van dag 4 heen
-  if (stijl['route.buitenExtraMm'] > 0) {
-    for (const dag of reis) {
+  const dikte = stijl['overzicht.dikteMm']
+  const buiten = stijl['overzicht.buitenMm']
+
+  if (buiten > 0) {
+    for (const punten of paden) {
       svg.append(maakSvg('path', {
-        d: padData(vereenvoudig(projecteer(dag.coordinates, view), 0.05)),
+        d: padData(punten),
         fill: 'none',
         stroke: stijl['route.buitenKleur'],
-        'stroke-width': stijl['route.dikteMm'] + 2 * stijl['route.buitenExtraMm'],
+        'stroke-width': dikte + 2 * buiten,
         'stroke-opacity': stijl['route.buitenDekking'],
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round'
@@ -93,12 +124,12 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
     }
   }
 
-  for (const [i, dag] of reis.entries()) {
+  for (const [i, punten] of paden.entries()) {
     svg.append(maakSvg('path', {
-      d: padData(vereenvoudig(projecteer(dag.coordinates, view), 0.05)),
+      d: padData(punten),
       fill: 'none',
       stroke: kleuren[i],
-      'stroke-width': stijl['route.dikteMm'],
+      'stroke-width': dikte,
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round'
     }))
@@ -163,18 +194,36 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   legenda.style.fontSize = mm(2.4)
   legenda.style.color = stijl['statistieken.labelKleur']
 
-  const balk = document.createElement('div')
-  balk.className = 'legenda-balk'
-  balk.style.height = mm(2.2)
-  balk.style.width = mm(38)
-  balk.style.background = `linear-gradient(to right, ${kleuren.join(', ')})`
+  if (stijl['overzicht.dagkleuren']) {
+    // losse kleuren: een blokje met dagnummer per dag, want een verloopbalk
+    // suggereert een reeks die er dan niet is
+    for (const [i, dag] of reis.entries()) {
+      const vak = document.createElement('span')
+      vak.className = 'legenda-dag'
+      vak.style.background = kleuren[i]
+      vak.style.width = mm(3.4)
+      vak.style.height = mm(3.4)
+      legenda.append(vak)
 
-  const van = document.createElement('span')
-  van.textContent = `dag 1`
-  const tot = document.createElement('span')
-  tot.textContent = `dag ${reis.length}`
+      const nr = document.createElement('span')
+      nr.className = 'legenda-nr'
+      nr.textContent = String(dag.dag)
+      legenda.append(nr)
+    }
+  } else {
+    const balk = document.createElement('div')
+    balk.className = 'legenda-balk'
+    balk.style.height = mm(2.2)
+    balk.style.width = mm(38)
+    balk.style.background = `linear-gradient(to right, ${kleuren.join(', ')})`
 
-  legenda.append(van, balk, tot)
+    const van = document.createElement('span')
+    van.textContent = 'dag 1'
+    const tot = document.createElement('span')
+    tot.textContent = `dag ${reis.length}`
+
+    legenda.append(van, balk, tot)
+  }
   opschriften.append(legenda)
 
   if (stijl['bron.aan']) {

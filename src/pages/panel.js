@@ -52,6 +52,12 @@ const SNEL = new Set([
   'route.buitenDekking',
   'route.buitenAlsRand',
   'route.streepjes',
+  'route.fwegStippels',
+  'overzicht.dagkleuren',
+  'overzicht.dikteMm',
+  'overzicht.buitenMm',
+  'overzicht.langsElkaar',
+  'overzicht.tussenruimteMm',
   'pijltjes.aan',
   'pijltjes.afstandCm',
   'pijltjes.grootteMm',
@@ -69,9 +75,15 @@ const SNEL = new Set([
   'schaal.balkAan',
   'profiel.hoogteMm',
   'profiel.verloopAan',
+  'profiel.rasterAan',
+  'profiel.rasterFijnheid',
   'profiel.verloopDekking',
   'profiel.vulKleur',
   'profiel.lijnKleur',
+  'voortgang.hoogteMm',
+  'voortgang.dikteMm',
+  'voortgang.stipMm',
+  'voortgang.naamMm',
   'statistieken.getalMm',
   'statistieken.kolommen',
   'pagina.breedteMm',
@@ -86,7 +98,9 @@ const GROEPEN_PER_PAGINA = {
     'schaal', 'bron'],
   stats: ['pagina', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
   overzicht: ['pagina', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
-    'markers', 'typografie', 'titelblok', 'schaal', 'bron']
+    'eerdere', 'markers', 'typografie', 'titelblok', 'schaal', 'bron'],
+  reiscijfers: ['pagina', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
+  voortgang: ['pagina', 'route', 'voortgang', 'typografie', 'statistieken']
 }
 
 /** Een handvol kleuren die vaak van pas komen, per soort knop. */

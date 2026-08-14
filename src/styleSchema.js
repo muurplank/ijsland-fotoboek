@@ -25,7 +25,7 @@ export const GROEPEN = [
   { id: 'terrein', label: 'Hoogtekleuren' },
   { id: 'route', label: 'Routelijn' },
   { id: 'pijltjes', label: 'Richtingspijltjes' },
-  { id: 'eerdere', label: 'Eerdere dagen' },
+  { id: 'eerdere', label: 'Overzichtskaart & eerdere dagen' },
   { id: 'markers', label: 'Markers' },
   { id: 'labels', label: 'Labels' },
   { id: 'typografie', label: 'Typografie' },
@@ -33,6 +33,7 @@ export const GROEPEN = [
   { id: 'inzet', label: 'Inzetkaartje' },
   { id: 'schaal', label: 'Schaalbalk & noordpijl' },
   { id: 'bron', label: 'Bronvermelding' },
+  { id: 'voortgang', label: 'Voortgangsbalk' },
   { id: 'profiel', label: 'Hoogteprofiel' },
   { id: 'statistieken', label: 'Statistieken' }
 ]
@@ -133,6 +134,16 @@ export const KNOPPEN = [
   { key: 'pijltjes.randMm', groep: 'pijltjes', label: 'Randdikte', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0 },
 
   // --------------------------------------------------------- eerdere dagen
+  { key: 'overzicht.dagkleuren', groep: 'eerdere', label: 'Elke dag een eigen kleur', type: 'aanuit', standaard: true, help: 'Op de overzichtskaart. Uit betekent: een verloop van licht naar donker, wat rustiger oogt maar minder goed laat zien welke dag welke is' },
+  { key: 'overzicht.langsElkaar', groep: 'eerdere', label: 'Gedeelde wegen naast elkaar', type: 'aanuit', standaard: true, help: 'Reed je twee dagen over dezelfde weg, dan verdwijnt de ene lijn onder de andere. Met deze aan komen ze naast elkaar te liggen' },
+  { key: 'overzicht.dikteMm', groep: 'eerdere', label: 'Lijndikte op de overzichtskaart', type: 'mm', min: 0.15, max: 3, step: 0.05, standaard: 0.7, help: 'Losstaand van de dagkaarten: acht routes over heel IJsland vragen om dunnere lijnen dan een enkele dag' },
+  { key: 'overzicht.buitenMm', groep: 'eerdere', label: 'Buitenlijn op de overzichtskaart', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.22 },
+  { key: 'overzicht.tussenruimteMm', groep: 'eerdere', label: 'Ruimte tussen de lijnen', type: 'mm', min: 0.3, max: 5, step: 0.1, standaard: 0.95 },
+  { key: 'route.fwegStippels', groep: 'route', label: 'F-wegen als stippellijn', type: 'aanuit', standaard: true, help: 'De onverharde hooglandwegen krijgen een stippellijn, zodat je ziet waar het geen gewone weg meer was' },
+  { key: 'route.fwegStreepMm', groep: 'route', label: 'F-weg: streeplengte', type: 'mm', min: 0.3, max: 8, step: 0.1, standaard: 1.6 },
+  { key: 'route.fwegGatMm', groep: 'route', label: 'F-weg: gat', type: 'mm', min: 0.3, max: 8, step: 0.1, standaard: 1.2 },
+  { key: 'profiel.rasterVerticaal', groep: 'profiel', label: 'Ook verticale rasterlijnen', type: 'aanuit', standaard: true },
+  { key: 'profiel.rasterFijnheid', groep: 'profiel', label: 'Fijnheid van het raster', type: 'getal', min: 2, max: 20, step: 1, standaard: 10, help: 'Hoeveel vakken er ongeveer over de grafiek komen. Hoger is fijner' },
   { key: 'eerdere.aan', groep: 'eerdere', label: 'Eerdere dagen tonen', type: 'aanuit', standaard: true },
   { key: 'eerdere.kleur', groep: 'eerdere', label: 'Kleur', type: 'kleur', standaard: '#b3ada2' },
   { key: 'eerdere.dikteMm', groep: 'eerdere', label: 'Dikte', type: 'mm', min: 0.05, max: 3, step: 0.05, standaard: 0.45 },
@@ -208,6 +219,17 @@ export const KNOPPEN = [
   { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: true },
   { key: 'bron.grootteMm', groep: 'bron', label: 'Grootte', type: 'mm', min: 1, max: 5, step: 0.1, standaard: 1.8 },
   { key: 'bron.kleur', groep: 'bron', label: 'Kleur', type: 'kleur', standaard: '#9a948b' },
+
+  // ------------------------------------------------------------- voortgang
+  { key: 'voortgang.hoogteMm', groep: 'voortgang', label: 'Hoogte van het strookje', type: 'mm', min: 8, max: 80, step: 1, standaard: 24, help: 'Het strookje wordt zo hoog als je hier zet, en net zo breed als de pagina. Bedoeld om onder een foto te plaatsen' },
+  { key: 'voortgang.dikteMm', groep: 'voortgang', label: 'Dikte van de balk', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 1.8 },
+  { key: 'voortgang.baanKleur', groep: 'voortgang', label: 'Kleur van het lege deel', type: 'kleur', standaard: '#e4e0d9' },
+  { key: 'voortgang.stipMm', groep: 'voortgang', label: 'Grootte van de stippen', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 2.6 },
+  { key: 'voortgang.stipRand', groep: 'voortgang', label: 'Randkleur huidige stip', type: 'kleur', standaard: '#ffffff' },
+  { key: 'voortgang.naamAan', groep: 'voortgang', label: 'Naam van de stop tonen', type: 'aanuit', standaard: true },
+  { key: 'voortgang.naamMm', groep: 'voortgang', label: 'Lettergrootte', type: 'mm', min: 1.5, max: 10, step: 0.1, standaard: 3.2 },
+  { key: 'voortgang.kmAan', groep: 'voortgang', label: 'Kilometers tonen', type: 'aanuit', standaard: true },
+  { key: 'voortgang.dagAan', groep: 'voortgang', label: 'Dag en titel tonen', type: 'aanuit', standaard: true },
 
   // ----------------------------------------------------------------- profiel
   { key: 'profiel.hoogteMm', groep: 'profiel', label: 'Hoogte van de grafiek', type: 'mm', min: 20, max: 200, step: 1, standaard: 70 },

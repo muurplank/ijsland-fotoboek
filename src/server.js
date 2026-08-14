@@ -214,6 +214,25 @@ const server = createServer(async (req, res) => {
       return json(res, uit)
     }
 
+    // -------------------------------------------- cijfers van de hele reis
+    if (pad === '/api/reis-cijfers') {
+      const dagen = []
+      for (const kort of await alleDagen()) {
+        const d = await dagGegevens(kort.dag)
+        dagen.push({
+          dag: d.dag.dag,
+          datum: d.dag.datum,
+          titel: d.dag.titel,
+          statistieken: d.statistieken,
+          weer: d.weer,
+          // uitgedund: voor een profiel over tweeduizend kilometer is elk
+          // vierde meetpunt ruim genoeg, en het scheelt fors in de overdracht
+          profiel: d.profiel.filter((_, i) => i % 4 === 0)
+        })
+      }
+      return json(res, dagen)
+    }
+
     // ------------------------------------------------------------ daggegevens
     if (pad === '/api/dag') {
       const nummer = Number(url.searchParams.get('dag') ?? 1)

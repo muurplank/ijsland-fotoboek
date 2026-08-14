@@ -130,11 +130,18 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
     binnen.style.width = mm(breedte)
     binnen.style.height = mm(hoogte)
 
+    // Het eiland vult het binnenvak precies.
+    //
+    // Eerder werd het geplaatst via een hulp-uitsnede die in een vierkant
+    // centreerde, terwijl de route in een vak van breedte bij hoogte werd
+    // getekend. Die twee centreren verschillend, dus stond het eiland een halve
+    // vakhoogte te laag ten opzichte van het kadertje. Nu delen ze dezelfde
+    // uitsnede: de bounds passen zonder marge, dus het eiland vult het vak.
     const eiland = document.createElement('img')
     eiland.src = silhouet.url
-    eiland.style.left = mm(Math.min(hoek0.x, hoek1.x))
-    eiland.style.top = mm(Math.min(hoek0.y, hoek1.y))
-    eiland.style.width = mm(Math.abs(hoek1.x - hoek0.x))
+    eiland.style.left = '0'
+    eiland.style.top = '0'
+    eiland.style.width = mm(breedte)
     eiland.style.height = mm(hoogte)
     binnen.append(eiland)
 
