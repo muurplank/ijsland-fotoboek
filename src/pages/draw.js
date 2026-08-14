@@ -61,13 +61,60 @@ function fwegStukken (gegevens, punten) {
   return stukken
 }
 
-/** Het pijltje als pad, wijzend naar rechts, met de punt in de oorsprong. */
+/**
+ * Het pijltje als pad, wijzend naar rechts met de punt in de oorsprong.
+ *
+ * De vormen die met een lijn getekend worden (chevrons, de streep) staan in
+ * LIJNVORMEN; die krijgen geen vulling maar een streek. De rest zijn gesloten
+ * vormen die wel gevuld worden.
+ */
+export const LIJNVORMEN = new Set(['chevron', 'dubbele-chevron', 'streep', 'haakje'])
+
 function pijlPad (vorm, grootte) {
   const l = grootte
-  if (vorm === 'chevron') {
-    return `M ${-l * 0.9} ${-l * 0.55} L 0 0 L ${-l * 0.9} ${l * 0.55}`
+
+  switch (vorm) {
+    case 'chevron':
+      return `M ${-l * 0.9} ${-l * 0.55} L 0 0 L ${-l * 0.9} ${l * 0.55}`
+
+    case 'dubbele-chevron':
+      // twee chevrons achter elkaar: leest sterker als richting
+      return `M ${-l * 0.85} ${-l * 0.5} L ${-l * 0.05} 0 L ${-l * 0.85} ${l * 0.5} ` +
+             `M ${-l * 1.55} ${-l * 0.5} L ${-l * 0.75} 0 L ${-l * 1.55} ${l * 0.5}`
+
+    case 'haakje':
+      // een smal V-tje, terughoudender dan een chevron
+      return `M ${-l * 0.7} ${-l * 0.38} L 0 0 L ${-l * 0.7} ${l * 0.38}`
+
+    case 'streep':
+      // dwarsstreepje met een klein punt eraan; heel rustig op drukke kaarten
+      return `M ${-l * 0.15} ${-l * 0.5} L ${-l * 0.15} ${l * 0.5} M ${-l * 0.15} 0 L 0 0`
+
+    case 'driehoek-vol':
+      // gewone gesloten driehoek, zonder de inham aan de achterkant
+      return `M 0 0 L ${-l} ${-l * 0.52} L ${-l} ${l * 0.52} Z`
+
+    case 'dart':
+      // gestrekte pijlpunt: sneller ogend, past bij een lange route
+      return `M 0 0 L ${-l * 1.25} ${-l * 0.42} L ${-l * 0.85} 0 L ${-l * 1.25} ${l * 0.42} Z`
+
+    case 'pijl': {
+      // pijlpunt met een steel eraan
+      const punt = l * 0.55
+      return `M 0 0 L ${-punt} ${-punt * 0.62} L ${-punt} ${-punt * 0.24} ` +
+             `L ${-l * 1.5} ${-punt * 0.24} L ${-l * 1.5} ${punt * 0.24} ` +
+             `L ${-punt} ${punt * 0.24} L ${-punt} ${punt * 0.62} Z`
+    }
+
+    case 'druppel':
+      // afgeronde druppel die naar voren wijst
+      return `M 0 0 C ${-l * 0.5} ${-l * 0.62} ${-l * 1.05} ${-l * 0.36} ${-l * 1.05} 0 ` +
+             `C ${-l * 1.05} ${l * 0.36} ${-l * 0.5} ${l * 0.62} 0 0 Z`
+
+    default:
+      // driehoek met een lichte inham achterin: de klassieke kaartpijl
+      return `M 0 0 L ${-l} ${-l * 0.5} L ${-l * 0.72} 0 L ${-l} ${l * 0.5} Z`
   }
-  return `M 0 0 L ${-l} ${-l * 0.5} L ${-l * 0.72} 0 L ${-l} ${l * 0.5} Z`
 }
 
 /** Een marker van de gevraagde vorm, gecentreerd op de oorsprong. */
@@ -248,15 +295,17 @@ export function teken (svg, opschriften, gegevens, stijl) {
   if (stijl['pijltjes.aan']) {
     const groep = maak('g')
     for (const p of pijltjesLangs(punten, stijl['pijltjes.afstandCm'] * 10)) {
+      const alsLijn = LIJNVORMEN.has(stijl['pijltjes.vorm'])
+
       groep.append(maak('path', {
         d: pijlPad(stijl['pijltjes.vorm'], stijl['pijltjes.grootteMm']),
         transform: `translate(${p.x.toFixed(3)} ${p.y.toFixed(3)}) rotate(${p.hoek.toFixed(2)})`,
-        fill: stijl['pijltjes.vorm'] === 'chevron' ? 'none' : stijl['pijltjes.kleur'],
-        stroke: stijl['pijltjes.vorm'] === 'chevron'
+        fill: alsLijn ? 'none' : stijl['pijltjes.kleur'],
+        stroke: alsLijn
           ? stijl['pijltjes.kleur']
           : (stijl['pijltjes.randMm'] > 0 ? stijl['pijltjes.randKleur'] : 'none'),
-        'stroke-width': stijl['pijltjes.vorm'] === 'chevron'
-          ? stijl['pijltjes.grootteMm'] * 0.28
+        'stroke-width': alsLijn
+          ? stijl['pijltjes.grootteMm'] * stijl['pijltjes.lijnDikte']
           : stijl['pijltjes.randMm'],
         'stroke-linecap': 'round',
         'stroke-linejoin': 'round'
