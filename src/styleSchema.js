@@ -214,7 +214,16 @@ export const KNOPPEN = [
   { key: 'schaal.balkAan', groep: 'schaal', label: 'Schaalbalk', type: 'aanuit', standaard: true },
   { key: 'schaal.positie', groep: 'schaal', label: 'Positie', type: 'keuze', opties: ['linksonder', 'rechtsonder', 'linksboven', 'rechtsboven'], standaard: 'linksonder' },
   { key: 'schaal.kleur', groep: 'schaal', label: 'Kleur', type: 'kleur', standaard: '#8b847c'},
-  { key: 'schaal.noordpijlAan', groep: 'schaal', label: 'Noordpijl', type: 'aanuit', standaard: false },
+  { key: 'schaal.noordpijlAan', groep: 'schaal', label: 'Kompasroos', type: 'aanuit', standaard: true },
+  { key: 'schaal.kompasVorm', groep: 'schaal', label: 'Vorm', type: 'keuze', opties: ['klassiek', 'ster', 'pijl'], standaard: 'klassiek', help: 'klassiek = acht punten met ring en gradenstreepjes · ster = alleen de vier hoofdrichtingen · pijl = alleen noord-zuid' },
+  { key: 'schaal.kompasMm', groep: 'schaal', label: 'Grootte', type: 'mm', min: 4, max: 40, step: 0.5, standaard: 11 },
+  { key: 'schaal.kompasHoek', groep: 'schaal', label: 'Hoek', type: 'keuze', opties: ['rechtsboven', 'linksboven', 'rechtsonder', 'linksonder'], standaard: 'rechtsboven' },
+  { key: 'schaal.kompasDonker', groep: 'schaal', label: 'Kleur belichte helft', type: 'kleur', standaard: '#3a352e' },
+  { key: 'schaal.kompasLicht', groep: 'schaal', label: 'Kleur schaduwhelft', type: 'kleur', standaard: '#ffffff' },
+  { key: 'schaal.kompasRing', groep: 'schaal', label: 'Kleur ring en streepjes', type: 'kleur', standaard: '#3a352e' },
+  { key: 'schaal.kompasLijnMm', groep: 'schaal', label: 'Lijndikte', type: 'mm', min: 0.05, max: 1, step: 0.01, standaard: 0.18 },
+  { key: 'schaal.kompasLetters', groep: 'schaal', label: 'Letters erbij', type: 'aanuit', standaard: true },
+  { key: 'schaal.kompasLetterMm', groep: 'schaal', label: 'Lettergrootte', type: 'mm', min: 1.2, max: 8, step: 0.1, standaard: 2.6 },
 
   // -------------------------------------------------------------------- bron
   { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: true },

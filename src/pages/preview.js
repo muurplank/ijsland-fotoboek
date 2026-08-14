@@ -217,7 +217,7 @@ function tekenPagina () {
     tekenStatistieken(tekening, opschriften, gegevens, stijl)
   } else {
     const view = teken(tekening, opschriften, gegevens, stijl)
-    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet)
+    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet, tekening)
   }
 
   // de handmatige verschuivingen liggen over de standaardopmaak heen

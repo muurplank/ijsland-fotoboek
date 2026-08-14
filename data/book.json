@@ -130,7 +130,7 @@
     "schaal.balkAan": true,
     "schaal.positie": "linksonder",
     "schaal.kleur": "#8b847c",
-    "schaal.noordpijlAan": false,
+    "schaal.noordpijlAan": true,
     "bron.aan": true,
     "bron.grootteMm": 1.8,
     "bron.kleur": "#a8a099",

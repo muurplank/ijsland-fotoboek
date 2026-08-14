@@ -8,6 +8,7 @@
 import { MapView } from '../geo/viewport.js'
 import { paginaMaat } from '../render/layout.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
+import { kompasroos } from './compass.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -47,7 +48,7 @@ function netteAfstand (ruwKm) {
  * @param {MapView} view de uitsnede van de grote kaart
  * @param {object|null} silhouet {url, bounds} van het inzetkaartje
  */
-export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
+export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = null) {
   const maat = paginaMaat(stijl)
   const marge = maat.afloopMm + stijl['pagina.veiligeMargeMm']
 
@@ -213,18 +214,27 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet) {
     laag.append(balk)
   }
 
-  // -------------------------------------------------------------- noordpijl
+  // -------------------------------------------------------------- kompasroos
   if (stijl['schaal.noordpijlAan']) {
-    const pijl = document.createElement('div')
-    pijl.className = 'noordpijl'
-    pijl.setAttribute('data-plek', 'noordpijl')
-    pijl.style.color = stijl['schaal.kleur']
-    pijl.style.fontSize = mm(3)
-    pijl.textContent = 'N'
-    pijl.style.position = 'absolute'
-    pijl.style.left = mm(marge)
-    pijl.style.top = mm(marge)
-    laag.append(pijl)
+    const straal = stijl['schaal.kompasMm'] / 2
+    const rand = marge + straal + (stijl['schaal.kompasLetters'] ? stijl['schaal.kompasLetterMm'] * 1.4 : 1)
+
+    const hoek = stijl['schaal.kompasHoek']
+    const x = hoek.includes('links') ? rand : maat.breedteMm - rand
+    const y = hoek.includes('boven') ? rand : maat.hoogteMm - rand
+
+    const roos = kompasroos({
+      straal,
+      vorm: stijl['schaal.kompasVorm'],
+      donker: stijl['schaal.kompasDonker'],
+      licht: stijl['schaal.kompasLicht'],
+      ring: stijl['schaal.kompasRing'],
+      ringDikteMm: stijl['schaal.kompasLijnMm'],
+      letters: stijl['schaal.kompasLetters'],
+      letterMm: stijl['schaal.kompasLetterMm']
+    })
+    roos.setAttribute('transform', `translate(${x} ${y})`)
+    svgLaag?.append(roos)
   }
 
   // ---------------------------------------------------------- bronvermelding

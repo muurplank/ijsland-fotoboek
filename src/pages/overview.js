@@ -12,6 +12,7 @@ import { maakView, paginaMaat } from '../render/layout.js'
 import { boundsOf } from '../geo/viewport.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
 import { Bezetting, langsElkaar } from '../render/parallel.js'
+import { kompasroos } from './compass.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -225,6 +226,28 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
     legenda.append(van, balk, tot)
   }
   opschriften.append(legenda)
+
+  // ------------------------------------------------------------ kompasroos
+  if (stijl['schaal.noordpijlAan']) {
+    const straal = stijl['schaal.kompasMm'] / 2
+    const rand = marge + straal + (stijl['schaal.kompasLetters'] ? stijl['schaal.kompasLetterMm'] * 1.4 : 1)
+    const hoek = stijl['schaal.kompasHoek']
+
+    const roos = kompasroos({
+      straal,
+      vorm: stijl['schaal.kompasVorm'],
+      donker: stijl['schaal.kompasDonker'],
+      licht: stijl['schaal.kompasLicht'],
+      ring: stijl['schaal.kompasRing'],
+      ringDikteMm: stijl['schaal.kompasLijnMm'],
+      letters: stijl['schaal.kompasLetters'],
+      letterMm: stijl['schaal.kompasLetterMm']
+    })
+    roos.setAttribute('transform',
+      `translate(${hoek.includes('links') ? rand : maat.breedteMm - rand} ` +
+      `${hoek.includes('boven') ? rand : maat.hoogteMm - rand})`)
+    svg.append(roos)
+  }
 
   if (stijl['bron.aan']) {
     const bron = document.createElement('div')
