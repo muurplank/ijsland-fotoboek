@@ -13,6 +13,7 @@
  */
 
 import { paginaMaat } from '../render/layout.js'
+import { bouwSvg, profielVorm, vormSchaal, VORM_INFO } from '../render/profielvorm.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -110,8 +111,14 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
     const xVan = km => grafiekLinks + (km / maxKm) * grafiekBreedte
     const yVan = m => grafiekOnder - (m / bovenGrens) * grafiekHoogte
 
+    const vorm = stijl['profiel.vorm']
+    const hoogteAs = VORM_INFO[vorm]?.hoogteAs ?? true
+
     // --- raster: terughoudend, alleen horizontaal
-    if (stijl['profiel.rasterAan']) {
+    //
+    // Bij een vorm die zijn eigen schaal gebruikt blijft de hoogteas weg: een
+    // streepje bij 400 m dat niet naar 400 m wijst leest erger dan geen as.
+    if (stijl['profiel.rasterAan'] && hoogteAs) {
       const stap = asStap(bovenGrens, Math.round(stijl['profiel.rasterFijnheid'] * 0.6))
       for (let h = 0; h <= bovenGrens; h += stap) {
         svg.append(maakSvg('line', {
@@ -133,67 +140,26 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
       svg.append(eenheid)
     }
 
-    // --- het vlak onder de lijn
+    // --- het vlak onder de lijn, in de vorm die in het paneel gekozen is
     //
-    // Met het hoogteverloop aan volgt de kleur de hoogte: een staand verloop
-    // waarvan de stops op de echte hoogtes liggen. Zo blijft het dal rustig en
-    // springt een klim er meteen uit.
-    //
-    // De tinten zijn zo gekozen dat de helderheid bij elke stap daalt. Een
-    // gewone regenboog heeft in het midden juist het lichtste punt, en dan leest
-    // het verloop niet als "hoger" - zeker niet in grijstinten of voor wie
-    // kleuren slecht onderscheidt.
-    const punten = profiel.map(p => `${xVan(p.afstandKm).toFixed(2)},${yVan(p.hoogteM).toFixed(2)}`)
-
-    let vulling = stijl['profiel.vulKleur']
-
-    if (stijl['profiel.verloopAan']) {
-      const trap = [
-        { m: 0, kleur: stijl['profiel.dal'] },
-        { m: stijl['profiel.laagM'], kleur: stijl['profiel.laag'] },
-        { m: stijl['profiel.middenM'], kleur: stijl['profiel.midden'] },
-        { m: stijl['profiel.hoogM'], kleur: stijl['profiel.hoog'] },
-        { m: stijl['profiel.piekM'], kleur: stijl['profiel.piek'] }
-      ]
-
-      const defs = maakSvg('defs')
-      const verloop = maakSvg('linearGradient', {
-        id: 'hoogteverloop',
-        gradientUnits: 'userSpaceOnUse',
-        x1: 0, y1: yVan(0), x2: 0, y2: yVan(bovenGrens)
-      })
-
-      let vorige = -1
-      for (const stap of trap) {
-        // stops moeten oplopen, ook als je de schuifjes door elkaar zet
-        const m = Math.max(stap.m, vorige + 1)
-        vorige = m
-        verloop.append(maakSvg('stop', {
-          offset: `${Math.min(100, (m / bovenGrens) * 100).toFixed(2)}%`,
-          'stop-color': stap.kleur
-        }))
-      }
-
-      defs.append(verloop)
-      svg.append(defs)
-      vulling = 'url(#hoogteverloop)'
+    // Welke vorm dat ook is: de kleur volgt de hoogte, met stops op de echte
+    // hoogtes. Zo blijft het dal rustig en springt een klim er meteen uit.
+    // Wat per vorm verschilt staat in render/profielvorm.js.
+    for (const knoop of profielVorm(vorm, {
+      punten: profiel.map(p => ({ km: p.afstandKm, m: p.hoogteM })),
+      xVan,
+      yVan,
+      links: grafiekLinks,
+      rechts: grafiekRechts,
+      boven: grafiekBoven,
+      onder: grafiekOnder,
+      bovenGrens,
+      stijl,
+      lijnMm: stijl['profiel.lijnDikteMm'],
+      id: 'dagprofiel'
+    })) {
+      svg.append(bouwSvg(knoop))
     }
-
-    svg.append(maakSvg('polygon', {
-      points: `${grafiekLinks},${grafiekOnder} ${punten.join(' ')} ${grafiekRechts},${grafiekOnder}`,
-      fill: vulling,
-      'fill-opacity': stijl['profiel.verloopAan'] ? stijl['profiel.verloopDekking'] : 1
-    }))
-
-    // --- de lijn zelf
-    svg.append(maakSvg('polyline', {
-      points: punten.join(' '),
-      fill: 'none',
-      stroke: stijl['profiel.lijnKleur'],
-      'stroke-width': stijl['profiel.lijnDikteMm'],
-      'stroke-linejoin': 'round',
-      'stroke-linecap': 'round'
-    }))
 
     // --- stops als merktekens langs de onderkant
     //
@@ -234,7 +200,10 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
     if (stijl['profiel.topLabelAan']) {
       const i = hoogtes.indexOf(hoogste)
       const x = xVan(profiel[i].afstandKm)
-      const y = yVan(hoogste)
+      // de spiegel tekent op halve schaal, dus niet zomaar yVan
+      const y = vormSchaal(vorm, {
+        yVan, boven: grafiekBoven, onder: grafiekOnder, bovenGrens
+      })(hoogste)
 
       svg.append(maakSvg('circle', {
         cx: x, cy: y, r: 0.8,

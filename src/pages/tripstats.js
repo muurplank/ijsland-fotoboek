@@ -11,6 +11,7 @@
  */
 
 import { paginaMaat } from '../render/layout.js'
+import { bouwSvg, profielVorm, VORM_INFO } from '../render/profielvorm.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -117,8 +118,11 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
     const xVan = km => grafiekLinks + (km / maxKm) * grafiekBreedte
     const yVan = m => grafiekOnder - (m / bovenGrens) * grafiekHoogte
 
-    // --- raster
-    if (stijl['profiel.rasterAan']) {
+    const vorm = stijl['profiel.vorm']
+    const hoogteAs = VORM_INFO[vorm]?.hoogteAs ?? true
+
+    // --- raster; weg bij een vorm die zijn eigen schaal gebruikt
+    if (stijl['profiel.rasterAan'] && hoogteAs) {
       const stap = asStap(bovenGrens, Math.round(stijl['profiel.rasterFijnheid'] * 0.6))
       for (let h = 0; h <= bovenGrens; h += stap) {
         svg.append(maakSvg('line', {
@@ -134,54 +138,23 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
       }
     }
 
-    // --- hetzelfde hoogteverloop als op de dagpagina's
-    let vulling = stijl['profiel.vulKleur']
-    if (stijl['profiel.verloopAan']) {
-      const trap = [
-        { m: 0, kleur: stijl['profiel.dal'] },
-        { m: stijl['profiel.laagM'], kleur: stijl['profiel.laag'] },
-        { m: stijl['profiel.middenM'], kleur: stijl['profiel.midden'] },
-        { m: stijl['profiel.hoogM'], kleur: stijl['profiel.hoog'] },
-        { m: stijl['profiel.piekM'], kleur: stijl['profiel.piek'] }
-      ]
-
-      const defs = maakSvg('defs')
-      const verloop = maakSvg('linearGradient', {
-        id: 'reisverloop',
-        gradientUnits: 'userSpaceOnUse',
-        x1: 0, y1: yVan(0), x2: 0, y2: yVan(bovenGrens)
-      })
-
-      let vorige = -1
-      for (const stap of trap) {
-        const m = Math.max(stap.m, vorige + 1)
-        vorige = m
-        verloop.append(maakSvg('stop', {
-          offset: `${Math.min(100, (m / bovenGrens) * 100).toFixed(2)}%`,
-          'stop-color': stap.kleur
-        }))
-      }
-
-      defs.append(verloop)
-      svg.append(defs)
-      vulling = 'url(#reisverloop)'
+    // --- dezelfde vorm en hetzelfde hoogteverloop als op de dagpagina's
+    for (const knoop of profielVorm(vorm, {
+      punten,
+      xVan,
+      yVan,
+      links: grafiekLinks,
+      rechts: grafiekRechts,
+      boven: grafiekBoven,
+      onder: grafiekOnder,
+      bovenGrens,
+      stijl,
+      // over tweeduizend kilometer wordt een lijn van de dagdikte een muur
+      lijnMm: stijl['profiel.lijnDikteMm'] * 0.8,
+      id: 'reisprofiel'
+    })) {
+      svg.append(bouwSvg(knoop))
     }
-
-    const reeks = punten.map(p => `${xVan(p.km).toFixed(2)},${yVan(p.m).toFixed(2)}`)
-
-    svg.append(maakSvg('polygon', {
-      points: `${grafiekLinks},${grafiekOnder} ${reeks.join(' ')} ${grafiekRechts},${grafiekOnder}`,
-      fill: vulling,
-      'fill-opacity': stijl['profiel.verloopAan'] ? stijl['profiel.verloopDekking'] : 1
-    }))
-
-    svg.append(maakSvg('polyline', {
-      points: reeks.join(' '),
-      fill: 'none',
-      stroke: stijl['profiel.lijnKleur'],
-      'stroke-width': stijl['profiel.lijnDikteMm'] * 0.8,
-      'stroke-linejoin': 'round'
-    }))
 
     // --- de dagovergangen, met het dagnummer erboven
     //

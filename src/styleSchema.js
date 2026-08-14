@@ -249,6 +249,10 @@ export const KNOPPEN = [
   { key: 'voortgang.dagAan', groep: 'voortgang', label: 'Dag en titel tonen', type: 'aanuit', standaard: true },
 
   // ----------------------------------------------------------------- profiel
+  { key: 'profiel.vorm', groep: 'profiel', label: 'Vorm van de grafiek', type: 'keuze', opties: ['silhouet', 'lagen', 'kam', 'arcering', 'terras', 'spiegel'], standaard: 'silhouet', help: 'silhouet = vlak met kleurverloop · lagen = vlakke hoogtebanden als uitgesneden multiplex · kam = een staand streepje per meetpunt in zijn eigen hoogtekleur · arcering = schuine lijntjes die hoger dichter gaan staan · terras = rustig vlak met hoogtelijnen erdoorheen · spiegel = het profiel met zijn weerspiegeling eronder' },
+  { key: 'profiel.bandStapM', groep: 'profiel', label: 'Hoogte per band', type: 'getal', min: 25, max: 500, step: 25, standaard: 100, eenheid: 'm', help: 'Voor lagen, arcering en terras: om de hoeveel meter er een nieuwe band of hoogtelijn komt' },
+  { key: 'profiel.kamAfstandMm', groep: 'profiel', label: 'Kam: afstand tussen de streepjes', type: 'mm', min: 0.2, max: 4, step: 0.05, standaard: 0.7 },
+  { key: 'profiel.arceringMm', groep: 'profiel', label: 'Arcering: ruimte tussen de lijntjes', type: 'mm', min: 0.3, max: 3, step: 0.05, standaard: 0.9, help: 'Dit is de ruimste stand, onderaan de grafiek. Naar boven toe gaan de lijntjes vanzelf dichter staan' },
   { key: 'profiel.hoogteMm', groep: 'profiel', label: 'Hoogte van de grafiek', type: 'mm', min: 20, max: 200, step: 1, standaard: 70 },
   { key: 'profiel.vulKleur', groep: 'profiel', label: 'Vulkleur', type: 'kleur', standaard: '#dfe6e9' },
   { key: 'profiel.lijnKleur', groep: 'profiel', label: 'Lijnkleur', type: 'kleur', standaard: '#f4610c'},

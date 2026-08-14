@@ -17,7 +17,7 @@ import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { extname, join, normalize, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { buildDay } from './dayData.js'
+import { maakDagCache } from './dagCache.js'
 import { fetchRoute } from './fetch/route.js'
 import { achtergrondVoorStijl } from './render/basemap.js'
 import { ijslandSilhouet } from './render/inset.js'
@@ -43,20 +43,16 @@ const MIMES = {
 }
 
 /** Onthoudt de opgehaalde daggegevens, zodat draaien aan een knop niet opnieuw downloadt. */
-const dagCache = new Map()
+const dagCache = maakDagCache()
 
 /** De laatst gemaakte laag met opgetilde plaatsnamen. */
 let bovenlaagCache = null
 
 async function dagGegevens (nummer, stijlOverschrijving) {
-  const sleutel = `${nummer}:${JSON.stringify(stijlOverschrijving ?? {})}`
-  if (!dagCache.has(sleutel)) {
-    dagCache.set(sleutel, buildDay(nummer, {
-      stijlOverschrijving,
-      onProgress: b => process.stdout.write(`  ... ${b}\n`)
-    }))
-  }
-  return dagCache.get(sleutel)
+  return dagCache.dag(nummer, {
+    stijlOverschrijving,
+    onProgress: b => process.stdout.write(`  ... ${b}\n`)
+  })
 }
 
 /** Alle dagbestanden, op volgorde. */
@@ -366,7 +362,7 @@ const server = createServer(async (req, res) => {
         await writeFile(boekBestand, JSON.stringify(b, null, 2) + '\n')
       }
 
-      dagCache.clear()
+      dagCache.leeg()
       return json(res, { opgeslagen: true })
     }
 
@@ -387,7 +383,7 @@ const server = createServer(async (req, res) => {
         await writeFile(bestandsnaam, JSON.stringify(inhoud, null, 2) + '\n')
       }
 
-      dagCache.clear()
+      dagCache.leeg()
       return json(res, { opgeslagen: true })
     }
 
