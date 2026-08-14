@@ -213,6 +213,10 @@
       "titelblok": {
         "dxMm": -3.3,
         "dyMm": -2.43
+      },
+      "label:2": {
+        "dxMm": 2.8,
+        "dyMm": -1.17
       }
     },
     "stats": {

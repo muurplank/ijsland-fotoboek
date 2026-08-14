@@ -402,3 +402,38 @@ body:not(.exporteren) #pagina [contenteditable].bewerkt {
 .rgb-rij.r input { accent-color: #c0392b; }
 .rgb-rij.g input { accent-color: #27893f; }
 .rgb-rij.b input { accent-color: #2b6cb0; }
+
+/* ---------------------------------------------- ruimer greepvlak om te slepen
+
+   Een plaatsnaam is op het scherm maar een paar pixels hoog. Om hem te kunnen
+   pakken zonder millimeterwerk krijgt alles wat versleepbaar is een onzichtbare
+   marge eromheen. Die telt alleen voor de muis, niet voor de opmaak: de tekst
+   staat nog precies waar hij stond, en in de export doet dit niets.            */
+
+body:not(.exporteren) #pagina [data-plek]::before {
+  content: '';
+  position: absolute;
+  inset: -7px -9px;
+  border-radius: 4px;
+}
+
+body:not(.exporteren) #pagina .plaatsnaam,
+body:not(.exporteren) #pagina .profiel-stop,
+body:not(.exporteren) #pagina .dagnummer,
+body:not(.exporteren) #pagina .profiel-top { position: absolute; }
+
+/* duidelijker aanwijzen wat je kunt pakken */
+body:not(.exporteren) #pagina [data-plek]:hover::before {
+  background: #7a51381f;
+  outline: 1px dashed #7a5138aa;
+  outline-offset: 0;
+}
+body:not(.exporteren) #pagina [data-plek]:hover { outline: none; }
+body:not(.exporteren) #pagina [data-plek].sleept::before {
+  background: #7a513833;
+  outline: 1px solid #7a5138;
+}
+body:not(.exporteren) #pagina [data-plek].sleept { outline: none; opacity: 1; }
+
+/* teksten die je ook kunt aanpassen krijgen een andere tint aanwijzing */
+body:not(.exporteren) #pagina [data-tekst]:hover::before { outline-color: #2b6cb0aa; }
