@@ -99,24 +99,62 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
   }))
 
   // ------------------------------------------------------ het gevulde deel
+  //
+  // Zelfde opbouw als de routelijn op de kaart: een dekkende rand met een
+  // doorschijnende kern. Zo hoort de balk zichtbaar bij de route en niet bij
+  // een willekeurig ander grafiekje.
   if (huidige.km > 0) {
-    svg.append(maakSvg('line', {
-      x1: links, x2: xVan(huidige.km), y1: midden, y2: midden,
+    const eind = xVan(huidige.km)
+    const buitenDikte = dikte + 2 * stijl['voortgang.buitenExtraMm']
+    const d = `M ${links} ${midden} L ${eind} ${midden}`
+
+    if (stijl['voortgang.buitenExtraMm'] > 0) {
+      // de brede lijn met het midden eruit gemaskeerd, zodat er een echte rand
+      // overblijft en de kern erdoorheen laat zien wat eronder ligt
+      const defs = maakSvg('defs')
+      const masker = maakSvg('mask', { id: 'voortgang-rand', maskUnits: 'userSpaceOnUse' })
+      masker.append(maakSvg('path', {
+        d, fill: 'none', stroke: '#ffffff', 'stroke-width': buitenDikte, 'stroke-linecap': 'round'
+      }))
+      masker.append(maakSvg('path', {
+        d, fill: 'none', stroke: '#000000', 'stroke-width': dikte, 'stroke-linecap': 'round'
+      }))
+      defs.append(masker)
+      svg.append(defs)
+
+      svg.append(maakSvg('path', {
+        d,
+        fill: 'none',
+        stroke: stijl['route.kleur'],
+        'stroke-width': buitenDikte,
+        'stroke-linecap': 'round',
+        mask: 'url(#voortgang-rand)'
+      }))
+    }
+
+    svg.append(maakSvg('path', {
+      d,
+      fill: 'none',
       stroke: stijl['route.kleur'],
+      'stroke-opacity': stijl['voortgang.kernDekking'],
       'stroke-width': dikte,
       'stroke-linecap': 'round'
     }))
   }
 
   // ------------------------------------------------------------- de stops
+  //
+  // Drie maten: waar je nu bent het grootst, waar je al geweest bent iets
+  // groter dan gemiddeld, en wat nog komt het kleinst. Zo lees je de voortgang
+  // ook zonder de kleuren te vergelijken.
   for (const stop of stops) {
     const x = xVan(stop.km)
     const gehad = stop.km <= huidige.km + 0.01
     const isHuidige = stop.index === huidige.index
 
-    const straal = isHuidige
-      ? stijl['voortgang.stipMm'] * 0.8
-      : stijl['voortgang.stipMm'] * 0.42
+    const straal = stijl['voortgang.stipMm'] * (
+      isHuidige ? 0.8 : gehad ? stijl['voortgang.gehadFactor'] : 0.42
+    )
 
     svg.append(maakSvg('circle', {
       cx: x, cy: midden, r: straal,

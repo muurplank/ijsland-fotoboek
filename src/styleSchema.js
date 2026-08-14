@@ -223,6 +223,9 @@ export const KNOPPEN = [
   // ------------------------------------------------------------- voortgang
   { key: 'voortgang.hoogteMm', groep: 'voortgang', label: 'Hoogte van het strookje', type: 'mm', min: 8, max: 80, step: 1, standaard: 24, help: 'Het strookje wordt zo hoog als je hier zet, en net zo breed als de pagina. Bedoeld om onder een foto te plaatsen' },
   { key: 'voortgang.dikteMm', groep: 'voortgang', label: 'Dikte van de balk', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 1.8 },
+  { key: 'voortgang.kernDekking', groep: 'voortgang', label: 'Dekking van de kern', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.47, help: 'De rand blijft altijd dekkend; dit is alleen de binnenkant, net als bij de routelijn op de kaart' },
+  { key: 'voortgang.buitenExtraMm', groep: 'voortgang', label: 'Rand extra dik', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.35 },
+  { key: 'voortgang.gehadFactor', groep: 'voortgang', label: 'Stippen die je gehad hebt', type: 'getal', min: 0.42, max: 1, step: 0.01, standaard: 0.62, help: 'Hoeveel groter de stops die je al gehad hebt zijn dan de stops die nog komen' },
   { key: 'voortgang.baanKleur', groep: 'voortgang', label: 'Kleur van het lege deel', type: 'kleur', standaard: '#e4e0d9' },
   { key: 'voortgang.stipMm', groep: 'voortgang', label: 'Grootte van de stippen', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 2.6 },
   { key: 'voortgang.stipRand', groep: 'voortgang', label: 'Randkleur huidige stip', type: 'kleur', standaard: '#ffffff' },
