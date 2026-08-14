@@ -149,6 +149,7 @@
     "statistieken.labelKleur": "#8b847c",
     "statistieken.lijntjes": false,
     "route.buitenAlsRand": true,
-    "profiel.verloopAan": true
+    "profiel.verloopAan": true,
+    "schaal.kompasMm": 17
   }
 }

@@ -233,6 +233,16 @@
         "dxMm": 17.53,
         "dyMm": 0
       }
+    },
+    "reiscijfers": {
+      "reistabel": {
+        "dxMm": 0.5,
+        "dyMm": 0.16
+      },
+      "reistotalen": {
+        "dxMm": 2,
+        "dyMm": 6.34
+      }
     }
   }
 }

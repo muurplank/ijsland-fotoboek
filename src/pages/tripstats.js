@@ -184,13 +184,22 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
     }))
 
     // --- de dagovergangen, met het dagnummer erboven
-    for (const grens of dagGrenzen) {
-      if (grens.km === 0) continue
-      const x = xVan(grens.km)
-      svg.append(maakSvg('line', {
-        x1: x, x2: x, y1: grafiekBoven - 1, y2: grafiekOnder,
-        stroke: '#00000022', 'stroke-width': 0.15, 'stroke-dasharray': '0.8 0.8'
-      }))
+    //
+    // Deze lijnen staan bewust duidelijker dan het raster: het raster is er om
+    // waarden af te lezen, deze om de reis in dagen te verdelen. Twee soorten
+    // hulplijnen met dezelfde zwaarte zouden allebei aan kracht verliezen.
+    if (stijl['profiel.dagLijnenAan']) {
+      for (const grens of dagGrenzen) {
+        if (grens.km === 0) continue
+        const x = xVan(grens.km)
+        svg.append(maakSvg('line', {
+          x1: x, x2: x, y1: grafiekBoven - 3.5, y2: grafiekOnder + 1.5,
+          stroke: stijl['profiel.dagLijnKleur'],
+          'stroke-width': stijl['profiel.dagLijnMm'],
+          'stroke-dasharray': `${stijl['profiel.dagStreepMm']} ${stijl['profiel.dagStreepMm'] * 0.8}`,
+          'stroke-linecap': 'round'
+        }))
+      }
     }
 
     for (const [i, grens] of dagGrenzen.entries()) {
