@@ -2,7 +2,7 @@
   "dag": 7,
   "datum": "2026-08-12",
   "titel": "Snaefellsnes en de zonsverduistering",
-  "tekst": "",
+  "tekst": "Na een keer lekker uitslapen zijn we op weg gegaan naar Búðakirkja, een klein zwart kerkje dat ook nog eens vlak bij de plek lag waar we de zonsverduistering wilden zien. Onderweg hebben we veel stops gemaakt voor eclipsebrilletjes, die erg moeilijk te vinden bleken. Uiteindelijk hadden we ze te pakken in een soort raar klein supermarktje.\n\nEenmaal aangekomen bij de kerk hebben we precies uitgezocht waar we het beste konden staan en zijn we daar nog even naartoe doorgereden. Daar was het vervolgens wachten. Helaas was het te bewolkt om veel van de zonsverduistering te zien, maar we merkten wel dat het gebeurde: het werd opeens twee minuten lang helemaal donker.\n\nOp de terugweg stonden we jammer genoeg heel lang in de file. Waar we op de heenweg zo’n drie uur over hadden gedaan, deden we er nu 6,5 uur over. Later hebben we het opgezocht en het bleek de langste file ooit in de geschiedenis van IJsland te zijn.",
   "waypoints": [
     {
       "name": "",
@@ -190,5 +190,17 @@
       "verblijf": "auto"
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "titelblok": {
+        "dxMm": 49.22,
+        "dyMm": 5.92
+      },
+      "label:25": {
+        "dxMm": 15.85,
+        "dyMm": -19.51
+      }
+    }
+  }
 }

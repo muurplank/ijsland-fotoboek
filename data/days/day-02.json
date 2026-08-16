@@ -2,10 +2,10 @@
   "dag": 2,
   "datum": "2026-08-07",
   "titel": "Keflavík → de zuidkust",
-  "tekst": "",
+  "tekst": "We hebben geslapen tot 08:00 uur en zijn daarna met de step de auto gaan ophalen en gaan inladen bij het hotel. Toen konden we eindelijk onderweg naar Reykjavík. Onderweg zijn we even gestopt voor wat snacks en daarna de stad in gegaan voor gasflesjes en souvenirs. We zijn nog langs een paar kledingwinkels geweest voor waterdichte kleding, maar helaas met weinig resultaat. Wel kregen we te horen dat we het geld van de originele boeking terug zouden krijgen, waardoor we onderaan de streep toch 250 euro minder kwijt waren aan de auto.\n\nHierna reden we door naar het stadje waar we in de buurt wilden kamperen. Onderweg kwamen we langs de Seljalandsfoss, een super mooie en grote waterval waar je na een klein stukje lopen ook nog een waterval in een berg vindt. Vervolgens zijn we doorgereden naar de camping. Na een heerlijke maaltijd van varkenshaas en zoete aardappel hebben we de tent opgezet. We probeerden op tijd te gaan slapen, maar dat lukte half door de extreme kou. Vanaf 02:00 uur heeft eigenlijk niemand van ons meer geslapen.",
   "waypoints": [
     {
-      "name": "Hotel",
+      "name": "Hotyel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "start"
@@ -18,7 +18,7 @@
       "toonLabel": false
     },
     {
-      "name": "Hotel",
+      "name": "Hotyel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "stop",
@@ -177,12 +177,16 @@
       "label:2": {
         "dxMm": 16.78,
         "dyMm": -10.07
+      },
+      "label:8": {
+        "dxMm": 19.63,
+        "dyMm": -6.31
       }
     },
     "stats": {
       "cijferrij": {
-        "dxMm": 20.03,
-        "dyMm": 80.12
+        "dxMm": 1.98,
+        "dyMm": -1.81
       },
       "titelblok": {
         "dxMm": 2.5,

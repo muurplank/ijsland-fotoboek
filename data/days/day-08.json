@@ -2,7 +2,7 @@
   "dag": 8,
   "datum": "2026-08-13",
   "titel": "Naar huis",
-  "tekst": "",
+  "tekst": "Voor de laatste nacht hebben we maar in de auto geslapen, omdat we geen zin hadden in een hotel en ook niet in het vroeg in de ochtend afbreken van de tent. We hebben allemaal best slecht geslapen en zijn daarna meteen doorgereden om de auto in te leveren, waarna een shuttle ons naar het vliegveld bracht.\n\nDaar was het super druk en stond slecht aangegeven wat we moesten doen om de koffers af te geven. Toen we eindelijk door de security heen waren, hebben we gewacht op het vliegtuig richting Oslo, waar we zouden overstappen op de vlucht naar Amsterdam. Na die overstap zijn we uiteindelijk gewoon op Schiphol aangekomen, waar we tot slot nog anderhalf uur op de koffers hebben staan wachten. Daarmee zat de reis erop.",
   "waypoints": [
     {
       "name": "",
@@ -25,7 +25,8 @@
       "lon": -22.622345,
       "type": "end",
       "notitie": "shuttle naar vliegveld",
-      "toonLabel": false
+      "toonLabel": false,
+      "verblijf": "vliegtuig"
     }
   ],
   "stijl": {
@@ -39,5 +40,23 @@
     "pijltjes.afstandCm": 1.5,
     "schaal.kleur": "#ffffff",
     "bron.kleur": "#ffffffcc"
+  },
+  "plaatsing": {
+    "kaart": {
+      "inzet": {
+        "dxMm": -221.65,
+        "dyMm": -3.91
+      },
+      "titelblok": {
+        "dxMm": 12.92,
+        "dyMm": 1.22
+      }
+    },
+    "reiscijfers": {
+      "reistabel": {
+        "dxMm": 19.8,
+        "dyMm": 0
+      }
+    }
   }
 }

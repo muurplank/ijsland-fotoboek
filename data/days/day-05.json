@@ -2,7 +2,7 @@
   "dag": 5,
   "datum": "2026-08-10",
   "titel": "Noordkust en de Westfjorden-rand",
-  "tekst": "",
+  "tekst": "Na een nacht die nog steeds koud was—maar een stuk beter te doen dan de eerste—zijn we weer op pad gegaan. Langs de weg hebben we bij een picknicktafel ontbeten met pannenkoeken. Daarna reden we door naar een plek die een zwart strand met geometrische basaltvormen had moeten zijn, maar daar was ter plekke niks van terug te zien en online konden we er ook weinig over vinden. We zijn daarom doorgereden naar een mooie vuurtoren op een vergelijkbaar strand.\n\nAangezien we daardoor vrij afgelegen zaten en nog boodschappen moesten doen, moesten we 2,5 uur rijden naar de dichtstbijzijnde supermarkt. Eenmaal daar de spullen gehaald te hebben, hebben we 's avonds lekker pasta gemaakt op een wildcamping.",
   "waypoints": [
     {
       "name": "",
@@ -201,8 +201,20 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 5.86,
-        "dyMm": 4.99
+        "dxMm": 0,
+        "dyMm": 0
+      },
+      "marker:26": {
+        "dxMm": 0,
+        "dyMm": 0,
+        "schaal": 1.34
+      }
+    },
+    "stats": {
+      "dagtekst": {
+        "dxMm": 71.78,
+        "dyMm": 18.56,
+        "schaal": 1
       }
     }
   }

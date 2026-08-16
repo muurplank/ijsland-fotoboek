@@ -2,7 +2,7 @@
   "dag": 6,
   "datum": "2026-08-11",
   "titel": "De Gouden Cirkel",
-  "tekst": "",
+  "tekst": "Toen we wakker werden, zijn we meteen naar de geysers gereden. Daar zijn we best lang gebleven en we hebben echt veel uitbarstingen gezien, wat ik van tevoren niet zo had verwacht. Na de geysers zijn we doorgereden naar een paar van de grootste watervallen van het eiland en het bekende vliegtuigwrak vlak aan zee. Dit lag weer dicht bij de eerste waterval die we aan het begin van de reis hadden gezien, waarmee ons rondje IJsland officieel voltooid was.\n\nHierna zijn we nog even langs de supermarkt gegaan voor wat boodschappen en daarna doorgereden naar het hotel voor alweer een van de laatste nachten.",
   "waypoints": [
     {
       "name": "",
@@ -172,8 +172,32 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 8.26,
-        "dyMm": -240.44
+        "dxMm": 0,
+        "dyMm": -247.54,
+        "schaal": 0.68
+      },
+      "titelblok": {
+        "dxMm": 98.63,
+        "dyMm": -3.55
+      },
+      "label:22": {
+        "dxMm": 0,
+        "dyMm": 0
+      },
+      "label:9": {
+        "dxMm": -2.72,
+        "dyMm": -3.47
+      }
+    },
+    "stats": {
+      "dagtekst": {
+        "dxMm": 51.98,
+        "dyMm": 23.69,
+        "schaal": 1.39
+      },
+      "cijferrij": {
+        "dxMm": 0.01,
+        "dyMm": 2.61
       }
     }
   }

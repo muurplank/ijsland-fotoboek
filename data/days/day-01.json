@@ -2,14 +2,15 @@
   "dag": 1,
   "datum": "2026-08-06",
   "titel": "Aankomst",
-  "tekst": "",
+  "tekst": "Na de feestweek in Santpoort en een korte after bij mij thuis, hadden we welgeteld twee uurtjes geslapen toen we werden opgehaald. Eenmaal op Schiphol hadden we direct al een uur vertraging terwijl we al in het vliegtuig zaten. Aangekomen in IJsland pikten we de koffers op en alles leek soepel te gaan, totdat we de huurauto wilden ophalen. We moesten bellen, maar er nam niemand op. Omdat we dachten te weten waar het was, zijn we maar 20 minuten door de regen gelopen. Daar kwamen we erachter dat het bedrijf helemaal niet bestond, niemand het kende en we simpelweg opgelicht waren. Geen auto dus...\n\nNa een hele tijd op het vliegveld te hebben gezeten om te kijken wat we konden doen, hebben we een lijstje van hopelijk wél betrouwbare bedrijven afgezocht en uiteindelijk ergens een auto gehuurd die we helaas pas de volgende dag op konden halen. Vervolgens moesten we nog een slaapplek regelen. De campings die we vonden lagen op meer dan twee uur lopen, dus hebben we uiteindelijk maar gekozen voor een hotel dat op een uurtje wandelen lag. Onderweg kwamen we elektrische stepjes tegen, dus zijn we met z'n tweeën op één step (met de koffers erachteraan slepend) naar het hotel gereden. Omdat we nog niet konden inchecken, hebben we eerst wat boodschappen gedaan. Eenmaal ingecheckt hebben we op de kamer hotdog opgewarmd in de waterkoker. Hierna hebben we niet veel meer gedaan en zijn we op tijd naar bed gegaan. ’s Nachts werden we nog wel even wakker gemaakt dat we in de verkeerde kamer zouden liggen maar dat leek uiteindelijk goed gegaan te zijn.",
   "_types": "start | via (alleen langsgereden) | stop (echt uitgestapt) | overnight (hier geslapen) | end",
   "waypoints": [
     {
       "name": "Keflavík Airport",
       "lat": 63.99661,
       "lon": -22.622687,
-      "type": "start"
+      "type": "start",
+      "verblijf": "vliegtuig"
     },
     {
       "name": "",
@@ -57,7 +58,7 @@
       "toonLabel": false
     },
     {
-      "name": "Hotel",
+      "name": "Hotyel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "overnight",
@@ -68,8 +69,8 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 5.34,
-        "dyMm": 9.81
+        "dxMm": 0,
+        "dyMm": 0
       },
       "schaalbalk": {
         "dxMm": 8.26,
@@ -84,18 +85,48 @@
         "dyMm": -0.52
       },
       "label:0": {
-        "dxMm": 17.53,
+        "dxMm": 38.61,
         "dyMm": 0
+      },
+      "marker:2": {
+        "dxMm": 0,
+        "dyMm": 0,
+        "schaal": 1.26
+      },
+      "marker:7": {
+        "dxMm": -4.98,
+        "dyMm": 6.16,
+        "schaal": 1.8
+      },
+      "titelblok": {
+        "dxMm": 0,
+        "dyMm": 2.61
       }
     },
     "reiscijfers": {
       "reistabel": {
-        "dxMm": 0.5,
-        "dyMm": 0.16
+        "dxMm": 55.38,
+        "dyMm": 19.96,
+        "schaal": 0.97
       },
       "reistotalen": {
-        "dxMm": 2,
-        "dyMm": 6.34
+        "dxMm": 0.01,
+        "dyMm": 9.42
+      },
+      "titelblok": {
+        "dxMm": 99.42,
+        "dyMm": -6.63
+      }
+    },
+    "stats": {
+      "dagtekst": {
+        "dxMm": 52.01,
+        "dyMm": 18
+      },
+      "titelblok": {
+        "dxMm": 109.34,
+        "dyMm": -3.79,
+        "schaal": 0.97
       }
     }
   }

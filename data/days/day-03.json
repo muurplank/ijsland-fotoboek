@@ -2,7 +2,7 @@
   "dag": 3,
   "datum": "2026-08-08",
   "titel": "Gletsjerlagunes → Stuðlagil",
-  "tekst": "",
+  "tekst": "Na een super slechte nacht hebben we om 05:45 uur heerlijke bacon en eieren gemaakt, de tent afgebroken en zijn we verder gereden op zoek naar dekentjes. Op weg naar Diamond Beach zagen we een soort klein meer met allemaal grote stukken ijs van de gletsjer, waar we even zijn gestopt voor wat foto’s. Daarna zijn we doorgereden naar Diamond Beach zelf, om te kijken naar de blokken ijs op het zwarte strand.\n\nVervolgens zijn we naar Höfn gereden om bij verschillende winkels te zoeken naar dekentjes, helaas opnieuw zonder resultaat. We hebben Route 1 vervolgd langs gestolde lavavelden, voordat we de F939 op gingen: een onverharde en slecht onderhouden weg (wat wel de bedoeling was). Omdat het super mistig was, zagen we niet super veel. Na de F-road kwamen we uit bij Egilsstaðir. Aangezien we ook daar nergens dekentjes konden vinden, hebben we de knoop doorgehakt en een hotelletje geboekt omdat we echt niet nog een nacht in de kou door wilden brengen.\n\nVoordat we naar het hotel gingen, zijn we nog langs de Stuðlagil-kloof gereden, waar de rotsen allemaal bijzondere geometrische vormen hebben door het stollen van lava. Eenmaal terug bij het hotel hebben we pasta gemaakt en zijn we snel gaan slapen. We waren zo moe van de nacht ervoor dat we in één ruk 11 uur hebben geslapen.",
   "waypoints": [
     {
       "name": "Kamperen",
@@ -200,5 +200,51 @@
       "fweg": false
     }
   ],
-  "stijl": {}
+  "stijl": {},
+  "plaatsing": {
+    "kaart": {
+      "label:26": {
+        "dxMm": 3.81,
+        "dyMm": 16.28
+      },
+      "marker:0": {
+        "dxMm": 0,
+        "dyMm": 0,
+        "schaal": 2.32
+      },
+      "label:0": {
+        "dxMm": 4.98,
+        "dyMm": -17.53
+      },
+      "marker:26": {
+        "dxMm": -8.77,
+        "dyMm": 3.32,
+        "schaal": 1.95
+      },
+      "titelblok": {
+        "dxMm": 124.38,
+        "dyMm": -2.74,
+        "schaal": 0.99
+      },
+      "kompas": {
+        "dxMm": 0,
+        "dyMm": 0,
+        "schaal": 1.29
+      },
+      "inzet": {
+        "dxMm": 0,
+        "dyMm": 2.35
+      }
+    },
+    "stats": {
+      "dagtekst": {
+        "dxMm": 56.46,
+        "dyMm": 15.84
+      },
+      "cijferrij": {
+        "dxMm": 0.01,
+        "dyMm": 3.72
+      }
+    }
+  }
 }
