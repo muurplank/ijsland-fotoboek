@@ -20,7 +20,7 @@ const bult = (u, v, mu, mv, breedte, hoogte) =>
   hoogte * Math.max(0, 1 - ((u - mu) ** 2 + (v - mv) ** 2) / breedte ** 2) ** 2
 
 /** IJskoepel met twee nunataks, een aflopende tong en schotsen ervoor. */
-export function gletsjer ({ nx, ny, tussen }) {
+export function gletsjer ({ nx, ny }) {
   const veld = hoogteVeld((u, v) => {
     const koepel = bult(u, v, 0.62, 0.5, 0.52, 4.2)
     const nunatak = bult(u, v, 0.34, 0.28, 0.14, 1.5) + bult(u, v, 0.42, 0.74, 0.12, 1.1)
@@ -34,16 +34,17 @@ export function gletsjer ({ nx, ny, tussen }) {
   const schots = (x, y, maat) => verplaats(
     prisma(
       [{ x: maat, y: 0 }, { x: 0, y: maat * 0.8 }, { x: -maat, y: 0 }, { x: 0, y: -maat * 0.8 }],
-      0, maat * 0.22, { tussen }
+      0, maat * 0.22
     ),
     { x, y }
   )
 
+  // In de hoek waar het veld op nul ligt, anders steken ze door de helling heen
   return voegSamen(
     veld,
-    schots(-4.7, -1.8, 0.95),
-    schots(-5.3, 1.2, 0.7),
-    schots(-4, 2.6, 0.55)
+    schots(-4.4, -3.6, 0.95),
+    schots(-2.9, -4.1, 0.7),
+    schots(-5.1, -2.4, 0.55)
   )
 }
 
@@ -53,7 +54,7 @@ export function gletsjer ({ nx, ny, tussen }) {
  * De lip buigt naar de kijker toe, want dat hoefijzer is het enige waaraan je
  * deze waterval van elke andere onderscheidt.
  */
-export function waterval ({ zijden, tussen }) {
+export function waterval ({ zijden }) {
   const HOOG = 6.2
 
   // Het gordijn is uit losse paden opgebouwd en niet uit een draailichaam, dus

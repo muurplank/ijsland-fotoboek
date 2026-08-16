@@ -99,18 +99,21 @@ function vliegtuig ({ zijden, tussen }) {
     -90, 'y'
   ), { x: 5.25 })
 
-  // naar achteren geveegd: de tip staat verder naar de staart dan de wortel
+  // De draagvlakken blijven twee doorsneden dik, ook op de hoogste fijnheid:
+  // een vleugel van 0,24 dik in tien laagjes snijden geeft geen vorm maar
+  // streepjes. Naar achteren geveegd, dus de tip staat dichter bij de staart
+  // dan de wortel.
   const vleugel = verplaats(prisma([
     { x: -1.4, y: 0.7 }, { x: 1.6, y: 0.7 }, { x: 3.4, y: 5.2 }, { x: 1.9, y: 5.2 }
-  ], -0.12, 0.12, { tussen }), { x: -1.4 })
+  ], -0.12, 0.12), { x: -1.4 })
 
   const stabilo = verplaats(prisma([
     { x: -0.9, y: 0.5 }, { x: 0.9, y: 0.5 }, { x: 1.8, y: 2.3 }, { x: 0.9, y: 2.3 }
-  ], -0.1, 0.1, { tussen }), { x: 3.3 })
+  ], -0.1, 0.1), { x: 3.3 })
 
   const vin = verplaats(draai(prisma([
     { x: -0.6, y: 0 }, { x: 1.4, y: 0 }, { x: 1.9, y: 2.6 }, { x: 0.7, y: 2.6 }
-  ], -0.1, 0.1, { tussen }), 90, 'x'), { x: 3.2 })
+  ], -0.1, 0.1), 90, 'x'), { x: 3.2 })
 
   const motor = draai(draaiLichaam([
     { r: 0.4, z: -0.9 }, { r: 0.48, z: -0.5 }, { r: 0.48, z: 0.5 }, { r: 0.38, z: 0.9 }
