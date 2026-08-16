@@ -68,6 +68,32 @@ async function alleDagen () {
   return uit
 }
 
+/**
+ * Waar je de nacht voor deze dag sliep.
+ *
+ * De dagkaart tekent op het vertrekpunt hetzelfde icoon als waar je die nacht
+ * lag - een tent, een huisje, een auto - want daar kwam je 's ochtends uit.
+ * Dat wordt hier afgeleid en niet in het dagbestand overgetypt: verplaats je de
+ * overnachting van dag 3, dan volgt het vertrekpunt van dag 4 vanzelf.
+ *
+ * Of het punt werkelijk samenvalt met het vertrek beoordeelt de tekenlaag; hier
+ * gaat alleen mee waar en wat het was.
+ */
+async function vorigeNacht (nummer) {
+  if (nummer <= 1) return null
+
+  const vorige = (await alleDagen()).find(d => d.dag === nummer - 1)
+  const laatste = vorige?.waypoints?.at(-1)
+  if (!laatste?.verblijf) return null
+
+  return {
+    verblijf: laatste.verblijf,
+    name: laatste.name ?? '',
+    lat: laatste.lat,
+    lon: laatste.lon
+  }
+}
+
 /** De routepunten van de hele reis achter elkaar. */
 let reisCoordsCache = null
 async function heleReisCoords () {
@@ -250,6 +276,7 @@ const server = createServer(async (req, res) => {
         statistieken: d.statistieken,
         weer: d.weer,
         profiel: d.profiel,
+        vorigeNacht: await vorigeNacht(nummer),
         genegeerd: d.genegeerd
       })
     }

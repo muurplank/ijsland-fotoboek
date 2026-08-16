@@ -23,6 +23,50 @@ const maak = (tag, eigenschappen = {}) => {
 const UITEINDEN = { rond: 'round', plat: 'butt', vierkant: 'square' }
 
 /**
+ * Binnen hoeveel graden twee punten dezelfde plek zijn: ongeveer zestig meter.
+ *
+ * Ruim genoeg voor een parkeerplaats of een hotelingang die je op twee dagen
+ * net iets anders hebt aangetikt, krap genoeg om niet de buurman mee te nemen.
+ * Dezelfde marge waarmee de server namen over dagen heen bijwerkt.
+ */
+const ZELFDE_PLEK_GRADEN = 0.0006
+
+/** De eigenschappen waarmee de bedieningspagina een onderdeel herkent. */
+const SLEEP = 'data-plek'
+const SCHAALBAAR = 'data-schaalbaar'
+const KNOPPEN = 'data-knoppen'
+
+/** Ligt dit punt op de plek waar de vorige nacht eindigde? */
+function isVorigeNacht (gegevens, w, i) {
+  const vorige = gegevens.vorigeNacht
+  return i === 0 && !!vorige &&
+    Math.abs(vorige.lat - w.lat) <= ZELFDE_PLEK_GRADEN &&
+    Math.abs(vorige.lon - w.lon) <= ZELFDE_PLEK_GRADEN
+}
+
+/**
+ * Waar je bij dit punt sliep, of niets.
+ *
+ * Het vertrekpunt van een dag is de plek waar je de vorige nacht lag, maar in
+ * het dagbestand staat het als een gewone start zonder verblijf. Vertrek je
+ * daar 's ochtends uit een tent, dan hoort er ook een tentje te staan - anders
+ * lijkt het alsof je de dag uit het niets begon.
+ *
+ * Afgeleid van de vorige dag en niet overgetypt in het bestand: verander je
+ * waar dag 3 eindigde, dan volgt het vertrekpunt van dag 4 vanzelf.
+ */
+function verblijfVan (gegevens, w, i) {
+  if (w.verblijf) return w.verblijf
+  return isVorigeNacht(gegevens, w, i) ? (gegevens.vorigeNacht.verblijf ?? null) : null
+}
+
+/** De naam van dit punt; het vertrekpunt erft die van de nacht ervoor. */
+function naamVan (gegevens, w, i) {
+  if (w.name) return w.name
+  return isVorigeNacht(gegevens, w, i) ? (gegevens.vorigeNacht.name ?? '') : ''
+}
+
+/**
  * De stukken van de route die op een F-weg liggen, als losse puntenreeksen.
  *
  * De etappelengtes vertellen waar elke etappe begint en eindigt op de route.
@@ -143,44 +187,83 @@ function markerVorm (vorm, straal) {
     })
   }
 
-  // Iconen voor waar je sliep. Bewust hoekig en zonder details: op vier
-  // millimeter papier overleeft alleen de silhouetvorm, en juist die maakt in
-  // een oogopslag duidelijk of het een tent of een dak was.
+  return maak('circle', { cx: 0, cy: 0, r: straal })
+}
+
+/** De vormen waar je sliep; die krijgen een badge in plaats van een silhouet. */
+const SLAAPVORMEN = new Set(['tent', 'huisje', 'auto'])
+
+/**
+ * Het tekentje voor waar je sliep, in een eenheidsvierkant van -1 tot 1.
+ *
+ * Alles is bewust hoekig en zonder details: op vier millimeter papier overleeft
+ * alleen de grote vorm. De deuropening in de tent en het huisje zijn gaten
+ * (evenodd), niet lijntjes - een lijn van een tiende millimeter verdwijnt in de
+ * druk, een gat blijft staan omdat de vulkleur eromheen er dwars doorheen komt.
+ */
+function slaapTeken (vorm) {
   if (vorm === 'tent') {
-    const s = straal
-    return maak('path', {
-      // driehoek met een V-vormige opening onderin, zoals een tentflap
-      d: `M ${-s * 1.05} ${s * 0.8} L 0 ${-s} L ${s * 1.05} ${s * 0.8} ` +
-         `L ${s * 0.3} ${s * 0.8} L 0 ${s * 0.02} L ${-s * 0.3} ${s * 0.8} Z`,
-      'stroke-linejoin': 'round'
-    })
+    // A-tent: twee schuine wanden op een vlakke grond, met een openstaande flap
+    return 'M 0 -0.78 L 0.86 0.62 L 0.56 0.62 L 0 -0.28 L -0.56 0.62 L -0.86 0.62 Z ' +
+           'M 0 0.06 L 0.34 0.62 L -0.34 0.62 Z'
   }
 
   if (vorm === 'huisje') {
-    const s = straal
-    return maak('path', {
-      // silhouet met een deuropening; evenodd maakt de deur een gat
-      d: `M ${-s * 0.88} ${s * 0.85} L ${-s * 0.88} ${-s * 0.08} L 0 ${-s} ` +
-         `L ${s * 0.88} ${-s * 0.08} L ${s * 0.88} ${s * 0.85} Z ` +
-         `M ${-s * 0.24} ${s * 0.85} L ${-s * 0.24} ${s * 0.26} ` +
-         `L ${s * 0.24} ${s * 0.26} L ${s * 0.24} ${s * 0.85} Z`,
-      'fill-rule': 'evenodd',
-      'stroke-linejoin': 'round'
-    })
+    // dak met overstek op een vierkant huis, met een deur als gat erin
+    return 'M 0 -0.82 L 0.92 -0.02 L 0.68 -0.02 L 0.68 0.7 L -0.68 0.7 ' +
+           'L -0.68 -0.02 L -0.92 -0.02 Z ' +
+           'M -0.2 0.7 L -0.2 0.16 L 0.2 0.16 L 0.2 0.7 Z'
   }
 
-  if (vorm === 'auto') {
-    const s = straal
-    return maak('path', {
-      d: `M ${-s} ${s * 0.35} L ${-s * 0.82} ${-s * 0.12} L ${-s * 0.45} ${-s * 0.55} ` +
-         `L ${s * 0.45} ${-s * 0.55} L ${s * 0.82} ${-s * 0.12} L ${s} ${s * 0.35} ` +
-         `L ${s} ${s * 0.62} L ${s * 0.6} ${s * 0.62} L ${s * 0.6} ${s * 0.35} ` +
-         `L ${-s * 0.6} ${s * 0.35} L ${-s * 0.6} ${s * 0.62} L ${-s} ${s * 0.62} Z`,
-      'stroke-linejoin': 'round'
-    })
-  }
+  // auto: motorkap, cabine en twee wielen die onder de bodem uit steken
+  return 'M -0.9 0.1 L -0.66 0.1 L -0.44 -0.42 L 0.44 -0.42 L 0.66 0.1 L 0.9 0.1 ' +
+         'L 0.9 0.4 L -0.9 0.4 Z ' +
+         'M -0.52 0.4 A 0.2 0.2 0 1 0 -0.52 0.41 Z ' +
+         'M 0.52 0.4 A 0.2 0.2 0 1 0 0.52 0.41 Z'
+}
 
-  return maak('circle', { cx: 0, cy: 0, r: straal })
+/**
+ * Een overnachting als badge: een gevulde schijf met het tekentje erin.
+ *
+ * Een kaal silhouet in de routekleur verdwijnt op een drukke kaart - een tentje
+ * op een groen dal is nauwelijks te vinden. Een gevulde schijf met het icoon in
+ * de randkleur erop geeft altijd hetzelfde contrast, ongeacht wat eronder ligt.
+ * Dat is ook hoe kaarten hun voorzieningen zetten.
+ */
+function slaapBadge (vorm, straal, { vulling, rand, randMm }) {
+  const groep = maak('g')
+
+  // Een dunnere ring dan de gewone stops hebben.
+  //
+  // Die stops zijn een witte schijf met een dikke gekleurde ring - daar ís de
+  // ring het teken. Hier is de ring alleen bedoeld om de badge van de kaart los
+  // te maken, en op de volle dikte vreet hij de schijf op: er blijft dan zo
+  // weinig vulkleur over dat het witte tekentje en de witte ring in elkaar
+  // overlopen en je een wit vlekje ziet in plaats van een tentje.
+  const ring = Math.min(randMm, straal * 0.18)
+
+  groep.append(maak('circle', {
+    cx: 0, cy: 0, r: straal - ring / 2,
+    fill: vulling,
+    stroke: rand,
+    'stroke-width': ring
+  }))
+
+  // Het tekentje schikt zich naar de binnenmaat van de ring, niet naar de
+  // buitenrand, zodat er rondom altijd een band vulkleur overblijft. Dat
+  // bandje is wat het als badge laat lezen.
+  const binnen = straal - ring
+  const schaal = binnen * 0.74
+
+  groep.append(maak('path', {
+    d: slaapTeken(vorm),
+    transform: `scale(${schaal.toFixed(4)})`,
+    fill: rand,
+    'fill-rule': 'evenodd',
+    'stroke-linejoin': 'round'
+  }))
+
+  return groep
 }
 
 /**
@@ -352,9 +435,14 @@ export function teken (svg, opschriften, gegevens, stijl) {
   const markers = maak('g')
   let stopNummer = 0
 
-  for (const w of gegevens.dag.waypoints) {
+  for (const [i, w] of gegevens.dag.waypoints.entries()) {
+    // uitgezette stops tekenen we helemaal niet: geen stip, geen naam, en ze
+    // tellen ook niet mee in de nummering
+    if (w.toon === false) continue
+
     const p = view.project(w.lon, w.lat)
-    const slaap = w.type === 'overnight'
+    const verblijf = verblijfVan(gegevens, w, i)
+    const slaap = w.type === 'overnight' || (i === 0 && !!verblijf)
     const via = w.type === 'via'
 
     const straal = (slaap
@@ -366,22 +454,29 @@ export function teken (svg, opschriften, gegevens, stijl) {
     // Waar je sliep bepaalt het icoon: een tent voor kamperen, een huis voor
     // een hotel, een auto voor de nacht op de parkeerplaats. Staat het niet in
     // het dagbestand, dan valt hij terug op de ingestelde vorm.
-    const slaapVorm = { tent: 'tent', hotel: 'huisje', auto: 'auto' }[w.verblijf] ??
+    const slaapVorm = { tent: 'tent', hotel: 'huisje', auto: 'auto' }[verblijf] ??
       stijl['markers.slaapVorm']
 
-    const vorm = markerVorm(
-      slaap ? slaapVorm : via ? 'cirkel' : stijl['markers.stopVorm'],
-      straal
-    )
+    const gekozen = slaap ? slaapVorm : via ? 'cirkel' : stijl['markers.stopVorm']
+    const alsBadge = slaap && SLAAPVORMEN.has(gekozen)
 
-    vorm.setAttribute('transform', `translate(${p.x.toFixed(3)} ${p.y.toFixed(3)})`)
-    vorm.setAttribute('fill', slaap
-      ? stijl['markers.slaapVulling']
-      : via ? stijl['markers.viaVulling'] : stijl['markers.stopVulling'])
+    const vorm = alsBadge
+      ? slaapBadge(gekozen, straal, {
+          vulling: stijl['markers.slaapVulling'],
+          rand: stijl['markers.slaapRand'],
+          randMm: stijl['markers.stopRandMm']
+        })
+      : markerVorm(gekozen, straal)
 
-    if (!via) {
-      vorm.setAttribute('stroke', slaap ? stijl['markers.slaapRand'] : stijl['markers.stopRand'])
-      vorm.setAttribute('stroke-width', stijl['markers.stopRandMm'])
+    if (!alsBadge) {
+      vorm.setAttribute('fill', slaap
+        ? stijl['markers.slaapVulling']
+        : via ? stijl['markers.viaVulling'] : stijl['markers.stopVulling'])
+
+      if (!via) {
+        vorm.setAttribute('stroke', slaap ? stijl['markers.slaapRand'] : stijl['markers.stopRand'])
+        vorm.setAttribute('stroke-width', stijl['markers.stopRandMm'])
+      }
     }
 
     markers.append(vorm)
@@ -403,16 +498,30 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
   // ---------------------------------------------------------------- labels
   if (stijl['labels.aan']) {
-    // Dezelfde naam twee keer op één kaart is altijd fout: reed je heen en weer
+    // Dezelfde plek twee keer benoemen is altijd fout: reed je heen en weer
     // langs het vliegveld, dan hoort er één keer "Keflavík Airport" te staan.
-    const alGetoond = new Set()
+    //
+    // Op de plek ontdubbelen en niet op de naam. Op de naam ontdubbelen leek
+    // hetzelfde, maar liet een label verdwijnen zodra je het de naam van een
+    // ander punt gaf - en dat is precies wat je doet als twee stops allebei
+    // "Kamperen" heten. Twee plekken die toevallig hetzelfde heten horen er
+    // gewoon allebei te staan; hetzelfde punt twee keer niet.
+    const alGetoond = []
+    const zelfdePlek = (w, naam) =>
+      alGetoond.some(g =>
+        g.naam === naam &&
+        Math.abs(g.lat - w.lat) <= ZELFDE_PLEK_GRADEN &&
+        Math.abs(g.lon - w.lon) <= ZELFDE_PLEK_GRADEN)
 
     for (const [i, w] of gegevens.dag.waypoints.entries()) {
       if (w.type === 'via' && !w.label) continue
       if (w.toonLabel === false) continue
-      if (!w.name) continue
-      if (alGetoond.has(w.name)) continue
-      alGetoond.add(w.name)
+
+      // het vertrekpunt heeft vaak zelf geen naam en erft die van de nacht ervoor
+      const tekst = naamVan(gegevens, w, i)
+      if (!tekst) continue
+      if (zelfdePlek(w, tekst)) continue
+      alGetoond.push({ naam: tekst, lat: w.lat, lon: w.lon })
 
       const p = view.project(w.lon, w.lat)
       const verschuivingX = w.labelDxMm ?? 0
