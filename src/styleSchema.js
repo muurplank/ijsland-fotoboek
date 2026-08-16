@@ -267,6 +267,12 @@ export const KNOPPEN = [
   { key: 'profiel.bandStapM', groep: 'profiel', label: 'Hoogte per band', type: 'getal', min: 25, max: 500, step: 25, standaard: 100, eenheid: 'm', help: 'Voor lagen, arcering en terras: om de hoeveel meter er een nieuwe band of hoogtelijn komt' },
   { key: 'profiel.kamAfstandMm', groep: 'profiel', label: 'Kam: afstand tussen de streepjes', type: 'mm', min: 0.2, max: 4, step: 0.05, standaard: 0.7 },
   { key: 'profiel.arceringMm', groep: 'profiel', label: 'Arcering: ruimte tussen de lijntjes', type: 'mm', min: 0.3, max: 3, step: 0.05, standaard: 0.9, help: 'Dit is de ruimste stand, onderaan de grafiek. Naar boven toe gaan de lijntjes vanzelf dichter staan' },
+  { key: 'profiel.temperatuurAan', groep: 'profiel', label: 'Temperatuurgrafiek ernaast', type: 'aanuit', standaard: true, help: 'Het temperatuurverloop van die dag naast het hoogteprofiel; ze delen dan de breedte gelijk. Uit betekent: hoogteprofiel over de volle breedte' },
+  { key: 'profiel.reisBreedte', groep: 'profiel', label: 'Reisgrafiek: breedte', type: 'getal', min: 0.3, max: 1, step: 0.01, standaard: 1, help: 'Alleen op de reiscijfer-pagina: deel van de beschikbare breedte dat het hoogteprofiel van de hele reis inneemt' },
+  { key: 'profiel.weertekensAan', groep: 'profiel', label: 'Weertekens in de temperatuurgrafiek', type: 'aanuit', standaard: true, help: 'Om de twee uur een tekentje langs de bovenkant: zon, bewolking, regen of sneeuw op het moment zelf' },
+  { key: 'profiel.weertekenMm', groep: 'profiel', label: 'Weertekens: grootte', type: 'mm', min: 1.5, max: 8, step: 0.1, standaard: 3.2 },
+  { key: 'profiel.tempLijnKleur', groep: 'profiel', label: 'Temperatuur: lijnkleur', type: 'kleur', standaard: '#c2571f' },
+  { key: 'profiel.tempVulKleur', groep: 'profiel', label: 'Temperatuur: vulkleur', type: 'kleur', standaard: '#e8a06a' },
   { key: 'profiel.hoogteMm', groep: 'profiel', label: 'Hoogte van de grafiek', type: 'mm', min: 20, max: 200, step: 1, standaard: 70 },
   { key: 'profiel.vulKleur', groep: 'profiel', label: 'Vulkleur', type: 'kleur', standaard: '#dfe6e9' },
   { key: 'profiel.lijnKleur', groep: 'profiel', label: 'Lijnkleur', type: 'kleur', standaard: '#f4610c'},
@@ -289,6 +295,37 @@ export const KNOPPEN = [
 
   // ------------------------------------------------------------ statistieken
   { key: 'statistieken.kolommen', groep: 'statistieken', label: 'Aantal kolommen', type: 'getal', min: 2, max: 6, step: 1, standaard: 4 },
+
+  // ------------------------------------------ tabel op de reiscijfer-pagina
+  { key: 'statistieken.tabelBreedte', groep: 'statistieken', label: 'Tabel: breedte', type: 'getal', min: 0.3, max: 1, step: 0.01, standaard: 1, help: 'Deel van de paginabreedte binnen de marges' },
+  { key: 'statistieken.kolomDagEm', groep: 'statistieken', label: 'Kolom: dagnummer', type: 'getal', min: 1, max: 8, step: 0.1, standaard: 1.8, help: 'Alle kolombreedtes staan in em, dus ze schalen mee met de lettergrootte. De titelkolom krijgt wat er overblijft' },
+  { key: 'statistieken.kolomDatumEm', groep: 'statistieken', label: 'Kolom: datum', type: 'getal', min: 2, max: 14, step: 0.1, standaard: 4.6 },
+  { key: 'statistieken.kolomKmEm', groep: 'statistieken', label: 'Kolom: kilometers', type: 'getal', min: 2, max: 14, step: 0.1, standaard: 4.6 },
+  { key: 'statistieken.kolomTijdEm', groep: 'statistieken', label: 'Kolom: tijd', type: 'getal', min: 2, max: 14, step: 0.1, standaard: 4.4 },
+  { key: 'statistieken.kolomKlimEm', groep: 'statistieken', label: 'Kolom: klim', type: 'getal', min: 2, max: 14, step: 0.1, standaard: 4.4 },
+  { key: 'statistieken.kolomWeerEm', groep: 'statistieken', label: 'Kolom: weer', type: 'getal', min: 2, max: 16, step: 0.1, standaard: 5.4 },
+
+  // ------------------------------------------- achtergrond van de statistiekpagina
+  { key: 'statistieken.achtergrond', groep: 'statistieken', label: 'Achtergrond', type: 'keuze', opties: ['geen', 'verloop', 'hoogtesilhouet', 'raster', 'kaart', 'draadmodel'], standaard: 'geen', help: 'geen = effen papier · verloop = zachte kleurovergang · hoogtesilhouet = het profiel van deze dag groot en bleek onderaan · raster = ruitjespapier · kaart = de dagkaart zelf, ver weggezet · draadmodel = een doorzichtig isometrisch draadmodel van het onderwerp van die dag' },
+  { key: 'statistieken.achtergrondKleur', groep: 'statistieken', label: 'Achtergrond: kleur', type: 'kleur', standaard: '#d9d3c8' },
+  { key: 'statistieken.achtergrondKleur2', groep: 'statistieken', label: 'Achtergrond: tweede kleur', type: 'kleur', standaard: '#f7f4ee', help: 'Waar het verloop naartoe gaat, en de lijn op de bergkam bij het hoogtesilhouet' },
+  { key: 'statistieken.achtergrondDekking', groep: 'statistieken', label: 'Achtergrond: dekking', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.45 },
+  { key: 'statistieken.achtergrondRichting', groep: 'statistieken', label: 'Verloop: richting', type: 'keuze', opties: ['verticaal', 'horizontaal', 'diagonaal'], standaard: 'verticaal' },
+  { key: 'statistieken.rasterStapMm', groep: 'statistieken', label: 'Raster: ruitjesmaat', type: 'mm', min: 2, max: 30, step: 0.5, standaard: 6 },
+  { key: 'statistieken.silhouetHoogte', groep: 'statistieken', label: 'Silhouet: hoe hoog', type: 'getal', min: 0.1, max: 0.8, step: 0.01, standaard: 0.34, help: 'Deel van de paginahoogte dat de bergen innemen' },
+
+  // ------------------------------------------- draadmodel achter de cijfers
+  { key: 'statistieken.draadmodel', groep: 'statistieken', label: 'Draadmodel: onderwerp', type: 'keuze', opties: ['automatisch', 'vliegtuig', 'kerk', 'gletsjer', 'waterval', 'vuurtoren', 'geiser', 'auto', 'toren'], standaard: 'automatisch', help: 'automatisch = het onderwerp dat bij deze dag hoort: dag 1 het vliegtuig, dag 2 de Hallgrimskirkja, dag 8 de verkeerstoren. Kies er zelf een als je een dag wilt omruilen' },
+  { key: 'statistieken.draadmodelKleur', groep: 'statistieken', label: 'Draadmodel: lijnkleur', type: 'kleur', standaard: '#8b847c' },
+  { key: 'statistieken.draadmodelLijnMm', groep: 'statistieken', label: 'Draadmodel: lijndikte', type: 'mm', min: 0.09, max: 0.6, step: 0.01, standaard: 0.14, help: 'Het schuifje begint bij 0,09 mm: daaronder valt een haarlijn weg in de druk' },
+  { key: 'statistieken.draadmodelDekking', groep: 'statistieken', label: 'Draadmodel: dekking', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.22, help: 'Dit blijft achtergrond: de cijfers moeten er zonder moeite overheen te lezen zijn. Te bleek is ook een risico - onder ongeveer vijf procent inkt laat de pers een haarlijn vallen' },
+  { key: 'statistieken.draadmodelDiepte', groep: 'statistieken', label: 'Draadmodel: verte vervaagt', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.55, help: 'Hoeveel bleker de lijnen worden naarmate ze verder weg liggen. Het model is doorzichtig; zonder dit wordt het een kluwen waarin voor- en achterkant door elkaar lopen' },
+  { key: 'statistieken.draadmodelDichtheid', groep: 'statistieken', label: 'Draadmodel: fijnheid', type: 'getal', min: 4, max: 56, step: 1, standaard: 24, help: 'Hoeveel lijnen er over een rond of gebogen vlak lopen, in de breedte én in de lengte. Boven ongeveer 40 wordt het een dicht gaas: mooi van dichtbij, maar zet de dekking dan lager, anders leest het als een grijze vlek achter de cijfers' },
+  { key: 'statistieken.draadmodelDraaiGraden', groep: 'statistieken', label: 'Draadmodel: draaiing', type: 'graden', min: 0, max: 360, step: 5, standaard: 45, help: 'Om zijn eigen staande as. 45 graden is de klassieke isometrische stand; elk onderwerp draait daar nog zijn eigen hoek bovenop, zodat je het herkent' },
+  { key: 'statistieken.draadmodelKantelGraden', groep: 'statistieken', label: 'Draadmodel: kanteling', type: 'getal', min: 10, max: 80, step: 1, standaard: 35, eenheid: '°', help: '35 graden is echt isometrisch: alle drie de assen krimpen dan evenveel. Lager kijk je er meer van opzij, hoger meer van bovenaf' },
+  { key: 'statistieken.draadmodelVulling', groep: 'statistieken', label: 'Draadmodel: grootte', type: 'getal', min: 0.3, max: 1.6, step: 0.01, standaard: 0.95, help: 'Deel van de bladzijde dat het model vult. Boven 1 loopt hij van de pagina af, wat vaak juist mooi is' },
+  { key: 'statistieken.draadmodelVerschuifMm', groep: 'statistieken', label: 'Draadmodel: hoger of lager', type: 'mm', min: -80, max: 80, step: 1, standaard: -12, help: 'Zet het model wat omhoog, zodat de kerncijfers onderaan op rustig papier staan' },
+
   { key: 'statistieken.getalMm', groep: 'statistieken', label: 'Grootte van de getallen', type: 'mm', min: 3, max: 30, step: 0.5, standaard: 9 },
   { key: 'statistieken.labelMm', groep: 'statistieken', label: 'Grootte van de labels', type: 'mm', min: 1.5, max: 10, step: 0.1, standaard: 2.6 },
   { key: 'statistieken.getalKleur', groep: 'statistieken', label: 'Kleur getallen', type: 'kleur', standaard: '#2b2926'},

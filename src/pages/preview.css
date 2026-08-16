@@ -563,7 +563,11 @@ body.exporteren .snaplijn { display: none; }
 .reistabel { display: grid; }
 .reistabel-rij {
   display: grid;
-  grid-template-columns: 1.8em 4.6em minmax(0, 1fr) 4.6em 4.4em 4.4em minmax(0, 1.15fr);
+  /* De kolombreedtes komen uit het paneel; de titelkolom slokt op wat overblijft.
+     In em, niet in millimeters: dan schuiven ze mee als je de tabel groter of
+     kleiner zet en blijft de verhouding tot de letters gelijk. */
+  grid-template-columns: var(--tabelkolommen,
+    1.8em 4.6em minmax(0, 1fr) 4.6em 4.4em 4.4em 5.4em);
   gap: .4em;
   padding: .42em 0;
   border-bottom: 1px solid #ece9e3;
@@ -577,8 +581,8 @@ body.exporteren .snaplijn { display: none; }
   border-bottom-width: 1px;
   border-bottom-color: #d8d3cb;
   font-size: .82em;
-  letter-spacing: .04em;
-  text-transform: uppercase;
+  /* Gewone schrijfwijze, geen kapitalen. Kapitalen vragen om extra letterruimte
+     om leesbaar te blijven, dus die spatiëring gaat er tegelijk uit. */
   color: var(--labelkleur-tabel);
   padding-bottom: .5em;
 }

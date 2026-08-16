@@ -108,7 +108,13 @@ function zetTypografie () {
 
 async function achtergrondNu () {
   // de statistiekpagina heeft geen kaartachtergrond
-  if (paginaType === 'stats' || paginaType === 'reiscijfers' || paginaType === 'voortgang') {
+  // De statistiekpagina heeft normaal geen kaartachtergrond, behalve als je
+  // daar juist de dagkaart als achtergrond koos.
+  const kaartAlsAchtergrond = paginaType === 'stats' &&
+    stijl['statistieken.achtergrond'] === 'kaart'
+
+  if (!kaartAlsAchtergrond &&
+      (paginaType === 'stats' || paginaType === 'reiscijfers' || paginaType === 'voortgang')) {
     achtergrond.removeAttribute('src')
     achtergrond.style.width = '0'
     // ook de opgetilde plaatsnamen weg: die horen bij de kaart, en anders
@@ -147,6 +153,9 @@ async function achtergrondNu () {
     achtergrond.style.top = `calc(${plaatsing.yMm} * var(--mm))`
     achtergrond.style.width = `calc(${plaatsing.breedteMm} * var(--mm))`
     achtergrond.style.height = `calc(${plaatsing.hoogteMm} * var(--mm))`
+    achtergrond.style.opacity = kaartAlsAchtergrond
+      ? String(stijl['statistieken.achtergrondDekking'])
+      : '1'
 
     // de uit de kaart geknipte plaatsnamen, op exact dezelfde plek
     if (plaatsing.bovenlaag) {

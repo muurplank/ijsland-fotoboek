@@ -8,44 +8,16 @@
  * is hoe de reis als geheel liep. Acht losse assen met elk hun eigen schaal
  * maken een heuvel van 400 meter even hoog als een pas van 1000, en dan lees je
  * precies verkeerd wat je wilde weten.
+ *
+ * Wat deze pagina deelt met de dagpagina staat in statsdelen.js.
  */
 
 import { paginaMaat } from '../render/layout.js'
 import { bouwSvg, profielVorm, VORM_INFO } from '../render/profielvorm.js'
-
-const SVG = 'http://www.w3.org/2000/svg'
-
-const maakSvg = (tag, eigenschappen = {}) => {
-  const n = document.createElementNS(SVG, tag)
-  for (const [k, v] of Object.entries(eigenschappen)) {
-    if (v !== null && v !== undefined) n.setAttribute(k, String(v))
-  }
-  return n
-}
-
-const mm = waarde => `calc(${waarde} * var(--mm))`
-
-function asStap (bereik, streefAantal = 4) {
-  const ruw = bereik / streefAantal
-  const macht = 10 ** Math.floor(Math.log10(ruw))
-  for (const veelvoud of [1, 2, 2.5, 5, 10]) {
-    if (ruw <= veelvoud * macht) return veelvoud * macht
-  }
-  return 10 * macht
-}
-
-function uurNotatie (uren) {
-  const u = Math.floor(uren)
-  const m = Math.round((uren - u) * 60)
-  return u > 0 ? `${u}u ${String(m).padStart(2, '0')}` : `${m} min`
-}
-
-function korteDatum (iso) {
-  const maanden = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun',
-    'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
-  const [, maand, dag] = iso.split('-').map(Number)
-  return `${dag} ${maanden[maand - 1]}`
-}
+import {
+  maakSvg, mm, asStap, korteDatum, uurNotatie, weerTeken,
+  reisCijfers, tekenAchtergrond, tekenBron, tekenCijferrij, tekenTitelblok
+} from './statsdelen.js'
 
 /**
  * @param {SVGElement} svg
@@ -61,34 +33,18 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
   svg.replaceChildren()
   opschriften.replaceChildren()
 
+  const { hoogste, cijfers } = reisCijfers(dagen)
+
+  tekenAchtergrond(svg, stijl, maat, { zaad: dagen.length, id: 'reis' })
+
   // ------------------------------------------------------------- titelblok
-  const blok = document.createElement('div')
-  blok.className = 'titelblok'
-  blok.setAttribute('data-plek', 'titelblok')
-  blok.style.position = 'absolute'
-  blok.style.left = mm(marge)
-  blok.style.top = mm(marge)
-  blok.style.color = stijl['titelblok.kleur']
-
-  const totaalKm = dagen.reduce((s, d) => s + d.statistieken.afstandKm, 0)
-  const totaalUur = dagen.reduce((s, d) => s + d.statistieken.rijtijdUren, 0)
-  const totaalKlim = dagen.reduce((s, d) => s + d.statistieken.stijgingM, 0)
-  const hoogste = Math.max(...dagen.map(d => d.statistieken.hoogstePuntM ?? 0))
-
-  const boven = document.createElement('div')
-  boven.className = 'titel-datum'
-  boven.style.fontSize = mm(stijl['typografie.datumMm'])
-  boven.textContent = `${korteDatum(dagen[0].datum)} – ${korteDatum(dagen.at(-1).datum)} ` +
-    `${dagen.at(-1).datum.slice(0, 4)}`
-
-  const titel = document.createElement('div')
-  titel.className = 'titel-hoofd'
-  titel.setAttribute('data-tekst', 'reiscijfertitel')
-  titel.style.fontSize = mm(stijl['typografie.titelMm'])
-  titel.textContent = 'De reis in cijfers'
-
-  blok.append(boven, titel)
-  opschriften.append(blok)
+  tekenTitelblok(opschriften, stijl, {
+    marge,
+    boven: `${korteDatum(dagen[0].datum)} – ${korteDatum(dagen.at(-1).datum)} ` +
+      `${dagen.at(-1).datum.slice(0, 4)}`,
+    titel: 'De reis in cijfers',
+    tekstSleutel: 'reiscijfertitel'
+  })
 
   // -------------------------------------------- profiel over de hele reis
   const punten = []
@@ -107,7 +63,10 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
   const grafiekBoven = marge + stijl['typografie.titelMm'] + stijl['typografie.datumMm'] + 18
   const grafiekHoogte = stijl['profiel.hoogteMm'] * 0.85
   const grafiekLinks = marge + 12
-  const grafiekRechts = maat.breedteMm - marge
+  // de grafiek mag smaller dan de pagina; hij blijft links uitgelijnd, want
+  // hij hoort onder de titel te beginnen en niet ergens in het midden te zweven
+  const grafiekRechts = grafiekLinks +
+    (maat.breedteMm - marge - grafiekLinks) * stijl['profiel.reisBreedte']
   const grafiekBreedte = grafiekRechts - grafiekLinks
   const grafiekOnder = grafiekBoven + grafiekHoogte
 
@@ -213,62 +172,42 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
   }
 
   // ------------------------------------------------------------- totalen
-  const cijfers = [
-    { waarde: dagen.length, eenheid: '', label: 'dagen' },
-    { waarde: totaalKm.toFixed(0), eenheid: 'km', label: 'gereden' },
-    { waarde: uurNotatie(totaalUur), eenheid: '', label: 'onderweg' },
-    { waarde: totaalKlim.toFixed(0), eenheid: 'm', label: 'geklommen' },
-    { waarde: hoogste.toFixed(0), eenheid: 'm', label: 'hoogste punt' }
-  ]
-
-  const rij = document.createElement('div')
-  rij.className = 'cijferrij'
-  rij.setAttribute('data-plek', 'reistotalen')
-  rij.style.left = mm(marge)
-  rij.style.top = mm(grafiekOnder + 14)
-  rij.style.width = mm(maat.breedteMm - 2 * marge)
-  rij.style.gridTemplateColumns = `repeat(${Math.min(5, cijfers.length)}, 1fr)`
-  rij.style.columnGap = mm(5)
-  rij.style.rowGap = mm(8)
-
-  for (const c of cijfers) {
-    const cel = document.createElement('div')
-    cel.className = 'cijfer'
-
-    const groot = document.createElement('div')
-    groot.className = 'cijfer-groot'
-    groot.style.fontSize = mm(stijl['statistieken.getalMm'] * 0.85)
-    groot.style.color = stijl['statistieken.getalKleur']
-    groot.textContent = c.waarde
-    if (c.eenheid) {
-      const e = document.createElement('span')
-      e.className = 'cijfer-eenheid'
-      e.style.fontSize = mm(stijl['statistieken.getalMm'] * 0.38)
-      e.textContent = c.eenheid
-      groot.append(e)
-    }
-
-    const klein = document.createElement('div')
-    klein.className = 'cijfer-label'
-    klein.style.fontSize = mm(stijl['statistieken.labelMm'])
-    klein.style.color = stijl['statistieken.labelKleur']
-    klein.textContent = c.label
-
-    cel.append(groot, klein)
-    rij.append(cel)
-  }
-  opschriften.append(rij)
+  tekenCijferrij(opschriften, cijfers, stijl, {
+    plek: 'reistotalen',
+    links: marge,
+    boven: grafiekOnder + 14,
+    breedte: maat.breedteMm - 2 * marge,
+    kolommen: Math.min(5, cijfers.length),
+    getalDeel: 0.85,
+    eenheidDeel: 0.38
+  })
 
   // ---------------------------------------------------------- regel per dag
   const tabel = document.createElement('div')
   tabel.className = 'reistabel'
   tabel.setAttribute('data-plek', 'reistabel')
+  tabel.setAttribute('data-schaalbaar', 'css')
+  tabel.setAttribute('data-midden', '')
+  tabel.setAttribute('data-knoppen', 'statistieken')
   tabel.style.left = mm(marge)
   tabel.style.top = mm(grafiekOnder + 14 + stijl['statistieken.getalMm'] + 16)
-  tabel.style.width = mm(maat.breedteMm - 2 * marge)
+  tabel.style.width = mm((maat.breedteMm - 2 * marge) * stijl['statistieken.tabelBreedte'])
   tabel.style.fontSize = mm(stijl['typografie.tekstMm'] * 0.82)
   tabel.style.color = stijl['statistieken.getalKleur']
   tabel.style.setProperty('--labelkleur-tabel', stijl['statistieken.labelKleur'])
+
+  // De kolommen in de volgorde waarin ze staan. De titel is de enige die
+  // meegeeft: die krijgt wat er overblijft, zodat de getallenkolommen op hun
+  // ingestelde maat blijven staan en niet gaan schuiven bij een lange dagtitel.
+  tabel.style.setProperty('--tabelkolommen', [
+    `${stijl['statistieken.kolomDagEm']}em`,
+    `${stijl['statistieken.kolomDatumEm']}em`,
+    'minmax(0, 1fr)',
+    `${stijl['statistieken.kolomKmEm']}em`,
+    `${stijl['statistieken.kolomTijdEm']}em`,
+    `${stijl['statistieken.kolomKlimEm']}em`,
+    `${stijl['statistieken.kolomWeerEm']}em`
+  ].join(' '))
 
   const kop = document.createElement('div')
   kop.className = 'reistabel-rij reistabel-kop'
@@ -290,7 +229,7 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
       `${s.afstandKm.toFixed(0)} km`,
       uurNotatie(s.rijtijdUren),
       `${s.stijgingM.toFixed(0)} m`,
-      w ? `${w.tempMin?.toFixed(0)}–${w.tempMax?.toFixed(0)}°, ${w.omschrijving ?? ''}` : '–'
+      w ? `${weerTeken(w.code)}  ${w.tempMin?.toFixed(0)}–${w.tempMax?.toFixed(0)}°` : '–'
     ]
     for (const v of velden) {
       r.append(Object.assign(document.createElement('span'), { textContent: v }))
@@ -299,15 +238,5 @@ export function tekenReisCijfers (svg, opschriften, dagen, stijl) {
   }
   opschriften.append(tabel)
 
-  // ---------------------------------------------------------- bronvermelding
-  if (stijl['bron.aan']) {
-    const bron = document.createElement('div')
-    bron.style.position = 'absolute'
-    bron.style.right = mm(marge)
-    bron.style.bottom = mm(maat.afloopMm + 1.5)
-    bron.style.fontSize = mm(stijl['bron.grootteMm'])
-    bron.style.color = stijl['bron.kleur']
-    bron.textContent = 'Hoogtegegevens: Terrain Tiles · Weer: Open-Meteo · Route: OSRM/OpenStreetMap'
-    opschriften.append(bron)
-  }
+  tekenBron(opschriften, stijl, maat, marge)
 }
