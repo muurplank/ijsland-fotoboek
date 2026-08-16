@@ -154,6 +154,12 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
   let allesTonen = false
   let paginaType = extra.paginaType ?? 'kaart'
 
+  // De groep die je opende door op de kaart te klikken. Die laat al zijn
+  // knoppen zien, ook in de "Snel"-stand: klik je op het titelblok en zie je
+  // vervolgens alleen "Titelblok tonen", dan is dat precies de knop die je
+  // niet zocht.
+  let viaDeKaart = null
+
   // ------------------------------------------------------------ kleurensets
   if (extra.presets?.length) {
     const doos = el('div', 'presets')
@@ -187,6 +193,11 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
   schakelaar.append(snelKnop, allesKnop)
   houder.append(schakelaar)
 
+  // Plek voor de stoppenlijst. Die komt niet uit het schema maar uit de dag
+  // zelf, dus hij hangt hierbuiten en blijft ongemoeid door het filteren.
+  const stoppenHouder = el('div', 'stoppen-slot')
+  houder.append(stoppenHouder)
+
   const groepenHouder = el('div', 'groepen-lijst')
   houder.append(groepenHouder)
 
@@ -215,7 +226,7 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
 
   function ververs () {
     for (const [, { node, knop }] of besturingen) {
-      const inWeergave = allesTonen || SNEL.has(knop.key)
+      const inWeergave = allesTonen || SNEL.has(knop.key) || knop.groep === viaDeKaart
       const inPagina = GROEPEN_PER_PAGINA[paginaType]?.includes(knop.groep) ?? true
       node.classList.toggle('verborgen', !(inWeergave && inPagina))
     }
@@ -227,11 +238,13 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
 
   snelKnop.addEventListener('click', () => {
     allesTonen = false
+    viaDeKaart = null
     snelKnop.classList.add('actief'); allesKnop.classList.remove('actief')
     ververs()
   })
   allesKnop.addEventListener('click', () => {
     allesTonen = true
+    viaDeKaart = null
     allesKnop.classList.add('actief'); snelKnop.classList.remove('actief')
     ververs()
   })
@@ -242,6 +255,33 @@ export function bouwPaneel (houder, schema, stijl, bijWijziging, extra = {}) {
     zet (key, waarde) { besturingen.get(key)?.zet(waarde) },
 
     zetPagina (type) { paginaType = type; ververs() },
+
+    /** Hangt de stoppenlijst van deze dag boven de instellingen. */
+    zetStops (node) { stoppenHouder.replaceChildren(node) },
+
+    /**
+     * Springt naar de knoppen van een groep, omdat je op de kaart klikte.
+     *
+     * Neemt geen focus af: je kunt na een dubbelklik gewoon doortypen in het
+     * label terwijl het paneel al is meegesprongen.
+     */
+    toon (groepId) {
+      if (!groepId) return
+
+      const details = groepenHouder.querySelector(`details.groep[data-groep="${groepId}"]`)
+      if (!details) return
+
+      viaDeKaart = groepId
+      ververs()
+
+      details.open = true
+      details.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+
+      // even oplichten, zodat je ziet waar je terechtkwam
+      details.classList.remove('aangewezen')
+      void details.offsetWidth
+      details.classList.add('aangewezen')
+    },
 
     filter (term) {
       const t = term.trim().toLowerCase()

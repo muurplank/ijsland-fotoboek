@@ -269,17 +269,25 @@ function slaapBadge (vorm, straal, { vulling, rand, randMm }) {
 /**
  * Tekent alles opnieuw.
  *
- * @param {SVGElement} svg het tekenvlak
+ * @param {SVGElement} svg het tekenvlak onder de opgetilde plaatsnamen
  * @param {HTMLElement} opschriften laag voor de labels (gewone tekst, geen svg)
  * @param {object} gegevens route en waypoints van de dag
  * @param {object} stijl alle instellingen
+ * @param {SVGElement} svgBoven het tekenvlak eróver, voor markers en kompas
  */
-export function teken (svg, opschriften, gegevens, stijl) {
+export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
   const maat = paginaMaat(stijl)
   const view = maakView(gegevens.route.coordinates, stijl)
 
-  svg.setAttribute('viewBox', `0 0 ${maat.breedteMm} ${maat.hoogteMm}`)
-  svg.replaceChildren()
+  // De markers gaan in de bovenste laag zodat ze niet onder de plaatsnamen
+  // verdwijnen die uit de kaart getild zijn. De routelijn blijft eronder: die
+  // hóórt achter een plaatsnaam langs te lopen.
+  const markerLaag = svgBoven ?? svg
+
+  for (const laag of new Set([svg, markerLaag])) {
+    laag.setAttribute('viewBox', `0 0 ${maat.breedteMm} ${maat.hoogteMm}`)
+    laag.replaceChildren()
+  }
   opschriften.replaceChildren()
 
   // ------------------------------------------------------------------ route
@@ -479,22 +487,39 @@ export function teken (svg, opschriften, gegevens, stijl) {
       }
     }
 
-    markers.append(vorm)
+    // Twee groepen om elkaar heen. De buitenste zet de marker op zijn plek op
+    // de kaart, de binnenste vangt jouw verschuiving en schaal op. Zo hoeft het
+    // transform uit het stijlblad niet te vechten met het transform-attribuut
+    // dat de plek bepaalt, en blijft schalen om het punt zelf draaien in plaats
+    // van om de oorsprong van de kaart.
+    const anker = maak('g', {
+      transform: `translate(${p.x.toFixed(3)} ${p.y.toFixed(3)})`
+    })
+    const beweegbaar = maak('g', {
+      [SLEEP]: `marker:${i}`,
+      [SCHAALBAAR]: 'css',
+      [KNOPPEN]: 'markers'
+    })
+
+    beweegbaar.append(vorm)
 
     if (stijl['markers.nummers'] && !via) {
       stopNummer++
       const nr = maak('text', {
-        x: p.x, y: p.y + straal * 0.36,
+        x: 0, y: straal * 0.36,
         'text-anchor': 'middle',
         'font-size': straal * 1.05,
         'font-weight': 650,
         fill: slaap ? '#ffffff' : stijl['markers.stopRand']
       })
       nr.textContent = String(stopNummer)
-      markers.append(nr)
+      beweegbaar.append(nr)
     }
+
+    anker.append(beweegbaar)
+    markers.append(anker)
   }
-  svg.append(markers)
+  markerLaag.append(markers)
 
   // ---------------------------------------------------------------- labels
   if (stijl['labels.aan']) {
@@ -529,9 +554,10 @@ export function teken (svg, opschriften, gegevens, stijl) {
 
       const naam = document.createElement('div')
       naam.className = 'plaatsnaam'
-      naam.setAttribute('data-plek', `label:${i}`)
+      naam.setAttribute(SLEEP, `label:${i}`)
       naam.setAttribute('data-tekst', `waypoint:${i}`)
-      naam.textContent = w.name
+      naam.setAttribute(KNOPPEN, 'labels')
+      naam.textContent = tekst
       naam.style.left = `calc(${(p.x + verschuivingX)} * var(--mm))`
       naam.style.top = `calc(${(p.y + verschuivingY)} * var(--mm))`
       opschriften.append(naam)

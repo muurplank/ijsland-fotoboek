@@ -152,6 +152,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
       const nr = document.createElement('div')
       nr.className = 'dagnummer'
       nr.setAttribute('data-plek', `dagnummer:${dag.dag}`)
+      nr.setAttribute('data-knoppen', 'eerdere')
       nr.style.left = mm(p.x)
       nr.style.top = mm(p.y)
       nr.style.fontSize = mm(stijl['markers.slaapGrootteMm'] * 0.62)
@@ -164,6 +165,9 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   const blok = document.createElement('div')
   blok.className = 'titelblok'
   blok.setAttribute('data-plek', 'titelblok')
+  blok.setAttribute('data-schaalbaar', 'css')
+  blok.setAttribute('data-midden', '')
+  blok.setAttribute('data-knoppen', 'titelblok')
   blok.style.position = 'absolute'
   blok.style.left = mm(marge)
   blok.style.top = mm(marge)
@@ -190,6 +194,9 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   const legenda = document.createElement('div')
   legenda.className = 'legenda'
   legenda.setAttribute('data-plek', 'legenda')
+  legenda.setAttribute('data-schaalbaar', 'css')
+  legenda.setAttribute('data-midden', '')
+  legenda.setAttribute('data-knoppen', 'eerdere')
   legenda.style.left = mm(marge)
   legenda.style.bottom = mm(marge)
   legenda.style.fontSize = mm(2.4)
@@ -208,7 +215,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
 
       const nr = document.createElement('span')
       nr.className = 'legenda-nr'
-      nr.textContent = String(dag.dag)
+      nr.textContent = `Dag ${dag.dag}`
       legenda.append(nr)
     }
   } else {

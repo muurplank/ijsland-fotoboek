@@ -186,6 +186,7 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
         const naam = document.createElement('div')
         naam.className = 'profiel-stop'
         naam.setAttribute('data-plek', `profielstop:${stop.naam}`)
+        naam.setAttribute('data-knoppen', 'profiel')
         naam.style.left = mm(x)
         naam.style.top = mm(grafiekOnder + 2.6)
         naam.style.maxHeight = mm(naamBandMm)
@@ -315,6 +316,9 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
     const tekst = document.createElement('div')
     tekst.className = 'dagtekst'
     tekst.setAttribute('data-plek', 'dagtekst')
+    tekst.setAttribute('data-schaalbaar', 'css')
+    tekst.setAttribute('data-midden', '')
+    tekst.setAttribute('data-knoppen', 'typografie')
     tekst.setAttribute('data-tekst', 'tekst')
     tekst.style.left = mm(marge)
     tekst.style.top = mm(grafiekOnder + naamBandMm + 16 + 34)

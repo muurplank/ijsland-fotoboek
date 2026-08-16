@@ -47,7 +47,8 @@ body {
   image-rendering: auto;
 }
 
-#tekening {
+#tekening,
+#tekening-boven {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -55,12 +56,21 @@ body {
   overflow: visible;
 }
 
+/* De bovenste tekenlaag is meestal leeg tussen de symbolen door; zonder dit
+   ving dat lege vlak de klikken af naar alles wat eronder ligt. */
+#tekening-boven { pointer-events: none; }
+#tekening-boven > * { pointer-events: auto; }
+
 /* De uit de kaart geknipte plaatsnamen, boven de routelijn maar onder de
    eigen opschriften. Zo dekt je route de kaart wel af, maar de tekst niet. */
 #bovenlaag { position: absolute; display: block; pointer-events: none; }
 
-#opschriften { position: absolute; inset: 0; }
-#opschriften > * { position: absolute; }
+/* De opschriftenlaag beslaat de hele pagina. Zonder pointer-events: none vangt
+   dat lege vlak elke klik af en is er van de markers en het kompas in de
+   tekenlaag eronder niets te pakken. De opschriften zelf blijven wel gewoon
+   aanklikbaar. */
+#opschriften { position: absolute; inset: 0; pointer-events: none; }
+#opschriften > * { position: absolute; pointer-events: auto; }
 
 #snijtekens { position: absolute; inset: 0; pointer-events: none; }
 
@@ -305,7 +315,15 @@ body.exporteren #pagina { box-shadow: none; }
 /* Alles wat zijn eigen uitlijning heeft (gecentreerd, rechts uitgelijnd) regelt
    de verschuiving zelf; deze regel is voor de rest. */
 #pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
-  transform: translate(var(--dx, 0px), var(--dy, 0px));
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--s, 1));
+}
+
+/* In de tekenlaag rekent alles in millimeters, want de viewBox staat in
+   millimeters en één px is daar één gebruikerseenheid. Vandaar dezelfde
+   eigenschappen zonder var(--mm) eromheen. Schalen draait om het punt zelf:
+   de marker zit in een groep die al op zijn plek staat. */
+#pagina svg [data-plek] {
+  transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--s, 1));
 }
 
 /* De aanwijzingen alleen in de bedieningspagina, nooit in de export. */
@@ -439,6 +457,60 @@ body:not(.exporteren) #pagina [data-plek].sleept { outline: none; opacity: 1; }
 
 /* teksten die je ook kunt aanpassen krijgen een andere tint aanwijzing */
 body:not(.exporteren) #pagina [data-tekst]:hover::before { outline-color: #2b6cb0aa; }
+
+/* ------------------------------------------- symbolen in de tekenlaag
+
+   Een SVG-element kent geen ::before en geen outline, dus de streepjeslijn
+   waarmee de opschriften zich aankondigen kan hier niet. Een gloed eromheen
+   doet hetzelfde werk: je ziet wat je op het punt staat te pakken.          */
+
+body:not(.exporteren) #pagina svg [data-plek] { cursor: grab; }
+body:not(.exporteren) #pagina svg [data-plek]:hover {
+  filter: drop-shadow(0 0 calc(0.5 * var(--mm)) #7a5138cc);
+}
+body:not(.exporteren) #pagina svg [data-plek].sleept {
+  cursor: grabbing;
+  filter: drop-shadow(0 0 calc(0.9 * var(--mm)) #7a5138);
+}
+
+/* ------------------------------------------------------- schalen en snappen */
+
+/* Het greepje springt naar wat je aanwijst; één voor de hele pagina, want
+   dertig markers met elk een eigen hoekje wordt een zooi. */
+.schaalgreep {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #7a5138;
+  box-shadow: 0 1px 3px #0000004d;
+  cursor: nwse-resize;
+  z-index: 6;
+}
+body.exporteren .schaalgreep { display: none; }
+
+/* De hulplijn verschijnt alleen zolang een snaplijn pakt. */
+.snaplijn {
+  position: absolute;
+  background: #2b6cb0;
+  opacity: .75;
+  pointer-events: none;
+  z-index: 5;
+}
+.snaplijn-x { top: 0; bottom: 0; left: 50%; width: 1px; margin-left: -.5px; }
+.snaplijn-y { left: 0; right: 0; top: 50%; height: 1px; margin-top: -.5px; }
+body.exporteren .snaplijn { display: none; }
+
+/* De groep waar je vanaf de kaart naartoe sprong, heel even oplichten. */
+.groep.aangewezen > summary {
+  animation: aanwijzen 1.1s ease-out;
+}
+@keyframes aanwijzen {
+  0%, 40% { background: #7a51384d; }
+  100% { background: transparent; }
+}
 
 .legenda-dag { border-radius: 2px; flex: none; }
 .legenda-nr { margin-right: .5em; margin-left: .15em; font-variant-numeric: tabular-nums; }

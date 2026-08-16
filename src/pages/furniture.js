@@ -46,9 +46,18 @@ function netteAfstand (ruwKm) {
  * @param {object} gegevens dag, route, statistieken
  * @param {object} stijl
  * @param {MapView} view de uitsnede van de grote kaart
- * @param {object|null} silhouet {url, bounds} van het inzetkaartje
+ * @param {object} bronnen
+ * @param {object|null} bronnen.silhouet {url, bounds} van het inzetkaartje
+ * @param {object[]|null} bronnen.reis alle dagen, voor de vage lijn op het inzetkaartje
+ * @param {SVGElement|null} bronnen.svgLaag de tekenlaag, waar het kompas in komt
+ * @param {object} bronnen.plaatsing de bewaarde verschuivingen en schalen van deze pagina
  */
-export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = null) {
+export function tekenBijwerk (laag, gegevens, stijl, view, {
+  silhouet = null,
+  reis = null,
+  svgLaag = null,
+  plaatsing = {}
+} = {}) {
   const maat = paginaMaat(stijl)
   const marge = maat.afloopMm + stijl['pagina.veiligeMargeMm']
 
@@ -57,6 +66,9 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = n
     const blok = document.createElement('div')
     blok.className = 'titelblok'
     blok.setAttribute('data-plek', 'titelblok')
+    blok.setAttribute('data-schaalbaar', 'css')
+    blok.setAttribute('data-midden', '')
+    blok.setAttribute('data-knoppen', 'titelblok')
     inHoek(blok, stijl['titelblok.positie'], marge, maat)
 
     blok.style.textAlign = stijl['titelblok.uitlijning']
@@ -107,6 +119,9 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = n
     const doos = document.createElement('div')
     doos.className = 'inzet'
     doos.setAttribute('data-plek', 'inzet')
+    doos.setAttribute('data-schaalbaar', 'hertekenen')
+    doos.setAttribute('data-midden', '')
+    doos.setAttribute('data-knoppen', 'inzet')
     // hoger zetten dan de bronvermelding, anders lopen ze in elkaar
     inHoek(doos, stijl['inzet.hoek'], marge, maat)
     if (!stijl['inzet.hoek'].includes('boven') && stijl['bron.aan']) {
@@ -197,6 +212,9 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = n
     const balk = document.createElement('div')
     balk.className = 'schaalbalk'
     balk.setAttribute('data-plek', 'schaalbalk')
+    balk.setAttribute('data-schaalbaar', 'hertekenen')
+    balk.setAttribute('data-midden', '')
+    balk.setAttribute('data-knoppen', 'schaal')
     inHoek(balk, stijl['schaal.positie'], marge, maat)
     balk.style.color = stijl['schaal.kleur']
     balk.style.fontSize = mm(2.2)
@@ -243,6 +261,9 @@ export function tekenBijwerk (laag, gegevens, stijl, view, silhouet, svgLaag = n
     bron.className = 'bronvermelding'
     bron.setAttribute('data-plek', 'bron')
     bron.setAttribute('data-tekst', 'bron')
+    bron.setAttribute('data-schaalbaar', 'css')
+    bron.setAttribute('data-midden', '')
+    bron.setAttribute('data-knoppen', 'bron')
     bron.style.position = 'absolute'
     bron.style.right = mm(marge)
     bron.style.bottom = mm(maat.afloopMm + 1.5)

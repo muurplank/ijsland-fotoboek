@@ -26,6 +26,7 @@ const $ = id => document.getElementById(id)
 const pagina = $('pagina')
 const achtergrond = $('achtergrond')
 const tekening = $('tekening')
+const tekeningBoven = $('tekening-boven')
 const bovenlaag = $('bovenlaag')
 const opschriften = $('opschriften')
 const melding = $('melding')
@@ -194,17 +195,21 @@ async function haalSilhouet () {
 /** ------------------------------------------------------- de pagina zelf */
 
 function tekenPagina () {
+  // alleen de dagkaart gebruikt de bovenste tekenlaag; de andere paginas
+  // hebben geen opgetilde plaatsnamen, dus daar blijft hij leeg
+  tekeningBoven.replaceChildren()
+
   if (paginaType === 'voortgang') {
     if (!gegevens) return
     tekenVoortgang(tekening, opschriften, gegevens, stijl, stopIndex)
-    pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+    pasPlaatsingToe(pagina, plaatsingVoorPagina())
     return
   }
 
   if (paginaType === 'reiscijfers') {
     if (!reisCijfers) return
     tekenReisCijfers(tekening, opschriften, reisCijfers, stijl)
-    pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+    pasPlaatsingToe(pagina, plaatsingVoorPagina())
     return
   }
 
@@ -216,12 +221,17 @@ function tekenPagina () {
   } else if (paginaType === 'stats') {
     tekenStatistieken(tekening, opschriften, gegevens, stijl)
   } else {
-    const view = teken(tekening, opschriften, gegevens, stijl)
-    tekenBijwerk(opschriften, gegevens, stijl, view, silhouet, tekening)
+    const view = teken(tekening, opschriften, gegevens, stijl, tekeningBoven)
+    // het bijwerk krijgt de plaatsing mee: de schaalbalk en het inzetkaartje
+    // worden op hun eigen maat opnieuw opgebouwd in plaats van uitgerekt
+    tekenBijwerk(opschriften, gegevens, stijl, view,
+      { silhouet, reis, svgLaag: tekeningBoven, plaatsing: plaatsingVoorPagina() })
   }
 
-  // de handmatige verschuivingen liggen over de standaardopmaak heen
-  pasPlaatsingToe(opschriften, plaatsingVoorPagina())
+  // de handmatige verschuivingen liggen over de standaardopmaak heen.
+  // Op de pagina en niet op de opschriftenlaag: de markers en het kompas
+  // staan in de tekenlaag en horen er net zo goed bij.
+  pasPlaatsingToe(pagina, plaatsingVoorPagina())
 }
 
 /** De verschuivingen die bij dit paginatype horen. */
@@ -378,21 +388,44 @@ async function start () {
     }
   })
 
-  // ------ verslepen en teksten aanpassen
+  // ------ verslepen, schalen en teksten aanpassen
+  //
+  // Het doel is per paginatype een eigen hoekje in de plaatsing: de titel mag
+  // op de kaart ergens anders staan dan op de statistiekpagina.
+  const plaatsingDoel = () => paginaType === 'overzicht'
+    ? ((boek.plaatsing ??= {}).overzicht ??= {})
+    : ((gegevens.dag.plaatsing ??= {})[paginaType] ??= {})
+
   maakBewerkbaar(pagina, {
     huidigePlaatsing: plaatsingVoorPagina,
+
     bijVerschuiven: (id, dxMm, dyMm) => {
-      const doel = paginaType === 'overzicht'
-        ? (boek.plaatsing ??= {}).overzicht ??= {}
-        : ((gegevens.dag.plaatsing ??= {})[paginaType] ??= {})
-      doel[id] = { dxMm, dyMm }
-      bewaarOpmaak(`verplaatst: ${id}`)
+      const doel = plaatsingDoel()
+      doel[id] = { ...doel[id], dxMm, dyMm }
+      bewaarPlaatsing(`verplaatst: ${id}`)
     },
+
+    bijSchalen: (id, schaal) => {
+      const doel = plaatsingDoel()
+      doel[id] = { dxMm: 0, dyMm: 0, ...doel[id], schaal }
+      bewaarPlaatsing(`geschaald: ${id} (${schaal}×)`)
+      // de schaalbalk en het inzetkaartje bouwen zichzelf op hun nieuwe maat
+      // opnieuw op, dus die hebben een hertekening nodig
+      tekenPagina()
+    },
+
     bijTekst: (id, tekst) => {
       pasTekstToe(id, tekst)
-      bewaarOpmaak(`tekst aangepast`)
+      bewaarTekst(id)
       tekenPagina()
-    }
+      return true
+    },
+
+    // klikken zonder te slepen: het paneel springt naar de knoppen die
+    // bij dit onderdeel horen
+    bijKlik: groep => paneel.toon(groep),
+
+    bijMelding: zegt
   })
 
   $('zoek').addEventListener('input', e => paneel.filter(e.target.value))
@@ -423,26 +456,67 @@ function pasTekstToe (id, tekst) {
   }
 }
 
-/** Bewaart de opmaak van deze dag; ontdubbeld, want slepen levert veel wijzigingen op. */
-const bewaarOpmaak = ontdubbel(async melding => {
+/**
+ * Wat er nog naar de server moet. Wordt samengevoegd tot de timer afloopt.
+ *
+ * Bewust alleen de velden die je werkelijk aanraakte.
+ *
+ * Eerder ging bij elke sleep de hele dag mee - titel, tekst en alle waypoints -
+ * uit het geheugen van dit tabblad. Werd het dagbestand ondertussen buiten de
+ * preview om aangepast, dan overschreef de eerstvolgende sleep dat weer met de
+ * oude inhoud van dit tabblad. Een dagverhaal van duizend tekens was zo weg
+ * door een titelblok twee millimeter te verschuiven.
+ */
+let teBewaren = null
+
+const stuurOpmaak = ontdubbel(async () => {
+  const velden = teBewaren
+  teBewaren = null
+  if (!velden) return
+
+  const { melding, ...rest } = velden
+
   try {
     const antwoord = await fetch('/api/opmaak', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        dag: huidigeDag,
-        titel: gegevens.dag.titel,
-        tekst: gegevens.dag.tekst,
-        waypoints: gegevens.dag.waypoints,
-        plaatsing: gegevens.dag.plaatsing,
-        boek: paginaType === 'overzicht' ? boek : undefined
-      })
+      body: JSON.stringify({ dag: huidigeDag, ...rest })
     })
     zegt(antwoord.ok ? `${melding} · bewaard` : 'bewaren mislukt')
   } catch (fout) {
     zegt(`bewaren mislukt: ${fout.message}`)
   }
 }, 600)
+
+/** Zet velden klaar om te bewaren; meerdere handelingen vlak na elkaar gaan samen. */
+function bewaarOpmaak (melding, velden) {
+  teBewaren = { ...teBewaren, ...velden, melding }
+  stuurOpmaak()
+}
+
+/** Slepen en schalen raken alleen de plaatsing. */
+function bewaarPlaatsing (melding) {
+  bewaarOpmaak(melding, {
+    plaatsing: gegevens.dag.plaatsing,
+    boek: paginaType === 'overzicht' ? { plaatsing: boek.plaatsing } : undefined
+  })
+}
+
+/** Een tekstwijziging raakt precies één veld. */
+function bewaarTekst (id) {
+  if (id === 'titel') return bewaarOpmaak('titel aangepast', { titel: gegevens.dag.titel })
+  if (id === 'tekst') return bewaarOpmaak('tekst aangepast', { tekst: gegevens.dag.tekst })
+
+  if (id === 'overzichtstitel' || id === 'bron') {
+    return bewaarOpmaak('tekst aangepast', {
+      boek: { overzicht: boek.overzicht, bron: boek.bron }
+    })
+  }
+
+  // een plaatsnaam: de waypoints gaan mee, want de server past de naam ook
+  // op de andere dagen aan waar hetzelfde punt voorkomt
+  bewaarOpmaak('naam aangepast', { waypoints: gegevens.dag.waypoints })
+}
 
 async function bewaar (niveau) {
   zegt('bewaren…')

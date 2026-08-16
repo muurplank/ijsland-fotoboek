@@ -169,6 +169,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     const naam = document.createElement('div')
     naam.className = 'voortgang-naam'
     naam.setAttribute('data-plek', 'voortgangnaam')
+    naam.setAttribute('data-knoppen', 'voortgang')
     naam.style.left = mm(Math.min(rechts - 2, Math.max(links + 2, xVan(huidige.km))))
     naam.style.top = mm(midden + dikte / 2 + 2.5)
     naam.style.fontSize = mm(stijl['voortgang.naamMm'])
@@ -181,6 +182,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     const kmTekst = document.createElement('div')
     kmTekst.className = 'voortgang-km'
     kmTekst.setAttribute('data-plek', 'voortgangkm')
+    kmTekst.setAttribute('data-knoppen', 'voortgang')
     kmTekst.style.left = mm(rechts)
     kmTekst.style.top = mm(midden - dikte / 2 - 2.5 - stijl['voortgang.naamMm'] * 0.8)
     kmTekst.style.fontSize = mm(stijl['voortgang.naamMm'] * 0.85)
@@ -193,6 +195,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     const dagTekst = document.createElement('div')
     dagTekst.className = 'voortgang-dag'
     dagTekst.setAttribute('data-plek', 'voortgangdag')
+    dagTekst.setAttribute('data-knoppen', 'voortgang')
     dagTekst.style.left = mm(links)
     dagTekst.style.top = mm(midden - dikte / 2 - 2.5 - stijl['voortgang.naamMm'] * 0.8)
     dagTekst.style.fontSize = mm(stijl['voortgang.naamMm'] * 0.85)
