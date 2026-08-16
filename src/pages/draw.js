@@ -191,7 +191,7 @@ function markerVorm (vorm, straal) {
 }
 
 /** De vormen waar je sliep; die krijgen een badge in plaats van een silhouet. */
-const SLAAPVORMEN = new Set(['tent', 'huisje', 'auto'])
+const SLAAPVORMEN = new Set(['tent', 'huisje', 'auto', 'vliegtuig'])
 
 /**
  * Het tekentje voor waar je sliep, in een eenheidsvierkant van -1 tot 1.
@@ -213,6 +213,15 @@ function slaapTeken (vorm) {
     return 'M 0 -0.82 L 0.92 -0.02 L 0.68 -0.02 L 0.68 0.7 L -0.68 0.7 ' +
            'L -0.68 -0.02 L -0.92 -0.02 Z ' +
            'M -0.2 0.7 L -0.2 0.16 L 0.2 0.16 L 0.2 0.7 Z'
+  }
+
+  if (vorm === 'vliegtuig') {
+    // van bovenaf gezien, neus naar boven: romp, teruggeveegde vleugels en een
+    // staartvlak. Begin en eind van de reis, waar geen tent of hotel stond
+    return 'M 0 -0.88 L 0.13 -0.55 L 0.13 -0.30 L 0.92 0.18 L 0.92 0.42 ' +
+           'L 0.13 0.20 L 0.13 0.52 L 0.34 0.72 L 0.34 0.86 L 0 0.74 ' +
+           'L -0.34 0.86 L -0.34 0.72 L -0.13 0.52 L -0.13 0.20 ' +
+           'L -0.92 0.42 L -0.92 0.18 L -0.13 -0.30 L -0.13 -0.55 Z'
   }
 
   // auto: motorkap, cabine en twee wielen die onder de bodem uit steken
@@ -450,7 +459,11 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
 
     const p = view.project(w.lon, w.lat)
     const verblijf = verblijfVan(gegevens, w, i)
-    const slaap = w.type === 'overnight' || (i === 0 && !!verblijf)
+    // Elke dag begint en eindigt met zo'n badge: 's ochtends waar je uit kwam,
+    // 's avonds waar je in kroop. Daarom hangt het niet aan het type maar aan
+    // het verblijf - de heenreis en de terugreis staan als vliegtuig op een
+    // punt dat geen overnachting is.
+    const slaap = w.type === 'overnight' || !!verblijf
     const via = w.type === 'via'
 
     const straal = (slaap
@@ -460,9 +473,10 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
     if (straal <= 0) continue
 
     // Waar je sliep bepaalt het icoon: een tent voor kamperen, een huis voor
-    // een hotel, een auto voor de nacht op de parkeerplaats. Staat het niet in
-    // het dagbestand, dan valt hij terug op de ingestelde vorm.
-    const slaapVorm = { tent: 'tent', hotel: 'huisje', auto: 'auto' }[verblijf] ??
+    // een hotel, een auto voor de nacht op de parkeerplaats, een vliegtuig voor
+    // de aankomst en het vertrek. Staat het niet in het dagbestand, dan valt hij
+    // terug op de ingestelde vorm.
+    const slaapVorm = { tent: 'tent', hotel: 'huisje', auto: 'auto', vliegtuig: 'vliegtuig' }[verblijf] ??
       stijl['markers.slaapVorm']
 
     const gekozen = slaap ? slaapVorm : via ? 'cirkel' : stijl['markers.stopVorm']
