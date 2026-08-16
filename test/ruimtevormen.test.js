@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 
 import {
-  leegModel, voegSamen, verplaats, schaal, draai, spiegel,
+  leegModel, voegSamen, verplaats, schaal, draai, spiegel, verdeel,
   ring, afgerondeRechthoek, loft, prisma, draaiLichaam, hoogteVeld, pad
 } from '../src/render/ruimtevormen.js'
 
@@ -44,6 +44,41 @@ test('een afgeronde rechthoek blijft binnen zijn eigen breedte en diepte', () =>
     assert.ok(Math.abs(p.x) <= 2 + 1e-9, `x liep uit tot ${p.x}`)
     assert.ok(Math.abs(p.y) <= 1 + 1e-9, `y liep uit tot ${p.y}`)
   }
+})
+
+// ------------------------------------------------------------ tussenwaarden
+
+test('zonder tussenwaarden blijft een reeks precies zoals hij was', () => {
+  const reeks = [{ r: 1, z: 0 }, { r: 2, z: 4 }]
+  assert.deepEqual(verdeel(reeks, 0), reeks)
+})
+
+test('tussenwaarden komen netjes tussen de bestaande punten te liggen', () => {
+  const uit = verdeel([{ r: 0, z: 0 }, { r: 4, z: 8 }], 3)
+
+  assert.equal(uit.length, 5, 'drie ertussen hoort vijf op te leveren')
+  assert.deepEqual(uit.map(p => p.r), [0, 1, 2, 3, 4])
+  assert.deepEqual(uit.map(p => p.z), [0, 2, 4, 6, 8])
+})
+
+test('een veld dat geen getal is komt van de linkerbuur', () => {
+  const omtrek = ring(1, 4)
+  const uit = verdeel([{ omtrek, z: 0 }, { omtrek, z: 2 }], 1)
+  assert.equal(uit[1].omtrek, omtrek, 'de omtrek werd geinterpoleerd in plaats van overgenomen')
+})
+
+test('een reeks van één punt valt niet uit elkaar', () => {
+  assert.equal(verdeel([{ r: 1, z: 0 }], 5).length, 1)
+})
+
+test('meer tussenwaarden geven een draailichaam meer ringen', () => {
+  const profiel = [{ r: 1, z: 0 }, { r: 1, z: 2 }]
+
+  // twee doorsneden met er vier tussen zijn zes ringen van elk zes punten
+  assert.equal(draaiLichaam(profiel, 6).punten.length, 12)
+  assert.equal(draaiLichaam(profiel, 6, { tussen: 4 }).punten.length, 36)
+
+  kettingenKloppen(draaiLichaam(profiel, 6, { tussen: 4 }), 'fijn draailichaam')
 })
 
 test('een draailichaam sluit zijn ringen', () => {
