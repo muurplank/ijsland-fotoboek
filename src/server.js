@@ -145,6 +145,10 @@ async function hernoemOveral (hernoemd, behalveDag) {
     let veranderd = false
     for (const w of dag.waypoints) {
       for (const { w: nieuw, oud } of hernoemd) {
+        // Een lege naam nooit doorzetten. Anders maakt één misplaatste
+        // backspace in de preview van één label een wijziging in meerdere
+        // dagbestanden tegelijk - en dat is niet terug te draaien met Escape.
+        if (!nieuw.name?.trim()) continue
         if (w.name !== oud.name) continue
         if (Math.abs(w.lat - nieuw.lat) > GRENS_GRADEN) continue
         if (Math.abs(w.lon - nieuw.lon) > GRENS_GRADEN) continue

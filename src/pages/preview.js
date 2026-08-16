@@ -51,6 +51,16 @@ let silhouetSleutel = null
 let vorigeAchtergrondSleutel = null
 let boek = {}
 let presets = []
+let stoppenOpen = false   // of de stoppenlijst in het paneel openstaat
+
+/**
+ * Labels die je even kwijt wilde door ze leeg te maken.
+ *
+ * Bewust alleen in het geheugen: dit gaat nooit naar een dagbestand, en na een
+ * herlaadbeurt staan ze er weer. Wil je een stop blijvend weghebben, dan is het
+ * vinkje in de stoppenlijst de plek daarvoor.
+ */
+let tijdelijkVerborgen = new Set()
 
 /** ------------------------------------------------------------- hulpjes */
 
@@ -300,6 +310,11 @@ async function laadDag (nummer) {
   zegt(`dag ${nummer} ophalen (eerste keer kan even duren)…`)
   gegevens = await (await fetch(`/api/dag?dag=${nummer}`)).json()
   if (gegevens.fout) throw new Error(gegevens.fout)
+
+  // verse dag, verse lijst met even weggeklikte labels
+  tijdelijkVerborgen = new Set()
+  gegevens.tijdelijkVerborgen = tijdelijkVerborgen
+
   huidigeDag = nummer
   document.title = `Dag ${gegevens.dag.dag} — ${gegevens.dag.titel}`
 }
@@ -365,31 +380,21 @@ async function start () {
   kiezer.addEventListener('change', async () => {
     try {
       await laadDag(Number(kiezer.value))
-      // instellingen van de nieuwe dag overnemen, maar het paneel bijwerken
-      stijl = { ...gegevens.stijl }
-      for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
+
+      // De instellingen blijven staan waar je ze had.
+      //
+      // Eerder werden ze vervangen door wat er voor de nieuwe dag opgeslagen
+      // stond, en dan sprong alles waar je net aan gedraaid had terug zodra je
+      // even op een andere dag keek. Je bent meestal aan het boek als geheel
+      // aan het werken, niet aan één dag - vandaar dat de knoppen meereizen.
+      // Met "Alleen deze dag" leg je ze alsnog per dag vast.
       stopIndex = null
+      paneel.zetStops(bouwStoppenlijst())
       if (paginaType === 'voortgang') vulStopkiezer()
       vorigeAchtergrondSleutel = null
       hertekenAlles()
     } catch (fout) { zegt(`dag laden mislukt: ${fout.message}`) }
   })
-
-  // ------ stopkiezer, alleen voor de voortgangsbalk
-  function vulStopkiezer () {
-    const kiezer = $('stop')
-    kiezer.replaceChildren()
-    if (!gegevens) return
-    const { stops } = stopsMetAfstand(gegevens)
-    for (const stop of stops) {
-      const o = document.createElement('option')
-      o.value = String(stop.index)
-      o.textContent = `${stop.naam || '(naamloos)'} · ${stop.km.toFixed(0)} km`
-      kiezer.append(o)
-    }
-    if (stopIndex === null && stops.length) stopIndex = stops[0].index
-    kiezer.value = String(stopIndex ?? stops[0]?.index ?? 0)
-  }
 
   $('stop').addEventListener('change', e => {
     stopIndex = Number(e.target.value)
@@ -464,6 +469,8 @@ async function start () {
     },
 
     bijTekst: (id, tekst) => {
+      if (!tekst.trim()) return leegGemaakt(id)
+
       pasTekstToe(id, tekst)
       bewaarTekst(id)
       tekenPagina()
@@ -477,6 +484,18 @@ async function start () {
     bijMelding: zegt
   })
 
+  paneel.zetStops(bouwStoppenlijst())
+
+  // De pagina kan ook rechtstreeks uit de adresbalk komen (?pagina=voortgang),
+  // en dan is er nooit op een paginaknop geklikt. Dezelfde stand dus alsnog
+  // zetten, anders blijft de stopkiezer verborgen en leeg.
+  for (const k of $('paginakiezer').querySelectorAll('button')) {
+    k.classList.toggle('actief', k.dataset.pagina === paginaType)
+  }
+  $('dag').disabled = paginaType === 'overzicht' || paginaType === 'reiscijfers'
+  $('stopkiezer-rij').classList.toggle('verborgen', paginaType !== 'voortgang')
+  if (paginaType === 'voortgang') vulStopkiezer()
+
   $('zoek').addEventListener('input', e => paneel.filter(e.target.value))
   window.addEventListener('resize', ontdubbel(() => { schaalPagina(); tekenPagina() }, 120))
 
@@ -489,6 +508,121 @@ async function start () {
   if (gegevens.genegeerd?.length) {
     zegt(`let op: onbekende instellingen overgeslagen: ${gegevens.genegeerd.join(', ')}`)
   }
+}
+
+/** Vult de keuzelijst "Tot" met de stops die aan staan; alleen voor de voortgangsbalk. */
+function vulStopkiezer () {
+  const kiezer = $('stop')
+  kiezer.replaceChildren()
+  if (!gegevens) return
+
+  const { stops } = stopsMetAfstand(gegevens)
+  for (const stop of stops) {
+    const o = document.createElement('option')
+    o.value = String(stop.index)
+    o.textContent = `${stop.naam || '(naamloos)'} · ${stop.km.toFixed(0)} km`
+    kiezer.append(o)
+  }
+
+  // de stop waar hij op stond kan net uitgezet zijn; dan terug naar de eerste
+  if (!stops.some(s => s.index === stopIndex)) stopIndex = stops[0]?.index ?? null
+  kiezer.value = String(stopIndex ?? 0)
+}
+
+/**
+ * De stops van deze dag, elk met een vinkje om hem aan of uit te zetten.
+ *
+ * Niet elk punt in een dagbestand verdient een plek op de kaart: een tankstop,
+ * een keerpunt dat je alleen nodig had om de route langs de goede weg te
+ * sturen, of een punt dat je per ongeluk aantikte. Uitzetten laat het punt in
+ * de route staan - je reed er langs, dus de kilometers kloppen - maar haalt de
+ * stip, de naam en de plek in de voortgangsbalk weg.
+ */
+function bouwStoppenlijst () {
+  const doos = document.createElement('details')
+  doos.className = 'groep stoppen'
+
+  // De lijst wordt na elk vinkje opnieuw opgebouwd, want de kop telt mee
+  // hoeveel er aan staan. Zonder dit klapte hij daarbij steeds dicht en kon je
+  // er geen twee achter elkaar uitzetten.
+  doos.open = stoppenOpen
+  doos.addEventListener('toggle', () => { stoppenOpen = doos.open })
+
+  const waypoints = gegevens?.dag.waypoints ?? []
+  const zichtbaar = waypoints.filter(w => w.type !== 'via')
+  const uit = zichtbaar.filter(w => w.toon === false).length
+
+  const kop = document.createElement('summary')
+  kop.append(Object.assign(document.createElement('span'), {
+    textContent: uit ? `Stops (${zichtbaar.length - uit} van ${zichtbaar.length} aan)` : 'Stops'
+  }))
+  doos.append(kop)
+
+  for (const [i, w] of waypoints.entries()) {
+    if (w.type === 'via') continue
+
+    const rij = document.createElement('div')
+    rij.className = 'knop'
+
+    const regel = document.createElement('div')
+    regel.className = 'aanuit'
+
+    const vinkje = document.createElement('input')
+    vinkje.type = 'checkbox'
+    vinkje.checked = w.toon !== false
+
+    const naam = document.createElement('label')
+    naam.textContent = w.name || '(naamloos)'
+    if (!w.name) naam.style.opacity = '.6'
+
+    vinkje.addEventListener('change', () => {
+      // alleen opschrijven als hij uit staat; standaard is aan, en dan hoort
+      // er niets extra's in het dagbestand te komen
+      if (vinkje.checked) delete w.toon
+      else w.toon = false
+
+      bewaarOpmaak(`stop ${vinkje.checked ? 'aan' : 'uit'}: ${w.name || '(naamloos)'}`,
+        { waypoints: gegevens.dag.waypoints })
+
+      if (paginaType === 'voortgang') vulStopkiezer()
+      tekenPagina()
+      paneel.zetStops(bouwStoppenlijst())
+    })
+
+    regel.append(vinkje, naam)
+    rij.append(regel)
+    doos.append(rij)
+  }
+
+  return doos
+}
+
+/**
+ * Wat er gebeurt als je een tekst helemaal leeghaalt.
+ *
+ * Voor een plaatsnaam is dat een manier om hem even weg te hebben: hij
+ * verdwijnt van de kaart, maar alleen in dit tabblad. De naam blijft gewoon in
+ * het dagbestand staan, dus na een herlaadbeurt is hij er weer. Zo kun je
+ * proberen hoe de kaart eruitziet zonder dat label zonder iets kwijt te raken.
+ *
+ * Voor de andere teksten niet. Na het dubbelklikken staat alles geselecteerd,
+ * dus één backspace maakt een dagverhaal van duizend tekens leeg - en dát is
+ * bijna nooit de bedoeling. Die wijziging nemen we niet aan.
+ *
+ * @returns {boolean} of de wijziging is aangenomen
+ */
+function leegGemaakt (id) {
+  const waypoint = id.match(/^waypoint:(\d+)$/)
+
+  if (waypoint) {
+    tijdelijkVerborgen.add(Number(waypoint[1]))
+    tekenPagina()
+    zegt('label verborgen tot je de pagina herlaadt - de naam blijft bewaard')
+    return true
+  }
+
+  zegt('deze tekst kan niet leeg - met Escape maak je een bewerking ongedaan')
+  return false
 }
 
 /** Zet een aangepaste tekst op de plek waar hij hoort. */

@@ -539,6 +539,10 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
         Math.abs(g.lon - w.lon) <= ZELFDE_PLEK_GRADEN)
 
     for (const [i, w] of gegevens.dag.waypoints.entries()) {
+      if (w.toon === false) continue
+      // even weggeklikt door de naam leeg te maken; staat alleen in dit
+      // tabblad en is na herladen weer terug
+      if (gegevens.tijdelijkVerborgen?.has(i)) continue
       if (w.type === 'via' && !w.label) continue
       if (w.toonLabel === false) continue
 

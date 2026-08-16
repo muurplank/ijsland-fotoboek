@@ -48,7 +48,8 @@ export function stopsMetAfstand (gegevens) {
   const uit = []
   let opgeteld = 0
 
-  const meetellen = w => w && w.type !== 'via'
+  // uitgezette stops staan ook niet op het strookje, en niet in de keuzelijst
+  const meetellen = w => w && w.type !== 'via' && w.toon !== false
   if (meetellen(waypoints[0])) {
     uit.push({ km: 0, naam: waypoints[0].name, type: waypoints[0].type, index: 0 })
   }
