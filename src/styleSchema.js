@@ -65,7 +65,7 @@ export const KNOPPEN = [
   { key: 'kaartvorm.randDikteMm', groep: 'kaartvorm', label: 'Randlijndikte', type: 'mm', min: 0, max: 3, step: 0.05, standaard: 0 },
 
   // ----------------------------------------------------------------- lagen
-  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['mapbox-outdoors', 'mapbox-satelliet-straten', 'mapbox-licht', 'mapbox-straten'], standaard: 'mapbox-outdoors', help: 'Outdoors heeft hoogtelijnen, paden en landcover; satelliet-straten zet wegen en namen over een luchtfoto' },
+  { key: 'lagen.stijl', groep: 'lagen', label: 'Kaartstijl', type: 'keuze', opties: ['mapbox-outdoors', 'mapbox-satelliet-straten', 'mapbox-licht', 'mapbox-straten', 'mapbox-donker', 'mapbox-nacht'], standaard: 'mapbox-outdoors', help: 'Outdoors heeft hoogtelijnen, paden en landcover; satelliet-straten zet wegen en namen over een luchtfoto. Donker en nacht zijn de enige stijlen die bij Mapbox zelf donker zijn - van Outdoors bestaat geen donkere versie' },
   { key: 'lagen.zeeAan', groep: 'lagen', label: 'Zee', type: 'aanuit', standaard: true },
   { key: 'lagen.zeeKleur', groep: 'lagen', label: 'Zeekleur', type: 'kleur', standaard: '#eef2f4' },
   { key: 'lagen.landKleur', groep: 'lagen', label: 'Landkleur', type: 'kleur', standaard: '#f6f4f0' },
@@ -81,10 +81,12 @@ export const KNOPPEN = [
   { key: 'lagen.hoogtelijnenKleur', groep: 'lagen', label: 'Hoogtelijnkleur', type: 'kleur', standaard: '#c9c2b6' },
   { key: 'lagen.mapboxLabelMm', groep: 'lagen', label: 'Mapbox: tekstgrootte', type: 'mm', min: 1.5, max: 9, step: 0.1, standaard: 3, help: 'Alleen voor de mapbox-stijlen. Hun plaatsnamen zitten met een vaste pixelgrootte in het beeld, dus dit bepaalt tegelijk hoe scherp de achtergrond wordt: grotere tekst betekent een zachtere kaart eronder' },
   { key: 'lagen.badgesWeg', groep: 'lagen', label: 'Wegnummers onder de route weghalen', type: 'aanuit', standaard: true, help: 'Mapbox zet witte wegnummer-badges langs de wegen. Die onder je eigen routelijn liggen zeggen niets en zien er rommelig uit; deze poetst alleen die weg' },
-  { key: 'lagen.tekstBoven', groep: 'lagen', label: 'Plaatsnamen boven de route', type: 'aanuit', standaard: true, help: 'Namen die de route kruist worden uitgeknipt en over de routelijn heen gelegd, zodat ze leesbaar blijven. De rest van de kaart blijft eronder' },
+  { key: 'lagen.tekstBoven', groep: 'lagen', label: 'Plaatsnamen boven de route', type: 'aanuit', standaard: true, help: 'De plaatsnamen worden uit de kaart geknipt en als eigen laag over de routelijn gelegd. De stapeling is dan: kaart, routelijn, plaatsnamen' },
   { key: 'lagen.badgesBoven', groep: 'lagen', label: 'Wegnummers juist bovenop leggen', type: 'aanuit', standaard: false, help: 'In plaats van weghalen: uitknippen en over de routelijn heen leggen, zodat de tekst leesbaar blijft' },
   { key: 'lagen.achtergrondDekking', groep: 'lagen', label: 'Dekking achtergrond', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 1 },
   { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken naar wit', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.1, help: 'Trekt de achtergrond richting het wit van het papier, zodat je route ervoor knalt' },
+  { key: 'lagen.verdonkering', groep: 'lagen', label: 'Verdonkeren naar zwart', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0, help: 'Het omgekeerde van verbleken. Hiermee maak je van Outdoors alsnog een donkere kaart met zijn hoogtelijnen erin - zet dan wel "Opgetilde namen" op licht, anders verdwijnen de plaatsnamen in het donker' },
+  { key: 'lagen.tekstKleur', groep: 'lagen', label: 'Opgetilde namen', type: 'keuze', opties: ['origineel', 'licht', 'donker'], standaard: 'origineel', help: 'De plaatsnamen die boven de route worden gelegd. Op een donkere kaart zijn ze zwart op zwart; met "licht" worden ze wit overgezet' },
   { key: 'lagen.ontzadiging', groep: 'lagen', label: 'Ontzadigen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.28, help: 'Haalt kleur uit de achtergrond zodat hij niet vloekt met je foto\'s' },
 
   // ---------------------------------------------------------------- relief

@@ -29,7 +29,13 @@ export const MAPBOX_STIJLEN = {
   outdoors: { id: 'outdoors-v12', label: 'Outdoors' },
   'satelliet-straten': { id: 'satellite-streets-v12', label: 'Satelliet met straten' },
   licht: { id: 'light-v11', label: 'Licht' },
-  straten: { id: 'streets-v12', label: 'Straten' }
+  straten: { id: 'streets-v12', label: 'Straten' },
+
+  // Van Outdoors bestaat geen donkere versie bij Mapbox; deze twee zijn de
+  // enige stijlen die af fabriek donker zijn. Ze missen de hoogtelijnen en de
+  // landcover waar Outdoors het van moet hebben - dat is de ruil.
+  donker: { id: 'dark-v11', label: 'Donker' },
+  nacht: { id: 'navigation-night-v1', label: 'Nacht' }
 }
 
 /** Mapbox rendert tot dit niveau. */

@@ -410,8 +410,8 @@ function vlakkenUitMasker (masker, width, height, { minOppervlak, maxOppervlak }
  *
  * @returns {{aantal: number, laag: Buffer|null}}
  */
-export function tilTekstOp (beeld, route, { lijnDikte = 8, ...opties } = {}) {
-  if (!route || route.length < 2) return { aantal: 0, laag: null }
+export function tilTekstOp (beeld, route, { lijnDikte = 8, alles = false, ...opties } = {}) {
+  if (!alles && (!route || route.length < 2)) return { aantal: 0, laag: null }
 
   const vlakken = vindTekstVlakken(beeld, opties)
   const masker = vlakken.masker
@@ -420,7 +420,12 @@ export function tilTekstOp (beeld, route, { lijnDikte = 8, ...opties } = {}) {
   let aantal = 0
 
   for (const vlak of vlakken) {
-    if (!raaktRoute(vlak, route, lijnDikte)) continue
+    // Met `alles` gaat de hele naamlaag omhoog, ook namen die de route niet
+    // raakt. Dat is een keuze over stapeling en niet over botsingen: de kaart
+    // onderop, de routelijn erop, de plaatsnamen bovenop. Alleen de gekruiste
+    // namen optillen laat een naam vlak naast de lijn onder een gletsjer of
+    // een hoogtelijn liggen, en dan leest de ene naam anders dan de andere.
+    if (!alles && !raaktRoute(vlak, route, lijnDikte)) continue
 
     const x1 = Math.min(beeld.width, vlak.x0 + vlak.breedte)
     const y1 = Math.min(beeld.height, vlak.y0 + vlak.hoogte)
@@ -441,5 +446,38 @@ export function tilTekstOp (beeld, route, { lijnDikte = 8, ...opties } = {}) {
     aantal++
   }
 
+  if (aantal && opties.hertint && opties.hertint !== 'origineel') {
+    hertintLaag(laag, opties.hertint)
+  }
+
   return { aantal, laag: aantal ? laag : null }
+}
+
+/**
+ * Zet de opgetilde tekst om naar licht of donker.
+ *
+ * Nodig zodra de kaart eronder van kleur wisselt: de namen komen uit het
+ * kaartbeeld zelf, dus op een donkergemaakte Outdoors zijn ze zwart op zwart.
+ *
+ * De helderheid van elke pixel wordt de nieuwe doorzichtigheid. Zo blijven de
+ * zachte randen van de letters zacht - hard omzetten naar één kleur zou de
+ * antialiasing weggooien en dan zie je in de druk getrapte lettervormen.
+ */
+function hertintLaag (laag, naar) {
+  const licht = naar === 'licht'
+
+  for (let i = 0; i < laag.length; i += 4) {
+    const a = laag[i + 3]
+    if (!a) continue
+
+    // hoe donker de pixel was, telt als hoe stevig de letter daar stond
+    const grijs = (laag[i] * 0.299 + laag[i + 1] * 0.587 + laag[i + 2] * 0.114) / 255
+    const sterkte = licht ? 1 - grijs : grijs
+
+    const waarde = licht ? 255 : 0
+    laag[i] = waarde
+    laag[i + 1] = waarde
+    laag[i + 2] = waarde
+    laag[i + 3] = Math.round(a * Math.min(1, sterkte * 1.15))
+  }
 }

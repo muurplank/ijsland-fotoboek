@@ -193,7 +193,11 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
 
     // Plaatsnamen juist optillen: die wil je lezen, dus die horen boven de lijn.
     if (stijl['lagen.tekstBoven']) {
-      const uit = tilTekstOp(raster, inPixels, { lijnDikte: dikteInPixels })
+      const uit = tilTekstOp(raster, inPixels, {
+        lijnDikte: dikteInPixels,
+        alles: true,
+        hertint: stijl['lagen.tekstKleur']
+      })
       if (uit.aantal) onProgress?.(`${uit.aantal} plaatsnaam/namen boven de route getild`)
       bovenlaag = uit.laag
     }
@@ -208,13 +212,18 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
   }
   const plek = plaatsing(beeld, view)
 
+  // Verbleken trekt naar wit (a<1, b>0), verdonkeren naar zwart (a<1, b=0).
+  // Ze staan als aparte knoppen omdat ze allebei bruikbaar zijn, maar ze werken
+  // op dezelfde lineaire schaling en horen elkaar dus niet tegen te werken.
   const f = stijl['lagen.verbleking']
+  const d = stijl['lagen.verdonkering'] ?? 0
+
   const pijp = sharp(beeld.data, {
     raw: { width: beeld.width, height: beeld.height, channels: beeld.channels }
   })
     .removeAlpha()
     .modulate({ saturation: 1 - stijl['lagen.ontzadiging'] })
-    .linear(1 - f, 255 * f)
+    .linear((1 - f) * (1 - d), 255 * f * (1 - d))
 
   const uit = await naarPagina(pijp, plek, dpi, 0)
 
