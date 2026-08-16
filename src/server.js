@@ -327,9 +327,19 @@ const server = createServer(async (req, res) => {
 
     // ------------------------------------------------------- inzetkaartje
     if (pad === '/api/inzet') {
+      const getal = (naam, terug) => {
+        const v = Number(url.searchParams.get(naam))
+        return Number.isFinite(v) ? v : terug
+      }
+
       const landKleur = url.searchParams.get('kleur') ?? '#e8e4dd'
       const silhouet = await ijslandSilhouet({
         landKleur,
+        kustKleur: url.searchParams.get('kust') ?? landKleur,
+        kustMm: getal('kustMm', 0),
+        // de breedte waarop het kaartje straks staat: daarmee wordt de dikte van
+        // de kustrand van millimeters naar beeldpunten omgerekend
+        breedteMm: getal('mm', 46),
         onProgress: (n, totaal) =>
           process.stdout.write(`  ... inzetkaartje (${typeof n === 'string' ? n : `${n}/${totaal}`})\n`)
       })
@@ -337,6 +347,7 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, {
         'content-type': 'image/png',
         'x-bounds': JSON.stringify(silhouet.bounds),
+        'x-kust': String(silhouet.kustPx),
         'cache-control': 'no-store'
       })
       return res.end(silhouet.png)

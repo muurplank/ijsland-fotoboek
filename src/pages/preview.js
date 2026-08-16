@@ -13,7 +13,7 @@
 
 import { bouwPaneel } from './panel.js'
 import { teken } from './draw.js'
-import { tekenBijwerk } from './furniture.js'
+import { tekenBijwerk, inzetMaten } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
 import { tekenReisCijfers } from './tripstats.js'
@@ -47,7 +47,7 @@ let dagen = []
 let huidigeDag = Number(params.get('dag') ?? 1)
 let paginaType = params.get('pagina') ?? 'kaart'
 let silhouet = null
-let silhouetKleur = null
+let silhouetSleutel = null
 let vorigeAchtergrondSleutel = null
 let boek = {}
 let presets = []
@@ -184,20 +184,56 @@ async function achtergrondNu () {
 
 const haalAchtergrond = ontdubbel(achtergrondNu, 260)
 
-/** Het silhouet van IJsland voor het inzetkaartje; hoeft maar een keer. */
-async function haalSilhouet () {
-  const kleur = stijl['inzet.landKleur']
-  if (!stijl['inzet.aan'] || paginaType !== 'kaart' || kleur === silhouetKleur) return
-  silhouetKleur = kleur
+/**
+ * Het silhouet van IJsland voor het inzetkaartje.
+ *
+ * De sleutel is de hele adresregel en niet alleen de landkleur: de kustrand
+ * wordt op de server van millimeters naar beeldpunten omgerekend, dus die hangt
+ * ook aan de kleur van de rand, de dikte ervan en de breedte van het kaartje.
+ * Alleen op de landkleur letten zou betekenen dat er zichtbaar niets verandert
+ * als je aan een van die andere drie draait.
+ */
+async function silhouetNu () {
+  if (!stijl['inzet.aan'] || paginaType !== 'kaart') return
+
+  const { binnenBreedte } = inzetMaten(stijl, plaatsingVoorPagina())
+  const adres = '/api/inzet?' + new URLSearchParams({
+    kleur: stijl['inzet.landKleur'],
+    kust: stijl['inzet.kustKleur'],
+    kustMm: String(stijl['inzet.kustMm']),
+    mm: binnenBreedte.toFixed(2)
+  })
+  if (adres === silhouetSleutel) return
+  silhouetSleutel = adres
 
   try {
-    const antwoord = await fetch(`/api/inzet?kleur=${encodeURIComponent(kleur)}`)
+    const antwoord = await fetch(adres)
     if (!antwoord.ok) throw new Error(await antwoord.text())
     const bounds = JSON.parse(antwoord.headers.get('x-bounds'))
+    const oud = silhouet?.url
     silhouet = { url: URL.createObjectURL(await antwoord.blob()), bounds }
     tekenPagina()
+    // pas opruimen nadat het nieuwe plaatje staat, anders knippert het weg
+    if (oud) URL.revokeObjectURL(oud)
   } catch (fout) {
+    silhouetSleutel = null // zodat een volgende poging het opnieuw probeert
     zegt(`inzetkaartje mislukt: ${fout.message}`)
+  }
+}
+
+// Slepen aan de breedte verandert de kustdikte in beeldpunten, en elke stap zou
+// anders een nieuwe render van het hele eiland uitlokken.
+const haalSilhouet = ontdubbel(silhouetNu, 260)
+
+/** De hele reis, voor de vage lijn op het inzetkaartje. */
+async function haalReis () {
+  if (reis || paginaType !== 'kaart' || !stijl['inzet.aan']) return
+  try {
+    await laadReis()
+    tekenPagina()
+  } catch (fout) {
+    // het kaartje tekent zonder de hele reis gewoon door, dus dit mag misgaan
+    zegt(`hele reis ophalen mislukt: ${fout.message}`)
   }
 }
 
@@ -255,6 +291,7 @@ function hertekenAlles () {
   tekenPagina()
   haalAchtergrond()
   haalSilhouet()
+  haalReis()
 }
 
 /** ------------------------------------------------------- gegevens laden */
@@ -269,7 +306,7 @@ async function laadDag (nummer) {
 
 async function laadReis () {
   if (reis) return
-  zegt('alle dagen ophalen voor de overzichtskaart…')
+  zegt('alle dagen ophalen…')
   reis = await (await fetch('/api/reis')).json()
 }
 
@@ -305,7 +342,10 @@ async function start () {
     document.body.classList.add('exporteren')
     schaalPagina()
     zetTypografie()
-    await haalSilhouet()
+    // niet de ontdubbelde versies: die komen pas na een tel, en dan staat
+    // klaarVoorExport allang aan en mist de PDF de vage reislijn
+    await silhouetNu()
+    if (paginaType === 'kaart' && stijl['inzet.aan']) await laadReis()
     tekenPagina()
     await achtergrondNu()
     await document.fonts.ready

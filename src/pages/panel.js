@@ -79,6 +79,8 @@ const SNEL = new Set([
   'titelblok.aan',
   'inzet.aan',
   'inzet.breedteMm',
+  'inzet.lijnMm',
+  'inzet.sluierDekking',
   'schaal.balkAan',
   'schaal.noordpijlAan',
   'schaal.kompasVorm',

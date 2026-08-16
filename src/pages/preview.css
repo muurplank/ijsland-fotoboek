@@ -275,10 +275,10 @@ body.exporteren #pagina { box-shadow: none; }
 .titel-datum { opacity: .7; letter-spacing: .06em; text-transform: uppercase; font-weight: 550; }
 .titel-hoofd { font-weight: 680; letter-spacing: -.01em; margin-top: .18em; }
 
-.inzet {
-  border-style: solid;
-  box-sizing: content-box;
-}
+/* De doos meet wat de knop zegt: breedte en hoogte zijn inclusief de marge en
+   de randlijn, want anders kwam er aan de rechter- en onderkant driemaal zoveel
+   ruimte te staan als links en boven. Vandaar geen content-box hier. */
+.inzet { border-style: solid; }
 .inzet-binnen { position: relative; overflow: hidden; }
 .inzet-binnen img { position: absolute; display: block; }
 .inzet-binnen svg { position: absolute; inset: 0; width: 100%; height: 100%; }

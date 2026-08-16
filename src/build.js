@@ -82,7 +82,9 @@ function controleer (stijl, plan, echteBreedte, echteHoogte) {
   const lijnen = [
     ['routelijn', stijl['route.dikteMm']],
     ['eerdere dagen', stijl['eerdere.dikteMm']],
-    ['wegen', stijl['lagen.wegenDikteMm']]
+    ['wegen', stijl['lagen.wegenDikteMm']],
+    // de dunste lijn op het inzetkaartje is de hele reis, half zo dik als de dag
+    ['inzetkaartje: hele reis', stijl['inzet.lijnMm'] * 0.5]
   ]
   for (const [naam, mm] of lijnen) {
     zeg(mm >= DUNSTE_LIJN_MM, `${naam} ${mm} mm dik (onder ${DUNSTE_LIJN_MM} mm valt het weg in de druk)`)
