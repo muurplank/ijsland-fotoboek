@@ -29,6 +29,84 @@ function polair (hoekGraden, straal) {
 const rond = n => Math.round(n * 1000) / 1000
 const punt = p => `${rond(p.x)} ${rond(p.y)}`
 
+/** Een hexkleur met doorzichtigheid, als rgb()-notatie. */
+function metDekking (hex, dekking) {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.slice(0, 6), 16)
+  return `rgb(${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255} / ${dekking})`
+}
+
+let glasTeller = 0
+
+/**
+ * Het glasplaatje onder de kompasroos.
+ *
+ * Hier met echte vormen opgebouwd in plaats van met CSS, zoals bij het
+ * titelblok. Een kompasroos staat in de tekenlaag, en de eigenschappen waarmee
+ * je in CSS glas maakt - backdrop-filter, box-shadow - werken daar niet of niet
+ * betrouwbaar. Met een verloop, een lichtrand en een zachte schaduw komt het op
+ * hetzelfde uit, en dit gaat gegarandeerd mee naar de PDF.
+ *
+ * @param {number} straal buitenmaat van het plaatje in millimeters
+ */
+export function kompasGlas (straal, {
+  kleur = '#ffffff',
+  dekking = 0.42,
+  schaduw = true
+} = {}) {
+  const groep = maakSvg('g', { class: 'kompasglas' })
+  const id = `kompasglas-${++glasTeller}`
+
+  const defs = maakSvg('defs')
+
+  // het licht valt van linksboven in, net als bij de arcering van de roos zelf
+  const sheen = maakSvg('linearGradient', { id: `${id}-sheen`, x1: '0.15', y1: '0', x2: '0.7', y2: '1' })
+  sheen.append(maakSvg('stop', { offset: '0', 'stop-color': '#ffffff', 'stop-opacity': '0.55' }))
+  sheen.append(maakSvg('stop', { offset: '0.45', 'stop-color': '#ffffff', 'stop-opacity': '0.10' }))
+  sheen.append(maakSvg('stop', { offset: '1', 'stop-color': '#ffffff', 'stop-opacity': '0' }))
+  defs.append(sheen)
+
+  if (schaduw) {
+    const filter = maakSvg('filter', {
+      id: `${id}-schaduw`, x: '-40%', y: '-40%', width: '180%', height: '180%'
+    })
+    filter.append(maakSvg('feDropShadow', {
+      dx: 0, dy: straal * 0.05, stdDeviation: straal * 0.07,
+      'flood-color': '#000000', 'flood-opacity': '0.18'
+    }))
+    defs.append(filter)
+  }
+
+  groep.append(defs)
+
+  // De rand vloeit uit in plaats van dat hij ergens ophoudt.
+  //
+  // Een harde cirkelrand op een kaart met veel kleur wordt in de druk een
+  // scherpe halo: precies het soort randje dat je op papier ziet zitten en op
+  // het scherm niet. Door de vulling in de laatste tien procent naar niets te
+  // laten zakken loopt het plaatje in de kaart over, en blijft het midden dicht
+  // genoeg om de roos te dragen.
+  const vloei = maakSvg('radialGradient', { id: `${id}-vloei` })
+  vloei.append(maakSvg('stop', { offset: '0', 'stop-color': kleur, 'stop-opacity': dekking }))
+  vloei.append(maakSvg('stop', { offset: '0.78', 'stop-color': kleur, 'stop-opacity': dekking }))
+  vloei.append(maakSvg('stop', { offset: '0.93', 'stop-color': kleur, 'stop-opacity': dekking * 0.55 }))
+  vloei.append(maakSvg('stop', { offset: '1', 'stop-color': kleur, 'stop-opacity': 0 }))
+  defs.append(vloei)
+
+  groep.append(maakSvg('circle', {
+    cx: 0, cy: 0, r: straal,
+    fill: `url(#${id}-vloei)`,
+    filter: schaduw ? `url(#${id}-schaduw)` : null
+  }))
+
+  groep.append(maakSvg('circle', {
+    cx: 0, cy: 0, r: straal * 0.985,
+    fill: `url(#${id}-sheen)`
+  }))
+
+  return groep
+}
+
 /**
  * Tekent een kompasroos als losse groep, gecentreerd op de oorsprong.
  *

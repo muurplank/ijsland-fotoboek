@@ -12,7 +12,8 @@ import { maakView, paginaMaat } from '../render/layout.js'
 import { boundsOf } from '../geo/viewport.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
 import { Bezetting, langsElkaar } from '../render/parallel.js'
-import { kompasroos } from './compass.js'
+import { kompasGlas, kompasroos } from './compass.js'
+import { zetGlas } from './furniture.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -172,6 +173,7 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
   blok.style.left = mm(marge)
   blok.style.top = mm(marge)
   blok.style.color = stijl['titelblok.kleur']
+  zetGlas(blok, stijl)
 
   const totaal = reis.reduce((s, d) => s + d.afstandKm, 0)
   const boven = document.createElement('div')
@@ -250,10 +252,28 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
       letters: stijl['schaal.kompasLetters'],
       letterMm: stijl['schaal.kompasLetterMm']
     })
-    roos.setAttribute('transform',
+    // buitenste groep zet de plek, binnenste vangt verschuiving en schaal op
+    const anker = document.createElementNS(SVG, 'g')
+    anker.setAttribute('transform',
       `translate(${hoek.includes('links') ? rand : maat.breedteMm - rand} ` +
       `${hoek.includes('boven') ? rand : maat.hoogteMm - rand})`)
-    svg.append(roos)
+
+    const beweegbaar = document.createElementNS(SVG, 'g')
+    beweegbaar.setAttribute('data-plek', 'kompas')
+    beweegbaar.setAttribute('data-schaalbaar', 'css')
+    beweegbaar.setAttribute('data-knoppen', 'schaal')
+
+    if (stijl['schaal.kompasGlas']) {
+      beweegbaar.append(kompasGlas(straal * stijl['schaal.kompasGlasFactor'], {
+        kleur: stijl['titelblok.glasKleur'],
+        dekking: stijl['titelblok.glasDekking'],
+        schaduw: stijl['titelblok.glasSchaduw']
+      }))
+    }
+
+    beweegbaar.append(roos)
+    anker.append(beweegbaar)
+    svg.append(anker)
   }
 
   if (stijl['bron.aan']) {

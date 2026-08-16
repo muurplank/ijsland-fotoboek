@@ -8,7 +8,8 @@
 import { MapView } from '../geo/viewport.js'
 import { paginaMaat } from '../render/layout.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
-import { kompasroos } from './compass.js'
+import { kompasGlas, kompasroos } from './compass.js'
+import { schaalVan } from './editable.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -21,6 +22,39 @@ const maakSvg = (tag, eigenschappen = {}) => {
 }
 
 const mm = waarde => `calc(${waarde} * var(--mm))`
+
+/** Een hexkleur met een doorzichtigheid erop, als rgb()-notatie. */
+function metDekking (hex, dekking) {
+  const h = hex.replace('#', '')
+  const n = parseInt(h.slice(0, 6), 16)
+  return `rgb(${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255} / ${dekking})`
+}
+
+/**
+ * Legt het glasplaatje achter een titelblok.
+ *
+ * Alle vier de paginatypes tekenen hun eigen titelblok, dus dit staat hier
+ * apart: zo ziet de titel er op de statistiekpagina hetzelfde uit als op de
+ * kaart, en hoeft de vormgeving maar op één plek bijgesteld te worden.
+ *
+ * Geeft terug of er een plaatje kwam, zodat de aanroeper weet of hij het oude
+ * platte vlak nog moet zetten.
+ */
+export function zetGlas (blok, stijl) {
+  if (!stijl['titelblok.glasAan']) return false
+
+  blok.classList.add('glas')
+  blok.style.setProperty('--glasvul',
+    metDekking(stijl['titelblok.glasKleur'], stijl['titelblok.glasDekking']))
+  blok.style.setProperty('--glasblur', stijl['titelblok.glasBlurMm'])
+  blok.style.setProperty('--glasronding', stijl['titelblok.glasRondingMm'])
+  blok.style.setProperty('--glaspad', stijl['titelblok.glasPadMm'])
+  blok.style.setProperty('--glasschaduw', stijl['titelblok.glasSchaduw']
+    ? `0 ${mm(0.5)} ${mm(1.7)} rgb(0 0 0 / .13), 0 ${mm(0.1)} ${mm(0.35)} rgb(0 0 0 / .08)`
+    : 'none')
+
+  return true
+}
 
 /** Zet een element in een van de vier hoeken van de pagina. */
 function inHoek (node, hoek, margeMm, maat) {
@@ -73,7 +107,9 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
 
     blok.style.textAlign = stijl['titelblok.uitlijning']
     blok.style.color = stijl['titelblok.kleur']
-    if (stijl['titelblok.vlakAan']) {
+
+    const glas = zetGlas(blok, stijl)
+    if (!glas && stijl['titelblok.vlakAan']) {
       blok.style.background = stijl['titelblok.vlakKleur']
       blok.style.opacity = '1'
       blok.style.padding = mm(3)
@@ -251,8 +287,28 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
       letters: stijl['schaal.kompasLetters'],
       letterMm: stijl['schaal.kompasLetterMm']
     })
-    roos.setAttribute('transform', `translate(${x} ${y})`)
-    svgLaag?.append(roos)
+    // Zelfde opzet als bij de markers: een buitenste groep die de plek bepaalt
+    // en een binnenste die jouw verschuiving en schaal opvangt, zodat schalen om
+    // het hart van de roos draait en niet om de hoek van de pagina.
+    const anker = maakSvg('g', { transform: `translate(${x} ${y})` })
+    const beweegbaar = maakSvg('g', {
+      'data-plek': 'kompas',
+      'data-schaalbaar': 'css',
+      'data-knoppen': 'schaal'
+    })
+
+    // het glasplaatje eerst, zodat de roos erbovenop komt
+    if (stijl['schaal.kompasGlas']) {
+      beweegbaar.append(kompasGlas(straal * stijl['schaal.kompasGlasFactor'], {
+        kleur: stijl['titelblok.glasKleur'],
+        dekking: stijl['titelblok.glasDekking'],
+        schaduw: stijl['titelblok.glasSchaduw']
+      }))
+    }
+
+    beweegbaar.append(roos)
+    anker.append(beweegbaar)
+    svgLaag?.append(anker)
   }
 
   // ---------------------------------------------------------- bronvermelding

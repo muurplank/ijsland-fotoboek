@@ -236,6 +236,42 @@ body.exporteren #pagina { box-shadow: none; }
 
 .titelblok { line-height: 1.15; }
 .titelblok.metvlak { position: relative; }
+
+/* ---------------------------------------------------- glasplaatje achter de titel
+
+   Opgebouwd uit lagen die állemaal meegaan naar de PDF: een melkachtige tint,
+   een verloop dat bovenin licht vangt, een dunne oplichtende bovenrand, een
+   iets donkerder onderrand, en een zachte schaduw die het plaatje van de kaart
+   tilt. De echte vervaging van de kaart erdoorheen komt daar met
+   backdrop-filter bovenop.
+
+   Die vervaging is bewust het enige dat erbij kan wegvallen: Chromiums printpad
+   laat backdrop-filter vallen, dus in de PDF zou een plaatje dat alleen daarop
+   leunt spoorloos zijn. Zo blijft het glas ook op papier een glasplaatje - net
+   iets minder diep.                                                            */
+
+.titelblok.glas {
+  position: relative;
+  box-sizing: border-box;
+  padding: calc(var(--glaspad) * var(--mm));
+  border-radius: calc(var(--glasronding) * var(--mm));
+
+  background:
+    linear-gradient(176deg,
+      rgb(255 255 255 / .30) 0%,
+      rgb(255 255 255 / .06) 34%,
+      rgb(255 255 255 / 0) 62%),
+    var(--glasvul);
+
+  box-shadow: var(--glasschaduw, none),
+    inset 0 calc(0.16 * var(--mm)) 0 rgb(255 255 255 / .72),
+    inset 0 calc(-0.13 * var(--mm)) 0 rgb(0 0 0 / .055),
+    inset calc(0.11 * var(--mm)) 0 0 rgb(255 255 255 / .30),
+    inset calc(-0.11 * var(--mm)) 0 0 rgb(255 255 255 / .18);
+
+  backdrop-filter: blur(calc(var(--glasblur) * var(--mm))) saturate(168%);
+  -webkit-backdrop-filter: blur(calc(var(--glasblur) * var(--mm))) saturate(168%);
+}
 .titel-datum { opacity: .7; letter-spacing: .06em; text-transform: uppercase; font-weight: 550; }
 .titel-hoofd { font-weight: 680; letter-spacing: -.01em; margin-top: .18em; }
 
