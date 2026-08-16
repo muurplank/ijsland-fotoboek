@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { Bezetting, langsElkaar } from '../src/render/parallel.js'
+import { Bezetting, langsElkaar, naastZichzelf } from '../src/render/parallel.js'
 
 test('een enkele route wordt niet verschoven', () => {
   const bezet = new Bezetting(1)
@@ -94,4 +94,62 @@ test('verschuift haaks op de rijrichting, niet altijd verticaal', () => {
   const midden = tweede[Math.floor(tweede.length / 2)]
   assert.ok(Math.abs(Math.abs(midden.x - 10) - 1.2) < 0.3,
     `bij een verticale weg hoort hij zijwaarts te schuiven, kreeg x=${midden.x.toFixed(2)}`)
+})
+
+// ------------------------------------------------------------ naastZichzelf
+
+test('een route die nergens terugkomt blijft liggen waar hij lag', () => {
+  const rechtdoor = []
+  for (let i = 0; i <= 100; i++) rechtdoor.push({ x: i, y: 10 })
+
+  const uit = naastZichzelf(rechtdoor, { afstandMm: 1.2, negeerMm: 25 })
+  for (const p of uit) {
+    assert.ok(Math.abs(p.y - 10) < 0.01, 'zonder terugweg hoort er niets te verschuiven')
+  }
+})
+
+test('heen en terug over dezelfde weg komen naast elkaar te liggen', () => {
+  // honderd millimeter naar rechts en over precies dezelfde lijn terug
+  const heen = []
+  for (let i = 0; i <= 100; i++) heen.push({ x: i, y: 10 })
+  const terug = []
+  for (let i = 100; i >= 0; i--) terug.push({ x: i, y: 10 })
+
+  const uit = naastZichzelf([...heen, ...terug], { afstandMm: 1.2, negeerMm: 25 })
+
+  // halverwege de terugweg hoort de lijn van de heenweg af te liggen
+  const opDeTerugweg = uit[Math.round(uit.length * 0.75)]
+  assert.ok(Math.abs(opDeTerugweg.y - 10) > 0.5,
+    `de terugweg hoort ernaast te liggen, lag op ${opDeTerugweg.y.toFixed(2)}`)
+
+  // en het begin hoort nog gewoon op de weg te liggen
+  assert.ok(Math.abs(uit[0].y - 10) < 0.3, 'de heenweg zelf blijft op de weg liggen')
+})
+
+test('een haarspeldbocht is geen terugweg', () => {
+  // een bocht van vijf millimeter breed: dat hoort binnen negeerMm te vallen
+  const bocht = []
+  for (let i = 0; i <= 40; i++) bocht.push({ x: i, y: 10 })
+  for (let i = 40; i >= 0; i--) bocht.push({ x: i, y: 10 + 5 })
+
+  const uit = naastZichzelf(bocht, { afstandMm: 1.2, negeerMm: 25 })
+  const grootsteAfwijking = Math.max(...uit.map((p, i) => Math.abs(p.y - bocht[i].y)))
+  assert.ok(grootsteAfwijking < 0.6,
+    `twee wegen op vijf millimeter van elkaar zijn niet dezelfde weg (${grootsteAfwijking.toFixed(2)})`)
+})
+
+test('een dicht bezette lijn levert één baan op, niet acht', () => {
+  // Een echte route heeft honderden punten per centimeter. Werd er per
+  // segmentje beslag gelegd, dan telde dezelfde cel telkens opnieuw mee en
+  // dreef de terugweg metersver weg van de heenweg.
+  const heen = []
+  for (let i = 0; i <= 2000; i++) heen.push({ x: i / 20, y: 10 })
+  const terug = [...heen].reverse()
+
+  const uit = naastZichzelf([...heen, ...terug], { afstandMm: 1.2, negeerMm: 25 })
+  const grootste = Math.max(...uit.map(p => Math.abs(p.y - 10)))
+
+  assert.ok(grootste <= 1.2 + 0.01,
+    `hooguit één baan opzij, was ${grootste.toFixed(2)} mm`)
+  assert.ok(grootste > 0.5, 'maar hij hoort wel degelijk opzij te gaan')
 })

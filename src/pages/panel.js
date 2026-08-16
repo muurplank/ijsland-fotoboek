@@ -53,6 +53,8 @@ const SNEL = new Set([
   'route.buitenAlsRand',
   'route.streepjes',
   'route.fwegStippels',
+  'route.heenEnTerug',
+  'route.tussenruimteMm',
   'overzicht.dagkleuren',
   'overzicht.dikteMm',
   'overzicht.buitenMm',

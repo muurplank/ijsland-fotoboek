@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { projecteer, padData, pijltjesLangs, vereenvoudig, lengteMm } from '../src/render/svg.js'
+import { projecteer, padData, pijltjesLangs, vereenvoudig, lengteMm, verzachtLijn } from '../src/render/svg.js'
 import { MapView } from '../src/geo/viewport.js'
 
 const VIEW = MapView.fit(
@@ -85,4 +85,39 @@ test('houdt echte bochten intact bij het vereenvoudigen', () => {
 test('laat korte reeksen met rust', () => {
   assert.equal(vereenvoudig([{ x: 0, y: 0 }, { x: 1, y: 1 }], 1).length, 2)
   assert.equal(vereenvoudig([], 1).length, 0)
+})
+
+// -------------------------------------------------------------- verzachtLijn
+
+test('verzacht de knikken maar houdt begin en eind waar ze waren', () => {
+  const hoek = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 10, y: 10 }]
+  const glad = verzachtLijn(hoek, 1)
+
+  assert.deepEqual(glad[0], hoek[0], 'het beginpunt hoort te blijven staan')
+  assert.deepEqual(glad.at(-1), hoek.at(-1), 'het eindpunt hoort te blijven staan')
+  assert.ok(!glad.some(p => p.x === 10 && p.y === 0), 'de scherpe hoek hoort weg te zijn')
+})
+
+test('haalt het gekriebel eruit dat streepjes lelijk maakt', () => {
+  // Een rechte weg van zestig millimeter met om de halve millimeter een
+  // minibochtje van een kwart millimeter - zo dicht bezet ligt een F-weg uit
+  // de routeplanner er op papier bij.
+  const recht = 60
+  const gekarteld = []
+  for (let i = 0; i <= recht * 2; i++) {
+    gekarteld.push({ x: i / 2, y: i % 2 === 0 ? 0 : 0.25 })
+  }
+
+  const glad = verzachtLijn(vereenvoudig(gekarteld, 0.35), 2)
+
+  // De booglengte is waar een stroke-dasharray langs telt. Op de gekartelde
+  // lijn is die flink langer dan de hemelsbrede afstand, en juist dat verschil
+  // maakt de streepjes in het oog te kort.
+  assert.ok(lengteMm(gekarteld) > recht * 1.1, 'de ruwe lijn hoort een omweg te maken')
+  assert.ok(lengteMm(glad) < recht * 1.01, 'na het verzachten hoort er nauwelijks omweg over')
+})
+
+test('laat een lijn met te weinig punten met rust', () => {
+  const kort = [{ x: 0, y: 0 }, { x: 5, y: 5 }]
+  assert.deepEqual(verzachtLijn(kort, 3), kort)
 })

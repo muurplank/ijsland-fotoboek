@@ -7,7 +7,8 @@
  */
 
 import { maakView, paginaMaat } from '../render/layout.js'
-import { padData, pijltjesLangs, projecteer, vereenvoudig } from '../render/svg.js'
+import { naastZichzelf } from '../render/parallel.js'
+import { padData, pijltjesLangs, projecteer, vereenvoudig, verzachtLijn } from '../render/svg.js'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -202,7 +203,26 @@ export function teken (svg, opschriften, gegevens, stijl) {
   const ruw = projecteer(gegevens.route.coordinates, view)
 
   // een tiende millimeter is al fijner dan een drukpers kan zetten
-  const punten = vereenvoudig(ruw, 0.05)
+  const rechtdoor = vereenvoudig(ruw, 0.05)
+
+  // Reed je een doodlopende fjordweg in en er weer uit, dan ligt de terugweg
+  // precies op de heenweg en zie je één lijn - alsof je er nooit gekeerd bent.
+  // Naast elkaar leggen laat zien dat je er twee keer reed, net als wat de
+  // overzichtskaart met gedeelde wegen tussen dagen doet.
+  //
+  // Dit gebeurt vóór alles wat de lijn volgt, zodat de pijltjes en de
+  // F-wegstippels vanzelf op de verschoven lijn terechtkomen.
+  // De twee banen liggen een lijndikte plus de gewenste witruimte uit elkaar.
+  // Alleen de witruimte aanhouden zou ze grotendeels laten overlappen, en dan
+  // zie je één dikke streep in plaats van twee richtingen. Door de dikte erbij
+  // op te tellen blijft er precies zoveel over als je instelt, en dat gat wordt
+  // gevuld door de buitenlijn die de route toch al heeft.
+  const punten = stijl['route.heenEnTerug']
+    ? naastZichzelf(rechtdoor, {
+        afstandMm: stijl['route.dikteMm'] + stijl['route.tussenruimteMm'],
+        negeerMm: stijl['route.keerNegeerMm']
+      })
+    : rechtdoor
 
   const streepjes = stijl['route.streepjes']
     ? `${stijl['route.streepMm']} ${stijl['route.gatMm']}`
@@ -278,13 +298,27 @@ export function teken (svg, opschriften, gegevens, stijl) {
   if (stijl['route.fwegStippels']) {
     const stukken = fwegStukken(gegevens, punten)
     for (const stuk of stukken) {
+      // De stippellijn krijgt een eigen, gladdere lijn dan de route zelf.
+      //
+      // Een hooglandweg zit vol minibochtjes, en de route is vereenvoudigd op
+      // 0,05 mm - fijner dan een pers kan zetten, dus die blijven er allemaal
+      // in. Een streepjespatroon telt langs de booglengte, dus over zo'n
+      // gekartelde lijn wordt een streepje van 1,6 mm in het oog veel korter,
+      // buigt het in zichzelf, en klit het met zijn buren. Grover vereenvoudigen
+      // en daarna de knikken afronden haalt het gekriebel eruit; de echte
+      // haarspeldbochten blijven staan. De route zelf blijft ongemoeid.
+      const glad = verzachtLijn(vereenvoudig(stuk, 0.35), 2)
+
       routeGroep.append(maak('path', {
-        d: padData(stuk),
+        d: padData(glad),
         fill: 'none',
         stroke: stijl['route.buitenKleur'],
         'stroke-width': stijl['route.dikteMm'] * 0.55,
         'stroke-dasharray': `${stijl['route.fwegStreepMm']} ${stijl['route.fwegGatMm']}`,
-        'stroke-linecap': 'round'
+        // plat, niet rond: ronde uiteinden zetten een halve lijndikte extra
+        // inkt aan elke kant van elk streepje, en in de bochten klonteren die
+        // aan elkaar tot blobjes
+        'stroke-linecap': 'butt'
       }))
     }
   }

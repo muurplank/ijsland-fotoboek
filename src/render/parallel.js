@@ -45,8 +45,13 @@ export class Bezetting {
    *
    * Elke cel telt maar een keer mee, ook al lopen er tien meetpunten doorheen:
    * we willen weten hoeveel routes hier langskomen, niet hoeveel punten.
+   *
+   * Met `alGeteld` loopt dat ontdubbelen door over meerdere aanroepen heen.
+   * Dat is nodig als een route stukje bij beetje beslag legt in plaats van in
+   * één keer: zonder die gedeelde lijst telt elk segmentje apart, en loopt een
+   * dicht bezette lijn op tot acht lagen waar er één hoort te staan.
    */
-  leg (punten) {
+  leg (punten, alGeteld = null) {
     const geraakt = new Set()
 
     for (let i = 1; i < punten.length; i++) {
@@ -62,7 +67,13 @@ export class Bezetting {
       }
     }
 
-    for (const k of geraakt) this.cellen.set(k, (this.cellen.get(k) ?? 0) + 1)
+    for (const k of geraakt) {
+      if (alGeteld) {
+        if (alGeteld.has(k)) continue
+        alGeteld.add(k)
+      }
+      this.cellen.set(k, (this.cellen.get(k) ?? 0) + 1)
+    }
   }
 }
 
@@ -83,30 +94,23 @@ function verzacht (waarden, straal) {
   return uit
 }
 
+/** Van "hoeveelste ben ik hier" naar "hoeveel schuif ik opzij". */
+function naarZijkant (n) {
+  if (n === 0) return 0
+  const stap = Math.ceil(n / 2)
+  return (n % 2 === 1 ? 1 : -1) * stap
+}
+
 /**
- * Legt deze route naast de routes die er al liggen, en legt daarna zelf beslag.
+ * Schuift elk punt haaks op de rijrichting opzij, zoveel als zijn laag aangeeft.
  *
- * De volgorde van verschuiven is 0, +1, -1, +2, -2: de eerste blijft op de weg
- * liggen, en daarna wisselen ze om de beurt van kant zodat het geheel om de
- * echte weg heen gecentreerd blijft.
+ * De verschuiving wordt eerst uitgemiddeld, zodat een route die halverwege van
+ * baan wisselt dat vloeiend doet in plaats van met een sprong.
  */
-export function langsElkaar (punten, bezetting, { afstandMm = 1.2, verzachting = 6 } = {}) {
-  if (punten.length < 2) return [...punten]
+export function verschuifOpzij (punten, lagen, { afstandMm = 1.2, verzachting = 6 } = {}) {
+  const zacht = verzacht(lagen.map(naarZijkant), verzachting)
 
-  // hoeveel routes er al over elk punt lopen
-  const lagen = punten.map(p => bezetting.aantalBij(p.x, p.y))
-
-  // van "hoeveelste ben ik hier" naar "hoeveel schuif ik opzij"
-  const naarZijkant = n => {
-    if (n === 0) return 0
-    const stap = Math.ceil(n / 2)
-    return (n % 2 === 1 ? 1 : -1) * stap
-  }
-
-  const ruw = lagen.map(naarZijkant)
-  const zacht = verzacht(ruw, verzachting)
-
-  const uit = punten.map((p, i) => {
+  return punten.map((p, i) => {
     const vorige = punten[Math.max(0, i - 1)]
     const volgende = punten[Math.min(punten.length - 1, i + 1)]
 
@@ -121,10 +125,83 @@ export function langsElkaar (punten, bezetting, { afstandMm = 1.2, verzachting =
 
     return { x: p.x + nx * zij, y: p.y + ny * zij }
   })
+}
+
+/**
+ * Legt deze route naast de routes die er al liggen, en legt daarna zelf beslag.
+ *
+ * De volgorde van verschuiven is 0, +1, -1, +2, -2: de eerste blijft op de weg
+ * liggen, en daarna wisselen ze om de beurt van kant zodat het geheel om de
+ * echte weg heen gecentreerd blijft.
+ */
+export function langsElkaar (punten, bezetting, { afstandMm = 1.2, verzachting = 6 } = {}) {
+  if (punten.length < 2) return [...punten]
+
+  // hoeveel routes er al over elk punt lopen
+  const lagen = punten.map(p => bezetting.aantalBij(p.x, p.y))
+  const uit = verschuifOpzij(punten, lagen, { afstandMm, verzachting })
 
   // beslag leggen op de oorspronkelijke weg, niet op de verschoven lijn: een
   // volgende route moet zich verhouden tot de weg, niet tot onze uitwijking
   bezetting.leg(punten)
 
   return uit
+}
+
+/**
+ * Legt een route naast zichzelf waar hij over zijn eigen weg terugkomt.
+ *
+ * Op een dagkaart is het probleem net anders dan op de overzichtskaart: daar
+ * botsen verschillende dagen, hier botst één route met zichzelf. Reed je een
+ * doodlopende fjordweg in en er weer uit, dan ligt de terugweg precies op de
+ * heenweg en zie je één lijn - alsof je er nooit gekeerd bent.
+ *
+ * De route wordt daarom van begin tot eind afgelopen, waarbij hij gaandeweg
+ * beslag legt op de weg achter zich. Komt hij later op bezet terrein, dan is
+ * dat zijn eigen heenweg en gaat hij ernaast liggen.
+ *
+ * De bezetting loopt bewust een stuk achter: `negeerMm` bepaalt hoeveel weg
+ * vlak achter je niet meetelt. Zonder die achterstand zou elk punt zijn eigen
+ * buren als bezet zien en zou de hele route wegdrijven van de weg.
+ */
+export function naastZichzelf (punten, {
+  afstandMm = 1.2,
+  celMm = null,
+  verzachting = 6,
+  negeerMm = 25
+} = {}) {
+  if (punten.length < 3) return [...punten]
+
+  const bezetting = new Bezetting(celMm ?? afstandMm * 1.6)
+
+  // de afgelegde weg op elk punt, om de achterstand in mm te kunnen meten
+  const langs = [0]
+  for (let i = 1; i < punten.length; i++) {
+    langs.push(langs[i - 1] + Math.hypot(punten[i].x - punten[i - 1].x, punten[i].y - punten[i - 1].y))
+  }
+
+  // Eén gedeelde lijst voor de hele route, zodat een cel hooguit één laag
+  // oplevert. De weg ligt er immers één keer; het gaat erom of je er later
+  // nog eens overheen komt, niet hoeveel meetpunten er in die cel vielen.
+  //
+  // Gevolg: reed je een weg drie keer, dan liggen de tweede en de derde keer
+  // op dezelfde baan naast de eerste. Op een dagkaart is dat prima - heen en
+  // terug is verreweg het gewone geval.
+  const alGeteld = new Set()
+
+  const lagen = new Array(punten.length).fill(0)
+  let achter = 1
+
+  for (let i = 0; i < punten.length; i++) {
+    // alles wat meer dan negeerMm terug ligt telt vanaf nu als bezet
+    const grens = langs[i] - negeerMm
+    while (achter < i && langs[achter] < grens) {
+      bezetting.leg([punten[achter - 1], punten[achter]], alGeteld)
+      achter++
+    }
+
+    lagen[i] = bezetting.aantalBij(punten[i].x, punten[i].y)
+  }
+
+  return verschuifOpzij(punten, lagen, { afstandMm, verzachting })
 }

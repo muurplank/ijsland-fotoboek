@@ -121,3 +121,38 @@ export function vereenvoudig (punten, tolerantieMm) {
 
   return punten.filter((_, i) => houden[i])
 }
+
+/**
+ * Rondt de knikken uit een lijn (Chaikin).
+ *
+ * Elke ronde vervangt elk hoekpunt door twee punten op een kwart en
+ * driekwart van zijn zijden, waardoor de knik een bocht wordt. De uiteinden
+ * blijven staan, zodat de lijn begint en eindigt waar hij hoort.
+ *
+ * Bedoeld voor lijnen waar een streepjespatroon overheen gaat: een
+ * stroke-dasharray telt langs de booglengte, dus over een gekartelde lijn
+ * worden de streepjes korter in het oog dan ze in werkelijkheid zijn, en
+ * buigen ze in zichzelf. Op een gladde lijn staan ze weer netjes op rij.
+ */
+export function verzachtLijn (punten, rondes = 1) {
+  let uit = punten
+
+  for (let r = 0; r < rondes; r++) {
+    if (uit.length < 3) return [...uit]
+
+    const nieuw = [uit[0]]
+    for (let i = 0; i < uit.length - 1; i++) {
+      const a = uit[i]
+      const b = uit[i + 1]
+      nieuw.push(
+        { x: a.x + (b.x - a.x) * 0.25, y: a.y + (b.y - a.y) * 0.25 },
+        { x: a.x + (b.x - a.x) * 0.75, y: a.y + (b.y - a.y) * 0.75 }
+      )
+    }
+    nieuw.push(uit[uit.length - 1])
+
+    uit = nieuw
+  }
+
+  return uit
+}
