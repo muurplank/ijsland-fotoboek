@@ -91,10 +91,27 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
 
   const huidige = stops.find(s => s.index === totIndex) ?? stops.at(-1)
 
+  // --------------------------------------------------------- één kleur of niet
+  //
+  // In één kleur blijft het strookje leesbaar doordat het onderscheid al in de
+  // maten zit: waar je nu bent is de stip het grootst, wat je gehad hebt iets
+  // groter dan wat nog komt. De kleur hoeft dat verschil dus niet te dragen.
+  // Wat nog moet komen wordt lichter gezet in plaats van andersgekleurd.
+  const een = stijl['voortgang.eenKleur']
+  const kleur = stijl['voortgang.kleur']
+
+  const baanKleur = een ? kleur : stijl['voortgang.baanKleur']
+  const baanDekking = een ? stijl['voortgang.legeDekking'] : 1
+  const lijnKleur = een ? kleur : stijl['route.kleur']
+  const randKleur = een ? kleur : stijl['voortgang.stipRand']
+  const naamKleur = een ? kleur : stijl['statistieken.getalKleur']
+  const labelKleur = een ? kleur : stijl['statistieken.labelKleur']
+
   // ------------------------------------------------------------- de baan
   svg.append(maakSvg('line', {
     x1: links, x2: rechts, y1: midden, y2: midden,
-    stroke: stijl['voortgang.baanKleur'],
+    stroke: baanKleur,
+    'stroke-opacity': baanDekking,
     'stroke-width': dikte,
     'stroke-linecap': 'round'
   }))
@@ -126,7 +143,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
       svg.append(maakSvg('path', {
         d,
         fill: 'none',
-        stroke: stijl['route.kleur'],
+        stroke: lijnKleur,
         'stroke-width': buitenDikte,
         'stroke-linecap': 'round',
         mask: 'url(#voortgang-rand)'
@@ -136,7 +153,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     svg.append(maakSvg('path', {
       d,
       fill: 'none',
-      stroke: stijl['route.kleur'],
+      stroke: lijnKleur,
       'stroke-opacity': stijl['voortgang.kernDekking'],
       'stroke-width': dikte,
       'stroke-linecap': 'round'
@@ -159,8 +176,9 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
 
     svg.append(maakSvg('circle', {
       cx: x, cy: midden, r: straal,
-      fill: gehad ? stijl['route.kleur'] : stijl['voortgang.baanKleur'],
-      stroke: stijl['voortgang.stipRand'],
+      fill: gehad ? lijnKleur : baanKleur,
+      'fill-opacity': gehad ? 1 : baanDekking,
+      stroke: randKleur,
       'stroke-width': isHuidige ? stijl['voortgang.stipMm'] * 0.26 : 0
     }))
   }
@@ -174,7 +192,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     naam.style.left = mm(Math.min(rechts - 2, Math.max(links + 2, xVan(huidige.km))))
     naam.style.top = mm(midden + dikte / 2 + 2.5)
     naam.style.fontSize = mm(stijl['voortgang.naamMm'])
-    naam.style.color = stijl['statistieken.getalKleur']
+    naam.style.color = naamKleur
     naam.textContent = huidige.naam
     opschriften.append(naam)
   }
@@ -187,7 +205,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     kmTekst.style.left = mm(rechts)
     kmTekst.style.top = mm(midden - dikte / 2 - 2.5 - stijl['voortgang.naamMm'] * 0.8)
     kmTekst.style.fontSize = mm(stijl['voortgang.naamMm'] * 0.85)
-    kmTekst.style.color = stijl['statistieken.labelKleur']
+    kmTekst.style.color = labelKleur
     kmTekst.textContent = `${huidige.km.toFixed(0)} van ${totaalKm.toFixed(0)} km`
     opschriften.append(kmTekst)
   }
@@ -200,7 +218,7 @@ export function tekenVoortgang (svg, opschriften, gegevens, stijl, totIndex) {
     dagTekst.style.left = mm(links)
     dagTekst.style.top = mm(midden - dikte / 2 - 2.5 - stijl['voortgang.naamMm'] * 0.8)
     dagTekst.style.fontSize = mm(stijl['voortgang.naamMm'] * 0.85)
-    dagTekst.style.color = stijl['statistieken.labelKleur']
+    dagTekst.style.color = labelKleur
     dagTekst.textContent = `Dag ${gegevens.dag.dag} · ${gegevens.dag.titel}`
     opschriften.append(dagTekst)
   }
