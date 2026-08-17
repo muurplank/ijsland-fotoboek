@@ -20,6 +20,7 @@ import { tekenReisCijfers } from './tripstats.js'
 import { tekenVoortgang, stopsMetAfstand, voortgangMaat } from './progress.js'
 import { maakBewerkbaar, pasPlaatsingToe } from './editable.js'
 import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
+import { klem, knop as knopVan } from '../style.js'
 
 const $ = id => document.getElementById(id)
 
@@ -468,6 +469,33 @@ async function start () {
       tekenPagina()
     },
 
+    // Een maat die voor het hele boek geldt, zoals de grootte van de markers.
+    // Die gaat naar de instelling en niet naar deze ene marker, want anders
+    // staan de tentjes in elk dagbestand op een andere maat.
+    bijStijlMaat: (key, mm) => {
+      const k = knopVan(key)
+      if (!k) return
+
+      const waarde = mm === null ? k.standaard : klem(key, mm)
+      stijl[key] = waarde
+      paneel.zet(key, waarde)
+      tekenPagina()
+      zegt(`${k.label}: ${waarde} mm — geldt voor alle dagen, nog bewaren voor het boek`)
+    },
+
+    // Het icoontje van de kaart af, met de naam en de voortgangsbalk erbij.
+    bijWeghalen: id => {
+      const m = /^marker:(\d+)$/.exec(id)
+      const w = m && gegevens?.dag.waypoints[Number(m[1])]
+      if (!w) return
+
+      w.toonIcoon = false
+      bewaarOpmaak(`icoontje weg: ${w.name || '(naamloos)'}`,
+        { waypoints: gegevens.dag.waypoints })
+      tekenPagina()
+      paneel.zetStops(bouwStoppenlijst())
+    },
+
     bijTekst: (id, tekst) => {
       if (!tekst.trim()) return leegGemaakt(id)
 
@@ -575,6 +603,22 @@ function bouwStoppenlijst () {
     naam.textContent = w.name || '(naamloos)'
     if (!w.name) naam.style.opacity = '.6'
 
+    // Op de kaart haal je een icoontje weg met Delete. Dat is de snelle weg,
+    // maar dan moet er ook een weg terug zijn: hier staat welke er uit staan.
+    let terug = null
+    if (w.toonIcoon === false) {
+      terug = document.createElement('button')
+      terug.className = 'stil icoon-terug'
+      terug.textContent = 'icoontje uit · terugzetten'
+      terug.addEventListener('click', () => {
+        delete w.toonIcoon
+        bewaarOpmaak(`icoontje terug: ${w.name || '(naamloos)'}`,
+          { waypoints: gegevens.dag.waypoints })
+        tekenPagina()
+        paneel.zetStops(bouwStoppenlijst())
+      })
+    }
+
     vinkje.addEventListener('change', () => {
       // alleen opschrijven als hij uit staat; standaard is aan, en dan hoort
       // er niets extra's in het dagbestand te komen
@@ -591,6 +635,7 @@ function bouwStoppenlijst () {
 
     regel.append(vinkje, naam)
     rij.append(regel)
+    if (terug) rij.append(terug)
     doos.append(rij)
   }
 

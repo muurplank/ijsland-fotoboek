@@ -161,14 +161,14 @@ export const KNOPPEN = [
   { key: 'eerdere.hoeveel', groep: 'eerdere', label: 'Welke dagen', type: 'keuze', opties: ['alle voorgaande', 'alleen de vorige', 'de hele reis'], standaard: 'alle voorgaande' },
 
   // --------------------------------------------------------------- markers
-  { key: 'markers.stopGrootteMm', groep: 'markers', label: 'Stop: grootte', type: 'mm', min: 0.5, max: 12, step: 0.1, standaard: 3.1},
+  { key: 'markers.stopGrootteMm', groep: 'markers', label: 'Stop: grootte', type: 'mm', min: 0.5, max: 12, step: 0.1, standaard: 3.1, help: 'Geldt voor alle stops in het boek. Aan het greepje op een stop trekken verzet deze maat, dus ze blijven overal even groot' },
   { key: 'markers.stopVulling', groep: 'markers', label: 'Stop: vulkleur', type: 'kleur', standaard: '#ffffff'},
   { key: 'markers.stopRand', groep: 'markers', label: 'Stop: randkleur', type: 'kleur', standaard: '#f4610c'},
   { key: 'markers.stopRandMm', groep: 'markers', label: 'Stop: randdikte', type: 'mm', min: 0.05, max: 2, step: 0.05, standaard: 0.85},
   { key: 'markers.stopVorm', groep: 'markers', label: 'Stop: vorm', type: 'keuze', opties: ['cirkel', 'vierkant', 'ruit', 'speld'], standaard: 'cirkel' },
   { key: 'markers.viaGrootteMm', groep: 'markers', label: 'Doorrijpunt: grootte', type: 'mm', min: 0, max: 8, step: 0.1, standaard: 1.3 },
   { key: 'markers.viaVulling', groep: 'markers', label: 'Doorrijpunt: kleur', type: 'kleur', standaard: '#f4610c'},
-  { key: 'markers.slaapGrootteMm', groep: 'markers', label: 'Overnachting: grootte', type: 'mm', min: 0.5, max: 14, step: 0.1, standaard: 4.2 },
+  { key: 'markers.slaapGrootteMm', groep: 'markers', label: 'Overnachting: grootte', type: 'mm', min: 0.5, max: 14, step: 0.1, standaard: 8, help: 'Geldt voor alle tentjes, huisjes, autos en vliegtuigen in het boek. Aan het greepje op een van hen trekken verzet deze maat, dus ze blijven overal even groot' },
   { key: 'markers.slaapVulling', groep: 'markers', label: 'Overnachting: vulkleur', type: 'kleur', standaard: '#f4610c'},
   { key: 'markers.slaapRand', groep: 'markers', label: 'Overnachting: randkleur', type: 'kleur', standaard: '#ffffff'},
   { key: 'markers.slaapVorm', groep: 'markers', label: 'Overnachting: vorm', type: 'keuze', opties: ['tent', 'huisje', 'auto', 'vliegtuig', 'cirkel', 'ster', 'ruit', 'speld'], standaard: 'tent', help: 'Wordt overschreven door wat er in het dagbestand staat: kamperen wordt een tent, een hotel een huisje, de heen- en terugvlucht een vliegtuig' },

@@ -32,6 +32,28 @@ const SCHAAL = 'data-schaalbaar'
 /** Elementen met deze eigenschap snappen op het midden van de pagina. */
 const MIDDEN = 'data-midden'
 
+/**
+ * Elementen die met het greepje niet zichzelf maar een instelling verstellen.
+ *
+ * Een marker hoort niet los van zijn soortgenoten geschaald te worden: als het
+ * hotel van dag 1 groter wordt, horen de tent van dag 4 en alle andere mee te
+ * groeien. Vandaar dat het greepje hier de maat in het instellingenschema
+ * verzet in plaats van een schaal op dit ene element.
+ */
+const STIJLMAAT = 'data-stijlmaat'
+
+/** De maat die die instelling nu heeft, in millimeters. */
+const STIJLNU = 'data-stijlnu'
+
+/** Elementen die je met Delete van de pagina af kunt halen. */
+const WEGHAAL = 'data-weghaalbaar'
+
+/** Snapt op het hart van het element met deze plek-naam. */
+const SNAPOP = 'data-snap-op'
+
+/** Blijft altijd minstens zoveel millimeter van de paginarand af. */
+const BINNENMARGE = 'data-binnen-marge'
+
 /** Naar welke groep in het paneel dit element verwijst. */
 const KNOPPEN = 'data-knoppen'
 
@@ -55,6 +77,55 @@ const alsLengte = (node, mm) => isSvg(node) ? `${mm}px` : `calc(${mm} * var(--mm
 const round2 = n => Math.round(n * 100) / 100
 
 /**
+ * Hoe ver dit element verschoven mag worden zonder tegen de rand te komen.
+ *
+ * Alleen voor de opschriften: die zijn gewone HTML en hebben offsetLeft en
+ * offsetWidth, waarmee je de plek meet zoals hij zonder verschuiving zou zijn.
+ * In de tekenlaag zit die informatie niet, en daar is het ook niet nodig.
+ *
+ * @returns {{dxMin, dxMax, dyMin, dyMax}|null} millimeters, of null als dit
+ *   element vrij mag staan
+ */
+function grenzenVan (node, laag) {
+  // Let op de expliciete null-controle: Number(null) is nul, en zonder dit zou
+  // elk element geklemd worden op een marge van nul. Dan schuift een plaatsnaam
+  // die net buiten de pagina hangt naar binnen, en het inzetkaartje van dag 8
+  // dat daar bewust weggeparkeerd staat ook.
+  const attr = node.getAttribute(BINNENMARGE)
+  if (attr === null || isSvg(node) || !node.offsetParent) return null
+
+  const marge = Number(attr)
+  if (!Number.isFinite(marge)) return null
+
+  const stijl = getComputedStyle(node)
+  const mmPx = parseFloat(stijl.getPropertyValue('--mm')) || 1
+  const s = parseFloat(stijl.getPropertyValue('--s')) || 1
+
+  // Schalen draait om het midden, dus wat er aan maat bijkomt steekt half naar
+  // links en half naar rechts uit.
+  const kaalBreedte = node.offsetWidth / mmPx
+  const kaalHoogte = node.offsetHeight / mmPx
+  const breedte = kaalBreedte * s
+  const hoogte = kaalHoogte * s
+  const links = node.offsetLeft / mmPx - (breedte - kaalBreedte) / 2
+  const boven = node.offsetTop / mmPx - (hoogte - kaalHoogte) / 2
+
+  // Past het element niet tussen de marges, dan wint de bovenrand: liever
+  // bovenaan afgekapt dan onderaan van de pagina af.
+  const paar = (start, maat, totaal) => {
+    const min = marge - start
+    const max = totaal - marge - maat - start
+    return max < min ? [min, min] : [min, max]
+  }
+
+  const [dxMin, dxMax] = paar(links, breedte, laag.clientWidth / mmPx)
+  const [dyMin, dyMax] = paar(boven, hoogte, laag.clientHeight / mmPx)
+  return { dxMin, dxMax, dyMin, dyMax }
+}
+
+const klemIn = (waarde, min, max) => Math.min(max, Math.max(min, waarde))
+
+/**
  * Zet de bewaarde verschuivingen en schalen op de elementen.
  * De opmaakcode hoeft hier niets van te weten: die tekent gewoon op de
  * standaardplek, en dit legt de correctie eroverheen.
@@ -64,15 +135,30 @@ export function pasPlaatsingToe (laag, plaatsing) {
     const id = node.getAttribute(SLEEP)
     const p = plaatsing?.[id]
 
-    node.style.setProperty('--dx', alsLengte(node, p?.dxMm ?? 0))
-    node.style.setProperty('--dy', alsLengte(node, p?.dyMm ?? 0))
-
+    // De schaal eerst, want de grenzen hieronder meten mee hoe groot het
+    // element met die schaal wordt.
+    //
     // Onderdelen die op hun eigen maat hertekend worden krijgen geen
     // beeldschaal: een schaalbalk die je uitrekt liegt over zijn kilometers,
     // en een uitgerekt inzetkaartje wordt wazig in de export. Die lezen hun
     // schaal uit de plaatsing en bouwen zichzelf opnieuw op.
-    if (node.getAttribute(SCHAAL) === 'hertekenen') continue
-    node.style.setProperty('--s', String(p?.schaal ?? 1))
+    if (node.getAttribute(SCHAAL) !== 'hertekenen') {
+      node.style.setProperty('--s', String(p?.schaal ?? 1))
+    }
+
+    let dx = p?.dxMm ?? 0
+    let dy = p?.dyMm ?? 0
+
+    // Wat nooit tegen de rand mag, gaat er ook niet tegenaan staan doordat er
+    // van eerder nog zo'n verschuiving bewaard is.
+    const grenzen = grenzenVan(node, laag)
+    if (grenzen) {
+      dx = klemIn(dx, grenzen.dxMin, grenzen.dxMax)
+      dy = klemIn(dy, grenzen.dyMin, grenzen.dyMax)
+    }
+
+    node.style.setProperty('--dx', alsLengte(node, round2(dx)))
+    node.style.setProperty('--dy', alsLengte(node, round2(dy)))
   }
 }
 
@@ -99,6 +185,9 @@ export function schaalVan (plaatsing, id) {
  * @param {() => object} haken.huidigePlaatsing geeft het actuele verschuivingen-object
  * @param {(id: string, dxMm: number, dyMm: number) => void} haken.bijVerschuiven
  * @param {(id: string, schaal: number) => void} haken.bijSchalen
+ * @param {(key: string, mm: number|null) => void} haken.bijStijlMaat een maat uit
+ *   het schema verzetten; null betekent terug naar de standaard
+ * @param {(id: string) => void} haken.bijWeghalen
  * @param {(id: string, tekst: string) => void} haken.bijTekst
  * @param {(groep: string|null, id: string) => void} haken.bijKlik
  * @param {(tekst: string) => void} haken.bijMelding
@@ -107,6 +196,8 @@ export function maakBewerkbaar (pagina, {
   huidigePlaatsing,
   bijVerschuiven,
   bijSchalen,
+  bijStijlMaat,
+  bijWeghalen,
   bijTekst,
   bijKlik,
   bijMelding
@@ -178,6 +269,8 @@ export function maakBewerkbaar (pagina, {
     const midY = r.top + r.height / 2
     const begin = Math.hypot(e.clientX - midX, e.clientY - midY)
 
+    const stijlKey = greepDoel.getAttribute(STIJLMAAT)
+
     schalen = {
       node: greepDoel,
       id,
@@ -187,6 +280,9 @@ export function maakBewerkbaar (pagina, {
       begin: begin || 1,
       beginSchaal: schaalVan(huidigePlaatsing(), id),
       hertekenen: greepDoel.getAttribute(SCHAAL) === 'hertekenen',
+      // een maat uit het schema in plaats van een schaal op dit ene element
+      stijlKey,
+      beginMaat: stijlKey ? Number(greepDoel.getAttribute(STIJLNU)) : null,
       laatste: null
     }
     greep.setPointerCapture(e.pointerId)
@@ -196,7 +292,10 @@ export function maakBewerkbaar (pagina, {
     e.preventDefault()
     e.stopPropagation()
     if (!greepDoel) return
-    bijSchalen?.(greepDoel.getAttribute(SLEEP), 1)
+
+    const stijlKey = greepDoel.getAttribute(STIJLMAAT)
+    if (stijlKey) bijStijlMaat?.(stijlKey, null)
+    else bijSchalen?.(greepDoel.getAttribute(SLEEP), 1)
   })
 
   // ------------------------------------------------------------------ slepen
@@ -222,6 +321,21 @@ export function maakBewerkbaar (pagina, {
     const kaalX = vak.left + vak.width / 2 - paginaVak.left - beginDx * schaal
     const kaalY = vak.top + vak.height / 2 - paginaVak.top - beginDy * schaal
 
+    // De verschuiving die dit element op dezelfde hoogte zet als een ander.
+    //
+    // Hier live gemeten en niet in de opmaak uitgerekend: dan klopt het ook als
+    // dat andere element zelf versleept, geschaald of tegen de marge geklemd is.
+    // Wat je op het scherm ziet is waar het op snapt.
+    let samenDy = null
+    const samenMet = node.getAttribute(SNAPOP)
+    if (samenMet) {
+      const doel = pagina.querySelector(`[${SLEEP}="${samenMet}"]`)
+      if (doel && doel !== node) {
+        const dv = doel.getBoundingClientRect()
+        samenDy = (dv.top + dv.height / 2 - paginaVak.top - kaalY) / schaal
+      }
+    }
+
     bezig = {
       node,
       id,
@@ -233,7 +347,10 @@ export function maakBewerkbaar (pagina, {
       versleept: false,
       // de verschuiving die dit element precies op het midden van de pagina zet
       middenDx: node.hasAttribute(MIDDEN) ? (paginaVak.width / 2 - kaalX) / schaal : null,
-      middenDy: node.hasAttribute(MIDDEN) ? (paginaVak.height / 2 - kaalY) / schaal : null
+      middenDy: node.hasAttribute(MIDDEN) ? (paginaVak.height / 2 - kaalY) / schaal : null,
+      samenDy,
+      kaalYmm: kaalY / schaal,
+      grenzen: grenzenVan(node, pagina)
     }
 
     // Hier bewust nog niets doen. Zowel preventDefault als setPointerCapture
@@ -262,10 +379,19 @@ export function maakBewerkbaar (pagina, {
         schalen.beginSchaal * (afstand / schalen.begin)))
 
       schalen.laatste = round2(s)
-      // onderdelen die zichzelf hertekenen kunnen niet live meebewegen; die
-      // wachten tot je loslaat, anders herbouwen we het inzetkaartje bij elke
-      // muisbeweging
-      if (!schalen.hertekenen) schalen.node.style.setProperty('--s', String(schalen.laatste))
+
+      if (schalen.stijlKey) {
+        // alles van dezelfde soort meteen mee laten groeien, zodat je onder het
+        // slepen al ziet dat het één maat voor allemaal is
+        for (const n of pagina.querySelectorAll(`[${STIJLMAAT}="${schalen.stijlKey}"]`)) {
+          n.style.setProperty('--s', String(schalen.laatste))
+        }
+      } else if (!schalen.hertekenen) {
+        // onderdelen die zichzelf hertekenen kunnen niet live meebewegen; die
+        // wachten tot je loslaat, anders herbouwen we het inzetkaartje bij elke
+        // muisbeweging
+        schalen.node.style.setProperty('--s', String(schalen.laatste))
+      }
       toonGreep(schalen.node)
       return
     }
@@ -294,11 +420,25 @@ export function maakBewerkbaar (pagina, {
     let pakY = false
     if (!e.altKey) {
       ;[dx, pakX] = snap(dx, [bezig.middenDx, 0], schaal)
-      ;[dy, pakY] = snap(dy, [bezig.middenDy, 0], schaal)
+      ;[dy, pakY] = snap(dy, [bezig.middenDy, bezig.samenDy, 0], schaal)
+    }
+
+    // en dan alsnog binnen de marge blijven, ook als een snaplijn eroverheen wees
+    if (bezig.grenzen) {
+      dx = klemIn(dx, bezig.grenzen.dxMin, bezig.grenzen.dxMax)
+      dy = klemIn(dy, bezig.grenzen.dyMin, bezig.grenzen.dyMax)
     }
 
     lijnX.hidden = !(pakX && dx === bezig.middenDx)
-    lijnY.hidden = !(pakY && dy === bezig.middenDy)
+
+    if (pakY && bezig.samenDy !== null && dy === bezig.samenDy) {
+      // de hulplijn op de hoogte waar hij pakt, niet op het midden van de pagina
+      lijnY.style.top = `${(bezig.kaalYmm + dy) * schaal}px`
+      lijnY.hidden = false
+    } else {
+      lijnY.style.removeProperty('top')
+      lijnY.hidden = !(pakY && dy === bezig.middenDy)
+    }
 
     bezig.node.style.setProperty('--dx', alsLengte(bezig.node, round2(dx)))
     bezig.node.style.setProperty('--dy', alsLengte(bezig.node, round2(dy)))
@@ -308,7 +448,13 @@ export function maakBewerkbaar (pagina, {
   const stop = () => {
     if (schalen) {
       if (schalen.laatste !== null && schalen.laatste !== schalen.beginSchaal) {
-        bijSchalen?.(schalen.id, schalen.laatste)
+        // Een maat uit het schema krijgt de nieuwe millimeters; de factor waarmee
+        // je sleepte is alleen het rekenmiddel ernaartoe.
+        if (schalen.stijlKey && Number.isFinite(schalen.beginMaat)) {
+          bijStijlMaat?.(schalen.stijlKey, round2(schalen.beginMaat * schalen.laatste))
+        } else {
+          bijSchalen?.(schalen.id, schalen.laatste)
+        }
       }
       schalen = null
       return
@@ -318,6 +464,7 @@ export function maakBewerkbaar (pagina, {
     bezig.node.classList.remove('sleept')
     lijnX.hidden = true
     lijnY.hidden = true
+    lijnY.style.removeProperty('top')
 
     if (bezig.versleept && bezig.laatste) {
       bijVerschuiven(bezig.id, round2(bezig.laatste.dx), round2(bezig.laatste.dy))
@@ -330,6 +477,29 @@ export function maakBewerkbaar (pagina, {
 
   pagina.addEventListener('pointerup', stop)
   pagina.addEventListener('pointercancel', stop)
+
+  // --------------------------------------------------------- iets weghalen
+  //
+  // Wat je aanwijst heeft het greepje, en dat is hier ook de selectie: wijs een
+  // icoontje aan en haal het met Delete van de kaart. Via de stoppenlijst kan het
+  // ook, maar daar staat een rij "(naamloos)" waarin je niet ziet welke je hebt.
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return
+    if (bezig || schalen) return
+
+    // niet terwijl je in een tekst of een invulveld bezig bent
+    const doel = e.target
+    if (doel?.isContentEditable) return
+    if (doel instanceof HTMLInputElement ||
+        doel instanceof HTMLTextAreaElement ||
+        doel instanceof HTMLSelectElement) return
+
+    if (!greepDoel?.hasAttribute(WEGHAAL)) return
+
+    e.preventDefault()
+    bijWeghalen?.(greepDoel.getAttribute(SLEEP))
+    toonGreep(null)
+  })
 
   // ------------------------------------------------------- tekst aanpassen
   pagina.addEventListener('dblclick', e => {

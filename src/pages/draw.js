@@ -35,6 +35,9 @@ const ZELFDE_PLEK_GRADEN = 0.0006
 const SLEEP = 'data-plek'
 const SCHAALBAAR = 'data-schaalbaar'
 const KNOPPEN = 'data-knoppen'
+const STIJLMAAT = 'data-stijlmaat'
+const STIJLNU = 'data-stijlnu'
+const WEGHAAL = 'data-weghaalbaar'
 
 /** Ligt dit punt op de plek waar de vorige nacht eindigde? */
 function isVorigeNacht (gegevens, w, i) {
@@ -466,9 +469,18 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
     const slaap = w.type === 'overnight' || !!verblijf
     const via = w.type === 'via'
 
-    const straal = (slaap
-      ? stijl['markers.slaapGrootteMm']
-      : via ? stijl['markers.viaGrootteMm'] : stijl['markers.stopGrootteMm']) / 2
+    // Alleen het icoontje weggehaald: de naam blijft op de kaart en de stop
+    // blijft in de voortgangsbalk staan. Het nummer telt wel door, anders
+    // verschuift de nummering van alle andere stops zodra je er één weghaalt.
+    if (w.toonIcoon === false) {
+      if (stijl['markers.nummers'] && !via) stopNummer++
+      continue
+    }
+
+    const maatKey = slaap
+      ? 'markers.slaapGrootteMm'
+      : via ? 'markers.viaGrootteMm' : 'markers.stopGrootteMm'
+    const straal = stijl[maatKey] / 2
 
     if (straal <= 0) continue
 
@@ -509,9 +521,15 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
     const anker = maak('g', {
       transform: `translate(${p.x.toFixed(3)} ${p.y.toFixed(3)})`
     })
+    // Het greepje verstelt hier niet dit ene icoontje maar de maat voor alle
+    // icoontjes van dezelfde soort: een hotel en een tent horen overal even
+    // groot te zijn, en dat lukt niet als je ze per stuk kunt uitrekken.
     const beweegbaar = maak('g', {
       [SLEEP]: `marker:${i}`,
-      [SCHAALBAAR]: 'css',
+      [SCHAALBAAR]: 'stijlmaat',
+      [STIJLMAAT]: maatKey,
+      [STIJLNU]: stijl[maatKey],
+      [WEGHAAL]: '',
       [KNOPPEN]: 'markers'
     })
 
