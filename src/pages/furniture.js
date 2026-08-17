@@ -8,6 +8,7 @@
 import { MapView } from '../geo/viewport.js'
 import { paginaMaat } from '../render/layout.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
+import { klem } from '../style.js'
 import { kompasGlas, kompasroos } from './compass.js'
 import { schaalVan } from './editable.js'
 
@@ -169,6 +170,11 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
   const maat = paginaMaat(stijl)
   const marge = maat.afloopMm + stijl['pagina.veiligeMargeMm']
 
+  // Hoe hoog het titelblok werkelijk werd. Het kompas mag die hoogte volgen,
+  // en dat kan pas als het blok in de pagina staat: een titel over twee regels
+  // is hoger dan een titel over één.
+  let titelHoogteMm = 0
+
   // ------------------------------------------------------------- titelblok
   if (stijl['titelblok.aan']) {
     const blok = document.createElement('div')
@@ -208,6 +214,13 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
 
     blok.append(datum, titel)
     laag.append(blok)
+
+    // offsetHeight en niet getBoundingClientRect: die eerste is de opmaakhoogte,
+    // los van de schaal die pasPlaatsingToe er straks overheen legt. Die schaal
+    // tellen we er zelf bij op, want het gaat om de hoogte zoals je hem ziet:
+    // heb je het titelblok groter getrokken, dan hoort het kompas mee te gaan.
+    const mmPx = parseFloat(getComputedStyle(blok).getPropertyValue('--mm')) || 1
+    titelHoogteMm = (blok.offsetHeight / mmPx) * schaalVan(plaatsing, 'titelblok')
   }
 
   // ---------------------------------------------------------- inzetkaartje
@@ -447,8 +460,32 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
 
   // -------------------------------------------------------------- kompasroos
   if (stijl['schaal.noordpijlAan']) {
-    const straal = stijl['schaal.kompasMm'] / 2
-    const rand = marge + straal + (stijl['schaal.kompasLetters'] ? stijl['schaal.kompasLetterMm'] * 1.4 : 1)
+    // De roos even hoog als het titelblok maken doet meer dan netjes staan:
+    // omdat het een cirkel is met precies die hoogte, betekent de bovenkanten
+    // gelijk zetten ook de middens en de onderkanten gelijk. Eén snaplijn is
+    // dan genoeg om zeker te weten dat ze op één hoogte staan.
+    //
+    // Het glasschijfje is wat je ziet, dus die buitenmaat wordt vergeleken.
+    // Staat het glas uit, dan is de roos zelf de buitenmaat.
+    let kompasMm = stijl['schaal.kompasMm']
+    if (stijl['schaal.kompasVolgtTitel'] && titelHoogteMm > 0) {
+      const glasFactor = stijl['schaal.kompasGlas'] ? stijl['schaal.kompasGlasFactor'] : 1
+      kompasMm = klem('schaal.kompasMm', titelHoogteMm / glasFactor)
+    }
+
+    const straal = kompasMm / 2
+
+    // Hoe ver het hart van de roos van de rand blijft, gerekend naar wat er het
+    // verst uitsteekt. Met glas is dat het schijfje - de letters zitten op 1,22
+    // maal de straal en vallen daar ruim binnen. Zonder glas zijn de letters zelf
+    // de buitenmaat.
+    //
+    // Dit is ook wat het kompas en het titelblok zonder slepen al op één hoogte
+    // zet: beide buitenkanten komen dan op de marge te liggen.
+    const buitenStraal = stijl['schaal.kompasGlas']
+      ? straal * stijl['schaal.kompasGlasFactor']
+      : straal + (stijl['schaal.kompasLetters'] ? stijl['schaal.kompasLetterMm'] * 1.4 : 1)
+    const rand = marge + buitenStraal
 
     const hoek = stijl['schaal.kompasHoek']
     const x = hoek.includes('links') ? rand : maat.breedteMm - rand
@@ -471,6 +508,8 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
     const beweegbaar = maakSvg('g', {
       'data-plek': 'kompas',
       'data-schaalbaar': 'css',
+      // sleep hem verticaal langs het titelblok en hij pakt op gelijke hoogte
+      'data-snap-op': 'titelblok',
       'data-knoppen': 'schaal'
     })
 
