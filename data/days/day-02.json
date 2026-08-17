@@ -181,6 +181,14 @@
       "label:8": {
         "dxMm": 19.63,
         "dyMm": -6.31
+      },
+      "marker:2": {
+        "dxMm": 0,
+        "dyMm": 14.67
+      },
+      "marker:1": {
+        "dxMm": 0,
+        "dyMm": 27.85
       }
     },
     "stats": {

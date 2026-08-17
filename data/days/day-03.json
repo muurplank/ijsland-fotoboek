@@ -209,8 +209,7 @@
       },
       "marker:0": {
         "dxMm": 0,
-        "dyMm": 0,
-        "schaal": 2.32
+        "dyMm": 0
       },
       "label:0": {
         "dxMm": 4.98,
@@ -218,8 +217,7 @@
       },
       "marker:26": {
         "dxMm": -8.77,
-        "dyMm": 3.32,
-        "schaal": 1.95
+        "dyMm": 3.32
       },
       "titelblok": {
         "dxMm": 124.38,

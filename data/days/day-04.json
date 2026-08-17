@@ -239,8 +239,8 @@
         "dyMm": 0
       },
       "titelblok": {
-        "dxMm": -3.3,
-        "dyMm": -2.43
+        "dxMm": 63.26,
+        "dyMm": -4.16
       },
       "label:2": {
         "dxMm": 0,
@@ -265,6 +265,10 @@
       "kompas": {
         "dxMm": 2.72,
         "dyMm": -4.21
+      },
+      "marker:0": {
+        "dxMm": 0,
+        "dyMm": 0
       }
     },
     "stats": {

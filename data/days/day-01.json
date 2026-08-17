@@ -90,17 +90,28 @@
       },
       "marker:2": {
         "dxMm": 0,
-        "dyMm": 0,
-        "schaal": 1.26
+        "dyMm": 0
       },
       "marker:7": {
         "dxMm": -4.98,
-        "dyMm": 6.16,
-        "schaal": 1.8
+        "dyMm": 6.16
       },
       "titelblok": {
+        "dxMm": 127.76,
+        "dyMm": -4.84,
+        "schaal": 1.1
+      },
+      "marker:4": {
+        "dxMm": -3.1,
+        "dyMm": 0
+      },
+      "kompas": {
         "dxMm": 0,
-        "dyMm": 2.61
+        "dyMm": -5.25
+      },
+      "marker:0": {
+        "dxMm": 0,
+        "dyMm": 0
       }
     },
     "reiscijfers": {

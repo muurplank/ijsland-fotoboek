@@ -206,8 +206,15 @@
       },
       "marker:26": {
         "dxMm": 0,
-        "dyMm": 0,
-        "schaal": 1.34
+        "dyMm": 0
+      },
+      "titelblok": {
+        "dxMm": 52.08,
+        "dyMm": -7.92
+      },
+      "marker:1": {
+        "dxMm": -2.35,
+        "dyMm": 3.02
       }
     },
     "stats": {

@@ -194,12 +194,16 @@
   "plaatsing": {
     "kaart": {
       "titelblok": {
-        "dxMm": 49.22,
-        "dyMm": 5.92
+        "dxMm": 45.92,
+        "dyMm": -5.52
       },
       "label:25": {
         "dxMm": 15.85,
         "dyMm": -19.51
+      },
+      "kompas": {
+        "dxMm": -8.54,
+        "dyMm": -4.57
       }
     }
   }
