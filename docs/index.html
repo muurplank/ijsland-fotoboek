@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>IJsland fotoboek</title>
+<link rel="stylesheet" href="src/pages/preview.css">
+</head>
+<body>
+
+<div id="werkblad">
+  <div id="doek">
+    <!-- Dit is de pagina zoals hij geprint wordt. Alles erbinnen rekent in millimeters. -->
+    <div id="pagina">
+      <img id="achtergrond" alt="">
+      <svg id="tekening" xmlns="http://www.w3.org/2000/svg"></svg>
+      <img id="bovenlaag" alt="">
+      <!-- Markers en kompas horen boven de uit de kaart getilde plaatsnamen:
+           de stapeling is kaart, routelijn, plaatsnamen van de kaart, en dan
+           pas wat wijzelf op de kaart zetten. -->
+      <svg id="tekening-boven" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="opschriften"></div>
+      <div id="snijtekens"></div>
+    </div>
+  </div>
+  <div id="onderbalk">
+    <span id="melding">bezig met laden…</span>
+    <span id="maatinfo"></span>
+  </div>
+</div>
+
+<aside id="paneel">
+  <header>
+    <h1>IJsland fotoboek</h1>
+    <div class="kiezer">
+      <label for="dag">Dag</label>
+      <select id="dag"></select>
+    </div>
+    <div class="kiezer verborgen" id="stopkiezer-rij">
+      <label for="stop">Tot</label>
+      <select id="stop"></select>
+    </div>
+    <div id="paginakiezer" class="tabs">
+      <button data-pagina="kaart" class="actief">Kaart</button>
+      <button data-pagina="stats">Statistieken</button>
+      <button data-pagina="overzicht">Hele reis</button>
+      <button data-pagina="reiscijfers">Reiscijfers</button>
+      <button data-pagina="voortgang">Voortgangsbalk</button>
+    </div>
+  </header>
+
+  <div id="zoekbalk">
+    <input type="search" id="zoek" placeholder="knop zoeken…" autocomplete="off">
+  </div>
+
+  <div id="groepen"></div>
+
+  <footer>
+    <button id="bewaar-boek" title="Geldt voor alle dagen">Bewaren voor het boek</button>
+    <button id="bewaar-dag" title="Alleen voor deze dag">Alleen deze dag</button>
+    <button id="herstel" class="stil">Alles terug naar standaard</button>
+  </footer>
+</aside>
+
+<script src="src/pages/statisch-schil.js"></script>
+<script type="module" src="src/pages/preview.js"></script>
+</body>
+</html>

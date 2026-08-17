@@ -41,6 +41,7 @@ Dat bestand staat in `.gitignore` en hoort daar te blijven.
 npm run dev            # bedieningspagina op http://localhost:4321
 node src/build.js 4    # exporteert dag 4 naar out/dag-04-kaart.png en .pdf
 npm test               # 21 testbestanden
+npm run statisch       # bakt een alleen-lezen versie naar docs/
 ```
 
 ## Hoe het in elkaar zit
@@ -171,6 +172,28 @@ route blijft staan — je reed er langs, dus de kilometers kloppen.
 Alles wordt op schijf gecachet in `~/Library/Caches/ijsland-fotoboek`, per soort
 apart. Dat loopt in de honderden megabytes voor het hoogtemodel, dus verwacht dat
 de eerste keer even duurt en daarna niet meer.
+
+## De statische versie
+
+`npm run statisch` bakt de bedieningspagina tot een map `docs/` die je zonder
+server kunt neerzetten, bijvoorbeeld op GitHub Pages (instellingen: main / docs).
+
+Het werkt doordat de zware kant en de bedienbare kant hier al gescheiden zijn.
+De elf antwoorden van de server worden één keer opgehaald en als bestand
+weggeschreven — de JSON van het schema, de dagen en de reis, plus per dag de
+achtergrondplaat en de plaatsnamenlaag. `src/pages/statisch-schil.js` onderschept
+de aanroepen en haalt in plaats daarvan die bestanden op, zodat de tekencode
+zelf niet weet of er een server is en er maar één versie van bestaat.
+
+Bij elkaar ongeveer 21 MB. Wat blijft werken is alles wat de browser tekent:
+route, pijltjes, markers, plaatsnamen, typografie, titelblok, inzetkaartje,
+schaalbalk, kompas, en de kleurensets. Wat vastligt is de kaartachtergrond — de
+33 knoppen uit `ACHTERGROND_KNOPPEN` doen daar niets meer, want die plaat is
+gebakken. Opslaan doet niets: wat je verzet blijft in dat tabblad staan en
+verdwijnt bij het herladen.
+
+Let op dat `docs/` je dagverhalen bevat. Zet je de repo publiek, dan staan die
+op internet.
 
 ## Bij het werken hieraan
 
