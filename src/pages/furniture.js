@@ -177,6 +177,10 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
     blok.setAttribute('data-schaalbaar', 'css')
     blok.setAttribute('data-midden', '')
     blok.setAttribute('data-knoppen', 'titelblok')
+    // Nooit tegen de rand aan, ook niet als je hem daarheen sleept: vanaf de
+    // snijlijn gerekend, want de afloop wordt eraf gesneden.
+    blok.setAttribute('data-binnen-marge',
+      String(maat.afloopMm + stijl['titelblok.minMargeMm']))
     inHoek(blok, stijl['titelblok.positie'], marge, maat)
 
     blok.style.textAlign = stijl['titelblok.uitlijning']

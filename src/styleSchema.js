@@ -209,6 +209,7 @@ export const KNOPPEN = [
   { key: 'titelblok.vlakKleur', groep: 'titelblok', label: 'Kleur vlak', type: 'kleur', standaard: '#ffffff' },
   { key: 'titelblok.vlakDekking', groep: 'titelblok', label: 'Dekking vlak', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.85 },
   { key: 'titelblok.kleur', groep: 'titelblok', label: 'Tekstkleur', type: 'kleur', standaard: '#2b2926'},
+  { key: 'titelblok.minMargeMm', groep: 'titelblok', label: 'Minimaal van de rand af', type: 'mm', min: 0, max: 20, step: 0.5, standaard: 4, help: 'Vanaf de snijlijn gerekend. Het titelblok komt hier nooit binnen, ook niet als je het daarheen sleept - anders staat het straks tegen de rand van de bladzijde aan' },
 
   // ----------------------------------------------------------------- inzet
   { key: 'inzet.aan', groep: 'inzet', label: 'Inzetkaartje tonen', type: 'aanuit', standaard: true },
