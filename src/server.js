@@ -39,6 +39,8 @@ const MIMES = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.svg': 'image/svg+xml'
 }
 
@@ -215,6 +217,34 @@ const server = createServer(async (req, res) => {
         uit.push(JSON.parse(await readFile(join(map, b), 'utf8')))
       }
       return json(res, uit)
+    }
+
+    // ------------------------------------------------ de stempels per dag
+    //
+    // Eén antwoord met alle dagen erin, op dagnummer. De pagina vraagt hem één
+    // keer en heeft daarna alles: acht losse verzoeken voor acht kleine JSON's
+    // is duurder dan het bestand zelf.
+    //
+    // Ontbreekt de map, dan is het antwoord een leeg object en geen fout: dan is
+    // `node src/stempel.js` gewoon nog niet gedraaid, en de pagina hoort dan een
+    // blad zonder stempelband te tekenen in plaats van een foutmelding.
+    if (pad === '/api/hero') {
+      const map = join(ROOT, 'data', 'hero')
+      const uit = {}
+      for (const b of (await readdir(map).catch(() => [])).sort()) {
+        if (!/^dag-\d+\.json$/.test(b)) continue
+        const notitie = JSON.parse(await readFile(join(map, b), 'utf8'))
+        uit[notitie.dag] = notitie
+      }
+      return json(res, uit)
+    }
+
+    // De afdrukken en de foto's zelf. Onder /api/ zodat de statische versie ze
+    // op precies hetzelfde adres kan neerzetten.
+    if (pad.startsWith('/api/hero/')) {
+      const naam = pad.slice('/api/hero/'.length)
+      if (!/^[\w.-]+$/.test(naam)) return res.writeHead(400).end('Rare bestandsnaam')
+      return bestand(res, join('data', 'hero', naam))
     }
 
     // ------------------------------------------------------- welke dagen zijn er

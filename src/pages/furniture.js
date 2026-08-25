@@ -92,6 +92,76 @@ const TOLERANTIE_REIS = 0.06
 const rond = n => Math.round(n * 1000) / 1000
 
 /**
+ * Het inzetkaartje omtoveren tot een postzegel.
+ *
+ * Drie dingen maken een postzegel herkenbaar, en niet één ervan is het plaatje:
+ * de kartelrand, de witte bies eromheen, en een afstempeling die er half
+ * overheen loopt. Dus doen we die drie, en laten we het kaartje zelf met rust -
+ * de kleur van het eiland regel je gewoon met de landkleur, en die zet de
+ * kleurenset al goed.
+ *
+ * De kartels zijn een masker van halve rondjes langs alle vier de kanten, in
+ * CSS. Dat blijft scherp op elke maat; een gekartelde PNG zou dat niet doen, en
+ * dit kaartje wordt nu juist opnieuw opgebouwd zodra je eraan trekt.
+ *
+ * De afstempeling zijn een paar golfjes over een hoek. Bleek, want een echte
+ * afstempeling is inkt over inkt en niet een sticker erbovenop.
+ */
+function maakZegel (doos, binnen, stijl, { dagNummer, breedte, hoogte }) {
+  const bies = stijl['inzet.biesMm']
+
+  doos.classList.add('inzet-zegel')
+  doos.style.setProperty('--tand', mm(stijl['inzet.tandMm']))
+  doos.style.background = stijl['papier.kleur']
+  doos.style.padding = mm(bies)
+  doos.style.borderRadius = '0'
+  doos.style.borderWidth = '0'
+  // Een schaduw onder een gekarteld masker valt buiten het masker en wordt dus
+  // een rechthoekige vlek om de tandjes heen. Zegel en schaduw gaan niet samen.
+  doos.style.boxShadow = 'none'
+
+  // ---- het onderschrift, binnen de bies
+  if (stijl['inzet.zegelTekst']) {
+    const regel = document.createElement('div')
+    regel.className = 'inzet-zegeltekst'
+    regel.style.fontSize = mm(Math.max(1.8, stijl['veldnotitie.grootteMm'] * 0.8))
+    regel.style.color = stijl['veldnotitie.zwakKleur']
+    regel.style.letterSpacing = `${stijl['veldnotitie.letterafstand']}em`
+    regel.textContent =
+      `${stijl['inzet.zegelTekst']} · ${String(dagNummer).padStart(2, '0')}`
+    doos.append(regel)
+  }
+
+  // ---- de afstempeling
+  if (stijl['inzet.afstempeling'] > 0) {
+    const stempel = maakSvg('svg', {
+      viewBox: `0 0 ${rond(breedte)} ${rond(hoogte)}`,
+      class: 'inzet-afstempeling'
+    })
+
+    // vier golfjes schuin over de rechterbovenhoek, zoals een poststempel er
+    // altijd half naast valt
+    for (let i = 0; i < 4; i++) {
+      const y = hoogte * 0.12 + i * hoogte * 0.055
+      const punten = []
+      for (let x = breedte * 0.42; x <= breedte * 1.05; x += breedte * 0.04) {
+        const golf = Math.sin((x / breedte) * 22) * hoogte * 0.012
+        punten.push(`${punten.length ? 'L' : 'M'} ${rond(x)} ${rond(y + golf - (x / breedte) * hoogte * 0.1)}`)
+      }
+      stempel.append(maakSvg('path', {
+        d: punten.join(' '),
+        fill: 'none',
+        stroke: stijl['veldnotitie.kleur'],
+        'stroke-width': rond(Math.max(0.09, hoogte * 0.008)),
+        'stroke-linecap': 'round',
+        'stroke-opacity': rond(stijl['inzet.afstempeling'] * 0.55)
+      }))
+    }
+    binnen.append(stempel)
+  }
+}
+
+/**
  * De maten van het inzetkaartje, op een plek.
  *
  * Zowel het tekenen als het ophalen van het silhouet heeft ze nodig: de dikte
@@ -420,6 +490,14 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
 
     binnen.append(svg)
     doos.append(binnen)
+
+    // De postzegel als laatste, want hij verandert de doos die er dan al staat.
+    if (stijl['inzet.postzegel']) {
+      maakZegel(doos, binnen, stijl, {
+        dagNummer: gegevens.dag.dag, breedte, hoogte
+      })
+    }
+
     laag.append(doos)
   }
 

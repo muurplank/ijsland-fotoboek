@@ -58,6 +58,7 @@ export const ACHTERGROND_KNOPPEN = [
   'route.buitenExtraMm',
   'lagen.zeeKleur',
   'lagen.verbleking',
+  'lagen.verbleekNaar',
   'lagen.ontzadiging',
   'relief.zonRichting',
   'relief.zonHoogte',

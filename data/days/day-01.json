@@ -69,8 +69,9 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 0,
-        "dyMm": 0
+        "dxMm": 3.72,
+        "dyMm": 4.71,
+        "schaal": 0.65
       },
       "schaalbalk": {
         "dxMm": 8.26,
@@ -131,13 +132,20 @@
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 52.01,
-        "dyMm": 18
+        "dxMm": 39.1,
+        "dyMm": 0,
+        "schaal": 0.87,
+        "breedteMm": 205.81,
+        "hoogteMm": 115.28
       },
       "titelblok": {
         "dxMm": 109.34,
         "dyMm": -3.79,
         "schaal": 0.97
+      },
+      "cijferrij": {
+        "dxMm": 11.82,
+        "dyMm": 0
       }
     }
   }

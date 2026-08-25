@@ -92,13 +92,14 @@ export async function satellietAchtergrond ({ view, stijl, dpi, onProgress }) {
   // voor composite, ongeacht de volgorde waarin je ze aanroept. De witte laag zou
   // dan groter zijn dan het inmiddels geschaalde beeld, en dat weigert sharp.
   const f = stijl['lagen.verbleking']
+  const bleekDoel = verbleekDoel(stijl)
 
   const pijp = sharp(beeld.data, {
     raw: { width: beeld.width, height: beeld.height, channels: beeld.channels }
   })
     .removeAlpha()
     .modulate({ saturation: 1 - stijl['lagen.ontzadiging'] })
-    .linear(1 - f, 255 * f)
+    .linear([1 - f, 1 - f, 1 - f], bleekDoel.map(k => k * f))
 
   const uit = await naarPagina(pijp, plek, dpi, 0)
   return { ...uit, bronvermelding: 'Luchtfoto: Esri, Maxar, Earthstar Geographics' }
@@ -110,6 +111,22 @@ export async function satellietAchtergrond ({ view, stijl, dpi, onProgress }) {
  * Geeft de afbeelding terug plus het rechthoekje in millimeters waar hij op de
  * pagina hoort te staan; de opmaak plaatst hem daar exact.
  */
+/**
+ * Waar het verbleken naartoe trekt, als drie kanaalwaarden.
+ *
+ * Stond hier eerst hard op wit. Dat is prima voor een gewone kaart, maar niet
+ * voor een boek dat op oud papier gedrukt lijkt: een kaart die naar zuiver wit
+ * verbleekt houdt zijn koele grijzen en blijft zichtbaar van een ander vel dan
+ * de bladzijde eromheen. Naar de papierkleur verbleken haalt dat verschil weg -
+ * de kaart en het papier komen dan uit dezelfde inktbak.
+ *
+ * Standaard #ffffff, dus voor wie er niet aan draait verandert er niets.
+ */
+function verbleekDoel (stijl) {
+  const hex = stijl['lagen.verbleekNaar'] ?? '#ffffff'
+  return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16))
+}
+
 export async function reliefAchtergrond ({ dem, view, stijl, dpi }) {
   const midden = tileToLonLat(
     (dem.originPx + dem.width / 2) / TILE_SIZE,
@@ -217,13 +234,17 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
   // op dezelfde lineaire schaling en horen elkaar dus niet tegen te werken.
   const f = stijl['lagen.verbleking']
   const d = stijl['lagen.verdonkering'] ?? 0
+  const bleekDoel = verbleekDoel(stijl)
 
   const pijp = sharp(beeld.data, {
     raw: { width: beeld.width, height: beeld.height, channels: beeld.channels }
   })
     .removeAlpha()
     .modulate({ saturation: 1 - stijl['lagen.ontzadiging'] })
-    .linear((1 - f) * (1 - d), 255 * f * (1 - d))
+    .linear(
+      [0, 1, 2].map(() => (1 - f) * (1 - d)),
+      bleekDoel.map(k => k * f * (1 - d))
+    )
 
   const uit = await naarPagina(pijp, plek, dpi, 0)
 

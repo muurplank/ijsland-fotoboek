@@ -61,16 +61,42 @@ export async function cached (soort, identiteit, laden, { extensie = 'json' } = 
 }
 
 /**
+ * Haalt de sleutels uit een url voordat hij in een foutmelding belandt.
+ *
+ * Mapbox zet zijn token in de query, en een foutmelding komt in je terminal, in
+ * de serverlog en soms in een schermafdruk terecht. Google-sleutels zitten in
+ * een header en hebben hier niets te vrezen.
+ */
+function zonderSleutels (url) {
+  return String(url).replace(/([?&](?:access_token|api_?key|token)=)[^&]*/gi, '$1[verborgen]')
+}
+
+/** Het begin van het antwoord, want daar staat waarom het misging. */
+async function uitleg (antwoord) {
+  try {
+    const tekst = (await antwoord.text()).trim()
+    return tekst ? `: ${tekst.slice(0, 200)}` : ''
+  } catch {
+    return ''
+  }
+}
+
+/**
  * Haalt een url op met een fatsoenlijke identificatie en een paar nieuwe pogingen
  * bij tijdelijke fouten. De gratis servers die we gebruiken knijpen af bij drukte;
  * dan is even wachten het juiste antwoord, niet meteen opgeven.
+ *
+ * Met `method` en `body` kun je ook posten; dat is voor de diensten die een
+ * opdracht in plaats van een adres willen, zoals de beeldmodellen.
  */
-export async function fetchWithRetry (url, { pogingen = 4, timeoutMs = 45000, headers = {} } = {}) {
+export async function fetchWithRetry (url, { pogingen = 4, timeoutMs = 45000, headers = {}, method = 'GET', body } = {}) {
   let laatsteFout
 
   for (let poging = 1; poging <= pogingen; poging++) {
     try {
       const antwoord = await fetch(url, {
+        method,
+        body,
         headers: {
           'User-Agent': 'IJsland-fotoboek/0.1 (persoonlijk fotoboekproject)',
           ...headers
@@ -82,9 +108,11 @@ export async function fetchWithRetry (url, { pogingen = 4, timeoutMs = 45000, he
 
       // 429 en 5xx zijn tijdelijk; de rest heeft geen zin om te herhalen
       if (antwoord.status !== 429 && antwoord.status < 500) {
-        throw new Error(`${url} gaf ${antwoord.status} ${antwoord.statusText}`)
+        throw new Error(
+          `${zonderSleutels(url)} gaf ${antwoord.status} ${antwoord.statusText}${await uitleg(antwoord)}`
+        )
       }
-      laatsteFout = new Error(`${url} gaf ${antwoord.status}`)
+      laatsteFout = new Error(`${zonderSleutels(url)} gaf ${antwoord.status}`)
     } catch (fout) {
       laatsteFout = fout
       if (fout.message?.includes('gaf 4')) throw fout
@@ -96,5 +124,5 @@ export async function fetchWithRetry (url, { pogingen = 4, timeoutMs = 45000, he
     }
   }
 
-  throw new Error(`Ophalen mislukt na meerdere pogingen: ${laatsteFout?.message ?? url}`)
+  throw new Error(`Ophalen mislukt na meerdere pogingen: ${laatsteFout?.message ?? zonderSleutels(url)}`)
 }

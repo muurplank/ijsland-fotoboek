@@ -1,0 +1,35 @@
+{
+  "dag": 5,
+  "plaats": "Keerpunt F-weg",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 4.ARW",
+      "variant": 1,
+      "verhouding": 1.333,
+      "plaat": "plaat-dag-05-1.jpg",
+      "stempel": "stempel-dag-05-1.png",
+      "foto": "foto-dag-05-1.jpg",
+      "inkten": [
+        "#1a1813",
+        "#4b4641",
+        "#884740",
+        "#702016"
+      ]
+    },
+    {
+      "bron": "Dag 4-2.ARW",
+      "variant": 1,
+      "verhouding": 0.873,
+      "plaat": "plaat-dag-05-2.jpg",
+      "stempel": "stempel-dag-05-2.png",
+      "foto": "foto-dag-05-2.jpg",
+      "inkten": [
+        "#1b2820",
+        "#474c43",
+        "#8d4643"
+      ]
+    }
+  ]
+}

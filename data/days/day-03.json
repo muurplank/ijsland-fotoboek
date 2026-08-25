@@ -237,7 +237,9 @@
     "stats": {
       "dagtekst": {
         "dxMm": 56.46,
-        "dyMm": 15.84
+        "dyMm": 15.84,
+        "breedteMm": 192.91,
+        "hoogteMm": 31.46
       },
       "cijferrij": {
         "dxMm": 0.01,

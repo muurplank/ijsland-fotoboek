@@ -1,0 +1,34 @@
+{
+  "dag": 7,
+  "plaats": "Vliegtuigwrak",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 6.jpg",
+      "variant": 1,
+      "verhouding": 1.437,
+      "plaat": "plaat-dag-07-1.jpg",
+      "stempel": "stempel-dag-07-1.png",
+      "foto": "foto-dag-07-1.jpg",
+      "inkten": [
+        "#4d5c49",
+        "#321b15",
+        "#72451e"
+      ]
+    },
+    {
+      "bron": "Dag 6-2.JPG",
+      "variant": 1,
+      "verhouding": 1.036,
+      "plaat": "plaat-dag-07-2.jpg",
+      "stempel": "stempel-dag-07-2.png",
+      "foto": "foto-dag-07-2.jpg",
+      "inkten": [
+        "#46312d",
+        "#4d6257",
+        "#100e0a"
+      ]
+    }
+  ]
+}

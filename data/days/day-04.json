@@ -239,8 +239,8 @@
         "dyMm": 0
       },
       "titelblok": {
-        "dxMm": 63.26,
-        "dyMm": -4.16
+        "dxMm": 58.57,
+        "dyMm": -3.86
       },
       "label:2": {
         "dxMm": 0,
@@ -273,8 +273,14 @@
     },
     "stats": {
       "cijferrij": {
-        "dxMm": 6.54,
-        "dyMm": -9.47
+        "dxMm": 6.64,
+        "dyMm": -3.25
+      },
+      "dagtekst": {
+        "dxMm": 68.49,
+        "dyMm": 6.83,
+        "breedteMm": 126.87,
+        "hoogteMm": 58.17
       }
     }
   }

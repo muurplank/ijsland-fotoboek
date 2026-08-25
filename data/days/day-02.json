@@ -199,6 +199,12 @@
       "titelblok": {
         "dxMm": 2.5,
         "dyMm": 5.17
+      },
+      "dagtekst": {
+        "dxMm": 74.81,
+        "dyMm": 0,
+        "breedteMm": 152.69,
+        "hoogteMm": 98.21
       }
     }
   }

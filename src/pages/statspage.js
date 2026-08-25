@@ -12,14 +12,18 @@
  *     verdeling en verdient geen assenstelsel
  *   - alleen het hoogste punt krijgt een label, niet elk meetpunt
  *   - geen hover of donkere modus: dit gaat naar papier
+ *   - de stempelband hangt aan de onderrand en niet aan de tekst erboven, zodat
+ *     een lang dagverhaal hem niet van het blad duwt
  */
 
 import { paginaMaat } from '../render/layout.js'
 import { bouwSvg, profielVorm, vormSchaal, VORM_INFO } from '../render/profielvorm.js'
+import { weerTekenKnoop } from '../render/weertekens.js'
 import {
   maakSvg, mm, asStap, leesbareDatum, weerTeken,
   dagCijfers, stopAfstanden, tekenAchtergrond, tekenBron, tekenCijferrij, tekenTitelblok
 } from './statsdelen.js'
+import { tekenStempelband } from './postzegel.js'
 
 export { weerTeken }
 
@@ -145,23 +149,48 @@ function tekenTemperatuur (svg, opschriften, uren, vak, stijl) {
 
   // --- de weertekens, om de twee uur
   //
+  // Als notatie en niet als emoji: een open rondje is een heldere hemel, een
+  // dichtgemaakt rondje een gesloten wolkendek, drie liggende streepjes mist,
+  // twee stippen regen, een sterretje sneeuw. Dat is de notatie waarmee
+  // weerwaarnemers het al anderhalve eeuw op hun kaarten zetten, en daarmee het
+  // enige tekentje op deze bladzijde dat iemand met een schrift ook echt zo zou
+  // hebben gezet. Wat de tekens zijn staat in render/weertekens.js; de emoji
+  // blijven als keuze bestaan.
+  //
   // In een strook langs de bovenkant en niet op de lijn zelf: op de lijn
   // zouden ze op een koude ochtend onderin plakken en op een warme middag
   // bovenin, waardoor het rijtje gaat golven en je het als een tweede grafiek
   // gaat lezen. Op één hoogte lees je ze als wat ze zijn - een tijdlijn van het
   // weer, boven de temperatuur die eronder loopt.
   if (stijl['profiel.weertekensAan']) {
-    const tekenY = boven + stijl['profiel.weertekenMm'] * 0.85
+    const tekenMaat = stijl['profiel.weertekenMm']
+    const vorm = stijl['profiel.weertekenVorm']
+    const getekend = vorm === 'notatie' || vorm === 'gekleurd'
+    const tekenY = boven + tekenMaat * (getekend ? 0.55 : 0.85)
+    const palet = {
+      zon: stijl['profiel.weerZon'],
+      wolk: stijl['profiel.weerWolk'],
+      neerslag: stijl['profiel.weerNeerslag'],
+      sneeuw: stijl['profiel.weerSneeuw']
+    }
 
     for (const u of uren) {
       if (u.uur % 2 !== 0) continue
       if (u.code === null || u.code === undefined) continue
 
+      const x = xVan(u.uur + 1)   // midden van het blok van twee uur
+
+      if (getekend) {
+        const knoop = weerTekenKnoop(u.code, {
+          x, y: tekenY, maatMm: tekenMaat, vorm, palet,
+          kleur: stijl['profiel.weertekenKleur']
+        })
+        if (knoop) svg.append(bouwSvg(knoop))
+        continue
+      }
+
       const teken = maakSvg('text', {
-        x: xVan(u.uur + 1),   // midden van het blok van twee uur
-        y: tekenY,
-        'text-anchor': 'middle',
-        'font-size': stijl['profiel.weertekenMm']
+        x, y: tekenY, 'text-anchor': 'middle', 'font-size': tekenMaat
       })
       teken.textContent = weerTeken(u.code)
       svg.append(teken)
@@ -404,23 +433,50 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
   })
 
   // ------------------------------------------------------------- eigen tekst
+  //
+  // Over de volle breedte binnen de marges, maar in kolommen gezet.
+  //
+  // Alleen breed maken was niet genoeg: op een pagina van dertig centimeter
+  // wordt één kolom ruim honderdvijftig tekens per regel, en dan vindt je oog
+  // aan het eind van een regel de volgende niet meer terug. Bovendien liep de
+  // tekst dan zo ver door dat hij de stempelband raakte. Kolommen lossen
+  // allebei op: de regels worden leesbaar én het blok wordt half zo hoog.
   if (gegevens.dag.tekst) {
     const tekst = document.createElement('div')
     tekst.className = 'dagtekst'
     tekst.setAttribute('data-plek', 'dagtekst')
-    tekst.setAttribute('data-schaalbaar', 'css')
+    // 'doos' en niet 'css': aan de hoek slepen maakt het vak groter en de tekst
+    // herwikkelt zich erin, zoals in een presentatieprogramma. Schalen zou de
+    // letter meegroeien, en dan staat het dagverhaal in een ander corps dan de
+    // rest van het boek.
+    tekst.setAttribute('data-schaalbaar', 'doos')
     tekst.setAttribute('data-midden', '')
     tekst.setAttribute('data-knoppen', 'typografie')
     tekst.setAttribute('data-tekst', 'tekst')
+    // Nu de tekst de volle breedte heeft, kan een bewaarde verschuiving hem
+    // alleen nog van de pagina af duwen - er is opzij niets meer te winnen.
+    // Dus klemt hij binnen de veilige marge, net als het titelblok.
+    tekst.setAttribute('data-binnen-marge', String(stijl['pagina.veiligeMargeMm']))
     tekst.style.left = mm(marge)
-    tekst.style.top = mm(grafiekOnder + naamBandMm + 16 + 34)
-    tekst.style.width = mm(Math.min(180, maat.breedteMm - 2 * marge))
+    // Dicht onder de cijferrij. Er stond 34 tussen, wat een gat achterliet
+    // waar niets kwam en de tekst tegen de stempelband aan duwde.
+    tekst.style.top = mm(grafiekOnder + naamBandMm + 16 + 24)
+    tekst.style.width = mm(maat.breedteMm - 2 * marge)
+    tekst.style.columnCount = String(stijl['typografie.kolommen'])
+    tekst.style.columnGap = mm(stijl['typografie.kolomGangMm'])
     tekst.style.fontSize = mm(stijl['typografie.tekstMm'])
     tekst.style.lineHeight = String(stijl['typografie.regelafstand'])
     tekst.style.color = stijl['titelblok.kleur']
     tekst.textContent = gegevens.dag.tekst
     opschriften.append(tekst)
   }
+
+  // ---------------------------------------------------------- de stempels
+  //
+  // Onderaan het blad, per foto van die dag een gesneden afdruk met zijn
+  // veldnotitie eronder. Dagen zonder foto krijgen niets; dan loopt de dagtekst
+  // gewoon door tot onderaan.
+  tekenStempelband(opschriften, gegevens.hero, stijl, maat, marge, gegevens.plaatsing)
 
   tekenBron(opschriften, stijl, maat, marge)
 }

@@ -1,7 +1,8 @@
 /**
  * Exporteert een dag naar drukklare bestanden.
  *
- *   node src/build.js 1
+ *   node src/build.js 1          de kaartpagina van dag 1
+ *   node src/build.js 1 stats    de cijferpagina van dag 1
  *
  * Levert twee dingen op:
  *   - een PNG op de ingestelde resolutie, voor fotoboekprogramma's die alleen
@@ -73,7 +74,8 @@ function controleer (stijl, plan, echteBreedte, echteHoogte) {
     ['bronvermelding', stijl['bron.grootteMm']],
     ['labels', stijl['labels.grootteMm']],
     ['bekende plaatsen', stijl['labels.omgevingGrootteMm']],
-    ['statistiek-labels', stijl['statistieken.labelMm']]
+    ['statistiek-labels', stijl['statistieken.labelMm']],
+    ['veldnotitie', stijl['veldnotitie.grootteMm']]
   ]
   for (const [naam, mm] of teksten) {
     zeg(mm >= KLEINSTE_TEKST_MM, `${naam} ${mm} mm (onder ${KLEINSTE_TEKST_MM} mm wordt het lastig lezen)`)
@@ -84,7 +86,10 @@ function controleer (stijl, plan, echteBreedte, echteHoogte) {
     ['eerdere dagen', stijl['eerdere.dikteMm']],
     ['wegen', stijl['lagen.wegenDikteMm']],
     // de dunste lijn op het inzetkaartje is de hele reis, half zo dik als de dag
-    ['inzetkaartje: hele reis', stijl['inzet.lijnMm'] * 0.5]
+    ['inzetkaartje: hele reis', stijl['inzet.lijnMm'] * 0.5],
+    // de vezels van het papier zijn met opzet haarfijn: die horen weg te vallen
+    // waar de pers ze niet aankan, en zijn dus geen punt om over te klagen
+    ['draadmodel', stijl['statistieken.draadmodelLijnMm']]
   ]
   for (const [naam, mm] of lijnen) {
     zeg(mm >= DUNSTE_LIJN_MM, `${naam} ${mm} mm dik (onder ${DUNSTE_LIJN_MM} mm valt het weg in de druk)`)
@@ -97,6 +102,20 @@ function controleer (stijl, plan, echteBreedte, echteHoogte) {
 
 const nummer = Number(process.argv[2] ?? 1)
 
+/**
+ * Welk blad van die dag: de kaart of de cijfers.
+ *
+ * Stond hier eerst niet, waardoor de cijferpagina alleen op het scherm bestond
+ * en nooit door de drukcontrole kwam - terwijl juist daar de kleinste letters
+ * en de dunste lijnen staan.
+ */
+const PAGINAS = { kaart: 'kaart', stats: 'stats', overzicht: 'overzicht', reiscijfers: 'reiscijfers' }
+const paginaType = PAGINAS[process.argv[3] ?? 'kaart']
+if (!paginaType) {
+  console.error(`  Onbekende pagina "${process.argv[3]}". Kies uit: ${Object.keys(PAGINAS).join(', ')}`)
+  process.exit(1)
+}
+
 const boek = await loadBook()
 const dag = await loadDay(nummer)
 const { stijl } = mergeStijl(boek.stijl, dag.stijl)
@@ -108,7 +127,7 @@ const plan = renderPlan(
 )
 
 console.log(`
-Dag ${dag.dag} — ${dag.titel}
+Dag ${dag.dag} — ${dag.titel} (${paginaType})
   pagina    ${maat.snijBreedteMm} × ${maat.snijHoogteMm} mm + ${maat.afloopMm} mm afloop
   resolutie ${stijl['pagina.dpi']} dpi
   export    ${plan.widthPx} × ${plan.heightPx} px
@@ -124,7 +143,7 @@ const uitmap = join(ROOT, 'out')
 await mkdir(uitmap, { recursive: true })
 
 const browser = await chromium.launch()
-const naam = `dag-${String(nummer).padStart(2, '0')}`
+const naam = `dag-${String(nummer).padStart(2, '0')}-${paginaType}`
 
 try {
   // ------------------------------------------------------------------ PNG
@@ -135,12 +154,12 @@ try {
   })
 
   const mmInCssPx = plan.viewportWidth / maat.breedteMm
-  await png.goto(`${BASIS}/?export=png&dag=${nummer}&mm=${mmInCssPx}`, { waitUntil: 'load' })
+  await png.goto(`${BASIS}/?export=png&pagina=${paginaType}&dag=${nummer}&mm=${mmInCssPx}`, { waitUntil: 'load' })
   await png.waitForFunction(() => window.klaarVoorExport === true, null, { timeout: 180000 })
 
   const beeld = await png.locator('#pagina').screenshot({ type: 'png' })
   const info = await sharp(beeld).metadata()
-  await writeFile(join(uitmap, `${naam}-kaart.png`), beeld)
+  await writeFile(join(uitmap, `${naam}.png`), beeld)
   await png.close()
 
   // ------------------------------------------------------------------ PDF
@@ -148,7 +167,7 @@ try {
   // een millimeter precies 96/25.4 css-pixels zijn, want zo rekent PDF ook.
   console.log('  PDF renderen…')
   const pdfPagina = await browser.newPage()
-  await pdfPagina.goto(`${BASIS}/?export=pdf&dag=${nummer}&mm=${96 / 25.4}`, { waitUntil: 'load' })
+  await pdfPagina.goto(`${BASIS}/?export=pdf&pagina=${paginaType}&dag=${nummer}&mm=${96 / 25.4}`, { waitUntil: 'load' })
   await pdfPagina.waitForFunction(() => window.klaarVoorExport === true, null, { timeout: 180000 })
 
   const pdf = await pdfPagina.pdf({
@@ -158,7 +177,7 @@ try {
     margin: { top: '0', right: '0', bottom: '0', left: '0' },
     pageRanges: '1'
   })
-  await writeFile(join(uitmap, `${naam}-kaart.pdf`), pdf)
+  await writeFile(join(uitmap, `${naam}.pdf`), pdf)
   await pdfPagina.close()
 
   // -------------------------------------------------------------- controle
@@ -169,8 +188,8 @@ try {
   const mis = punten.filter(p => !p.goed)
   console.log(`
   Klaar:
-    out/${naam}-kaart.png   ${(beeld.length / 1e6).toFixed(1)} MB
-    out/${naam}-kaart.pdf   ${(pdf.length / 1e6).toFixed(1)} MB  (tekst en lijnen als vectoren)
+    out/${naam}.png   ${(beeld.length / 1e6).toFixed(1)} MB
+    out/${naam}.pdf   ${(pdf.length / 1e6).toFixed(1)} MB  (tekst en lijnen als vectoren)
 `)
   if (mis.length) {
     console.log(`  ${mis.length} punt(en) om naar te kijken voordat je dit laat drukken.\n`)

@@ -209,8 +209,8 @@
         "dyMm": 0
       },
       "titelblok": {
-        "dxMm": 52.08,
-        "dyMm": -7.92
+        "dxMm": 48.19,
+        "dyMm": -3.86
       },
       "marker:1": {
         "dxMm": -2.35,
@@ -219,9 +219,15 @@
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 71.78,
-        "dyMm": 18.56,
-        "schaal": 1
+        "dxMm": 83.56,
+        "dyMm": 0,
+        "schaal": 1,
+        "breedteMm": 116.88,
+        "hoogteMm": 74.37
+      },
+      "postzegel:2": {
+        "dxMm": 138.92,
+        "dyMm": -36.93
       }
     }
   }

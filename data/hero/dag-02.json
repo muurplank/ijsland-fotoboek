@@ -1,0 +1,20 @@
+{
+  "dag": 2,
+  "plaats": "Bónus",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 1.jpg",
+      "variant": 1,
+      "verhouding": 0.878,
+      "plaat": "plaat-dag-02-1.jpg",
+      "stempel": "stempel-dag-02-1.png",
+      "foto": "foto-dag-02-1.jpg",
+      "inkten": [
+        "#1d2820",
+        "#484c42"
+      ]
+    }
+  ]
+}

@@ -205,6 +205,14 @@
         "dxMm": -8.54,
         "dyMm": -4.57
       }
+    },
+    "stats": {
+      "dagtekst": {
+        "dxMm": 0,
+        "dyMm": 0,
+        "breedteMm": 259.59,
+        "hoogteMm": 36.69
+      }
     }
   }
 }

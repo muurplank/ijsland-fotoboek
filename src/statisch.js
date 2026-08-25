@@ -20,9 +20,12 @@
  */
 
 import { spawn } from 'node:child_process'
+import { readdir } from 'node:fs/promises'
 import { mkdir, writeFile, readFile, rm, cp } from 'node:fs/promises'
 import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import sharp from 'sharp'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const UIT = join(ROOT, 'docs')
@@ -30,7 +33,7 @@ const POORT = Number(process.env.PORT ?? 4321)
 const BASIS = `http://localhost:${POORT}`
 
 /** De vaste JSON-antwoorden: die hangen niet aan een dag. */
-const VAST = ['schema', 'presets', 'dagen', 'reis', 'reis-cijfers']
+const VAST = ['schema', 'presets', 'dagen', 'reis', 'reis-cijfers', 'hero']
 
 async function serverDraait () {
   try {
@@ -213,6 +216,39 @@ const i = await bewaar(`/api/inzet?${vraag}`, join(UIT, 'api', 'inzet.png'),
   'x-bounds', join(UIT, 'api', 'inzet.json'))
 totaal += i
 console.log('  inzetkaartje'.padEnd(28) + kb(i))
+
+// --------------------------------------------------------- de stempels
+//
+// De afdrukken en de foto's uit data/hero/. Kleiner gemaakt dan ze op schijf
+// staan: die zijn op drukmaat, en een scherm heeft daar niets aan terwijl het
+// de map wel verdubbelt. De ruwe platen uit data/hero/ruw/ blijven thuis - dat
+// is het archief, geen website.
+const HERO_PX = 1400
+const heroMap = join(ROOT, 'data', 'hero')
+const heroBestanden = (await readdir(heroMap).catch(() => []))
+  .filter(b => /\.(png|jpe?g)$/i.test(b))
+
+if (heroBestanden.length) {
+  await mkdir(join(UIT, 'api', 'hero'), { recursive: true })
+  let heroTotaal = 0
+
+  for (const naam of heroBestanden) {
+    const beeld = sharp(join(heroMap, naam)).resize({
+      width: HERO_PX, height: HERO_PX, fit: 'inside', withoutEnlargement: true
+    })
+    // PNG houdt zijn doorzichtigheid, want daar hangt de hele stempel op
+    const buf = naam.toLowerCase().endsWith('.png')
+      ? await beeld.png({ compressionLevel: 9 }).toBuffer()
+      : await beeld.jpeg({ quality: 82 }).toBuffer()
+
+    await writeFile(join(UIT, 'api', 'hero', naam), buf)
+    heroTotaal += buf.length
+  }
+
+  totaal += heroTotaal
+  console.log('  stempels en foto´s'.padEnd(28) +
+    `${heroBestanden.length} bestanden, ${kb(heroTotaal)}`)
+}
 
 console.log(`\n  Klaar: docs/ is ${(totaal / 1e6).toFixed(1)} MB`)
 console.log('  Zet Pages in de repo-instellingen op main / docs\n')

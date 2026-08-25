@@ -18,6 +18,9 @@ import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
 import { tekenReisCijfers } from './tripstats.js'
 import { tekenVoortgang, stopsMetAfstand, voortgangMaat } from './progress.js'
+import { tekenStempelOpKaart } from './postzegel.js'
+import { papierKnopen } from '../render/papier.js'
+import { bouwSvg } from '../render/profielvorm.js'
 import { maakBewerkbaar, pasPlaatsingToe } from './editable.js'
 import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
 import { klem, knop as knopVan } from '../style.js'
@@ -52,6 +55,7 @@ let silhouetSleutel = null
 let vorigeAchtergrondSleutel = null
 let boek = {}
 let presets = []
+let heros = {}          // per dag de stempels en de veldnotitie, uit data/hero/
 let stoppenOpen = false   // of de stoppenlijst in het paneel openstaat
 
 /**
@@ -102,6 +106,20 @@ function schaalPagina () {
     `${dpi} dpi · export ${px(maat.breedteMm)} × ${px(maat.hoogteMm)} px`
 }
 
+/**
+ * De drie letterfamilies.
+ *
+ * American Typewriter staat alleen op macOS. Courier New staat daar wél overal
+ * achter, dus op een andere machine - of in de gebakken docs/ - valt de
+ * typemachine daarop terug. Iets minder mooi, maar wel dezelfde soort letter:
+ * een schrijfmachineletter met schreven, en niet ineens een schreefloze.
+ */
+const LETTERS = {
+  'systeem-schreefloos': '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif',
+  'systeem-schreef': 'Georgia, "Times New Roman", serif',
+  typemachine: '"American Typewriter", "Courier New", Courier, ui-monospace, monospace'
+}
+
 function zetTypografie () {
   const p = pagina.style
   p.setProperty('--labelkleur', stijl['labels.kleur'])
@@ -110,9 +128,7 @@ function zetTypografie () {
   p.setProperty('--halo', `calc(${stijl['labels.haloMm']} * var(--mm))`)
   p.setProperty('--letterafstand', `${stijl['labels.letterafstand']}em`)
   p.setProperty('--hoofdletters', stijl['labels.hoofdletters'] ? 'uppercase' : 'none')
-  p.fontFamily = stijl['typografie.lettertype'] === 'systeem-schreef'
-    ? 'Georgia, "Times New Roman", serif'
-    : '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'
+  p.fontFamily = LETTERS[stijl['typografie.lettertype']] ?? LETTERS['systeem-schreefloos']
 }
 
 /** ------------------------------------------------------- achtergrond */
@@ -275,19 +291,56 @@ function tekenPagina () {
   } else if (!gegevens) {
     return
   } else if (paginaType === 'stats') {
-    tekenStatistieken(tekening, opschriften, gegevens, stijl)
+    tekenStatistieken(tekening, opschriften,
+      { ...gegevens, hero: heros[huidigeDag], plaatsing: plaatsingVoorPagina() }, stijl)
   } else {
     const view = teken(tekening, opschriften, gegevens, stijl, tekeningBoven)
+    // Het vel over de kaart: boven de kaartplaat, maar vóór de route getekend,
+    // dus onder de route. Zo lijkt alles op hetzelfde papier gedrukt zonder dat
+    // de lijn die je moet kunnen volgen erdoor vertroebelt.
+    legPapierOverKaart()
     // het bijwerk krijgt de plaatsing mee: de schaalbalk en het inzetkaartje
     // worden op hun eigen maat opnieuw opgebouwd in plaats van uitgerekt
     tekenBijwerk(opschriften, gegevens, stijl, view,
       { silhouet, reis, svgLaag: tekeningBoven, plaatsing: plaatsingVoorPagina() })
+    tekenStempelOpKaart(opschriften, heros[huidigeDag], stijl,
+      paginaMaat(stijl), paginaMaat(stijl).afloopMm + stijl['pagina.veiligeMargeMm'])
   }
 
   // de handmatige verschuivingen liggen over de standaardopmaak heen.
   // Op de pagina en niet op de opschriftenlaag: de markers en het kompas
   // staan in de tekenlaag en horen er net zo goed bij.
   pasPlaatsingToe(pagina, plaatsingVoorPagina())
+}
+
+/**
+ * Hetzelfde vel als op de cijferpagina, maar dan over de kaart.
+ *
+ * Zonder grondvlak: alleen de vezels, de sporen en de vuile randen. Met vlak
+ * zou de kaart eronder verdwijnen, en dan is het geen papier meer maar verf.
+ *
+ * De laag gaat vooraan in de tekenlaag, dus onder alles wat daar al staat.
+ */
+function legPapierOverKaart () {
+  if (!stijl['papier.overKaart']) return
+
+  const maat = paginaMaat(stijl)
+  const vel = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  vel.setAttribute('opacity', String(stijl['papier.overKaartDekking']))
+  vel.setAttribute('pointer-events', 'none')
+
+  for (const knoop of papierKnopen({
+    breedteMm: maat.breedteMm,
+    hoogteMm: maat.hoogteMm,
+    stijl,
+    zaad: huidigeDag,
+    id: 'kaartpapier',
+    grondvlak: false
+  })) {
+    vel.append(bouwSvg(knoop))
+  }
+
+  tekening.prepend(vel)
 }
 
 /** De verschuivingen die bij dit paginatype horen. */
@@ -318,6 +371,28 @@ async function laadDag (nummer) {
 
   huidigeDag = nummer
   document.title = `Dag ${gegevens.dag.dag} — ${gegevens.dag.titel}`
+
+  // De stempels van deze dag erbij. Mag ontbreken, dus dit mag de dag nooit
+  // laten mislukken - vandaar dat laadHero zelf alles opslikt.
+  await laadHero(nummer)
+}
+
+/**
+ * De stempels en de veldnotitie van een dag.
+ *
+ * Mag ontbreken: dagen waarvan nog geen heropfoto door src/stempel.js is gehaald
+ * krijgen simpelweg geen stempelband. Daarom wordt een mislukking hier stil
+ * opgeslikt en niet als fout gemeld - er is niets kapot, er is alleen nog niets.
+ */
+async function laadHero (nummer) {
+  if (nummer in heros) return heros[nummer]
+  try {
+    const antwoord = await fetch('/api/hero')
+    heros = antwoord.ok ? await antwoord.json() : {}
+  } catch {
+    heros = {}
+  }
+  return heros[nummer]
 }
 
 async function laadReis () {
@@ -466,6 +541,21 @@ async function start () {
       bewaarPlaatsing(`geschaald: ${id} (${schaal}×)`)
       // de schaalbalk en het inzetkaartje bouwen zichzelf op hun nieuwe maat
       // opnieuw op, dus die hebben een hertekening nodig
+      tekenPagina()
+    },
+
+    // Een tekstvak dat je aan zijn hoek groter of kleiner sleept, waarbij de
+    // tekst zich erin herwikkelt. De letter blijft even groot; alleen de doos
+    // verandert. null zet hem terug op de standaardmaat van de opmaak.
+    bijDoos: (id, maat) => {
+      const doel = plaatsingDoel()
+      if (maat === null) {
+        if (doel[id]) { delete doel[id].breedteMm; delete doel[id].hoogteMm }
+        bewaarPlaatsing(`maat terug: ${id}`)
+      } else {
+        doel[id] = { dxMm: 0, dyMm: 0, ...doel[id], ...maat }
+        bewaarPlaatsing(`maat: ${id} (${maat.breedteMm} × ${maat.hoogteMm} mm)`)
+      }
       tekenPagina()
     },
 

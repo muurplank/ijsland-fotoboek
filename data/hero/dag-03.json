@@ -1,0 +1,33 @@
+{
+  "dag": 3,
+  "plaats": "Seljalandsfoss",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 2.ARW",
+      "variant": 1,
+      "verhouding": 1.383,
+      "plaat": "plaat-dag-03-1.jpg",
+      "stempel": "stempel-dag-03-1.png",
+      "foto": "foto-dag-03-1.jpg",
+      "inkten": [
+        "#465950",
+        "#1c2d28",
+        "#6e511e"
+      ]
+    },
+    {
+      "bron": "Dag 2-2.ARW",
+      "variant": 1,
+      "verhouding": 1.023,
+      "plaat": "plaat-dag-03-2.jpg",
+      "stempel": "stempel-dag-03-2.png",
+      "foto": "foto-dag-03-2.jpg",
+      "inkten": [
+        "#2d2e1a",
+        "#645835"
+      ]
+    }
+  ]
+}

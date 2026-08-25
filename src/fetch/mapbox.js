@@ -13,16 +13,11 @@
  * de kaart.
  */
 
-import { readFile } from 'node:fs/promises'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
-
 import sharp from 'sharp'
 import { cached, fetchWithRetry } from './cache.js'
+import { haalGeheim } from './geheimen.js'
 import { mapLimit } from './parallel.js'
 import { metersPerPixel, tilesForBounds, TILE_SIZE, zoomBinnenBudget, zoomForResolution } from '../geo/tiles.js'
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 
 /** De stijlen die we aanbieden, met hun officiele naam bij Mapbox. */
 export const MAPBOX_STIJLEN = {
@@ -81,23 +76,8 @@ export function controleerToken (token) {
   return token
 }
 
-let tokenCache
 async function haalToken () {
-  if (tokenCache !== undefined) return tokenCache
-
-  if (process.env.MAPBOX_TOKEN) {
-    tokenCache = controleerToken(process.env.MAPBOX_TOKEN)
-    return tokenCache
-  }
-
-  try {
-    const geheim = JSON.parse(await readFile(join(ROOT, 'data', 'secrets.json'), 'utf8'))
-    tokenCache = controleerToken(geheim.mapboxToken)
-  } catch (fout) {
-    if (fout.code === 'ENOENT') controleerToken(null)
-    throw fout
-  }
-  return tokenCache
+  return haalGeheim({ sleutel: 'mapboxToken', env: ['MAPBOX_TOKEN'], controle: controleerToken })
 }
 
 async function fetchTile ({ x, y, z }, stijl, token, retina) {

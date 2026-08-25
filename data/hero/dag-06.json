@@ -1,0 +1,47 @@
+{
+  "dag": 6,
+  "plaats": "Vuurtoren",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 5.ARW",
+      "variant": 1,
+      "verhouding": 1.108,
+      "plaat": "plaat-dag-06-1.jpg",
+      "stempel": "stempel-dag-06-1.png",
+      "foto": "foto-dag-06-1.jpg",
+      "inkten": [
+        "#46312d",
+        "#5d575b",
+        "#1d100a"
+      ]
+    },
+    {
+      "bron": "Dag 5-2.jpg",
+      "variant": 1,
+      "verhouding": 1.214,
+      "plaat": "plaat-dag-06-2.jpg",
+      "stempel": "stempel-dag-06-2.png",
+      "foto": "foto-dag-06-2.jpg",
+      "inkten": [
+        "#341a13",
+        "#5e4035",
+        "#9f3f2c"
+      ]
+    },
+    {
+      "bron": "Dag 5-3.ARW",
+      "variant": 1,
+      "verhouding": 0.94,
+      "plaat": "plaat-dag-06-3.jpg",
+      "stempel": "stempel-dag-06-3.png",
+      "foto": "foto-dag-06-3.jpg",
+      "inkten": [
+        "#2b342a",
+        "#4e574d",
+        "#050b07"
+      ]
+    }
+  ]
+}

@@ -11,3 +11,20 @@ out/
 
 # Toegangssleutels: horen niet in git, ook publieke niet.
 data/secrets.json
+
+# De heropfoto's zelf. Sony-RAW van 25 MB per stuk, en ze staan al in iCloud -
+# dus veilig, en niets om een git-repo mee vol te zetten.
+#
+# Let op de schuine streep ervoor. Zonder die streep raakt dit patroon ook
+# data/hero/, want op een Mac vergelijkt git hoofdletterongevoelig - en dan
+# verdwijnen de gemaakte stempels stilletjes uit je commit.
+/Hero/
+
+# De platen zoals het beeldmodel ze teruggaf, op 4096 bij 4096.
+#
+# Dit is het enige in dit project dat geld kost en niet opnieuw te maken is:
+# hetzelfde verzoek geeft een andere afdruk. Ze blijven daarom op schijf staan,
+# en omdat de projectmap in iCloud ligt zijn ze daarmee ook geback-upt. Wat er
+# uit voortkomt (plaat-, stempel- en foto-bestanden) gaat wél mee in git, want
+# dat is wat de pagina's nodig hebben.
+data/hero/ruw/

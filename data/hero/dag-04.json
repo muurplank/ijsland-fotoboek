@@ -1,0 +1,33 @@
+{
+  "dag": 4,
+  "plaats": "Stuðlagil",
+  "jaar": "2026",
+  "trefwoorden": [],
+  "afdrukken": [
+    {
+      "bron": "Dag 3.ARW",
+      "variant": 1,
+      "verhouding": 1.278,
+      "plaat": "plaat-dag-04-1.jpg",
+      "stempel": "stempel-dag-04-1.png",
+      "foto": "foto-dag-04-1.jpg",
+      "inkten": [
+        "#321e17",
+        "#5d4c43"
+      ]
+    },
+    {
+      "bron": "Dag 3-2.jpg",
+      "variant": 1,
+      "verhouding": 1.064,
+      "plaat": "plaat-dag-04-2.jpg",
+      "stempel": "stempel-dag-04-2.png",
+      "foto": "foto-dag-04-2.jpg",
+      "inkten": [
+        "#1a281e",
+        "#434d45",
+        "#593709"
+      ]
+    }
+  ]
+}

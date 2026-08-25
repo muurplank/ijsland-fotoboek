@@ -191,9 +191,11 @@
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 51.98,
-        "dyMm": 23.69,
-        "schaal": 1.39
+        "dxMm": 92.02,
+        "dyMm": 0,
+        "schaal": 1.39,
+        "breedteMm": 145.05,
+        "hoogteMm": 57.39
       },
       "cijferrij": {
         "dxMm": 0.01,

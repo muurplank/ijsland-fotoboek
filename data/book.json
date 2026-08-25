@@ -225,12 +225,20 @@
         "dyMm": -0.14
       },
       "dagnummer:8": {
-        "dxMm": -0.98,
-        "dyMm": 3.17
+        "dxMm": -7.68,
+        "dyMm": 0
       },
       "dagnummer:2": {
         "dxMm": -0.16,
         "dyMm": -0.31
+      },
+      "dagnummer:7": {
+        "dxMm": 9.23,
+        "dyMm": 5.78
+      },
+      "dagnummer:1": {
+        "dxMm": 10.08,
+        "dyMm": -6.79
       }
     }
   }
