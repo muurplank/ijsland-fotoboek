@@ -654,6 +654,27 @@ export function maakBewerkbaar (pagina, {
     toonGreep(null)
   })
 
+  // Dubbelklikken doet hetzelfde, en dat is de weg waarop je het vanzelf
+  // probeert: je wijst een stop aan die je niet wilt en klikt hem weg, zonder
+  // eerst te bedenken dat het greepje jouw selectie is en dat Delete dus over
+  // dít icoontje gaat.
+  //
+  // Een tekst wint altijd: op een plaatsnaam die je kunt aanpassen opent
+  // dezelfde dubbelklik de tekst, en die mag hier niet onder vandaan gehaald
+  // worden. Op de kaart is dat nu geen van beide tegelijk, maar het scheelt
+  // een naam die verdwijnt zodra iemand er ooit allebei op zet.
+  pagina.addEventListener('dblclick', e => {
+    if (bezig || schalen) return
+    if (e.target.closest?.(`[${TEKST}]`)) return
+
+    const node = e.target.closest?.(`[${WEGHAAL}]`)
+    if (!node) return
+
+    e.preventDefault()
+    bijWeghalen?.(node.getAttribute(SLEEP))
+    toonGreep(null)
+  })
+
   // ------------------------------------------------------- tekst aanpassen
   pagina.addEventListener('dblclick', e => {
     const node = e.target.closest?.(`[${TEKST}]`)

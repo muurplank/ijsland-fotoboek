@@ -697,8 +697,9 @@ function bouwStoppenlijst () {
     naam.textContent = w.name || '(naamloos)'
     if (!w.name) naam.style.opacity = '.6'
 
-    // Op de kaart haal je een icoontje weg met Delete. Dat is de snelle weg,
-    // maar dan moet er ook een weg terug zijn: hier staat welke er uit staan.
+    // Op de kaart haal je een icoontje weg met Delete of een dubbelklik. Dat is
+    // de snelle weg, maar dan moet er ook een weg terug zijn: hier staat welke
+    // er uit staan.
     let terug = null
     if (w.toonIcoon === false) {
       terug = document.createElement('button')
