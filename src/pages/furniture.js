@@ -577,7 +577,11 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
       ring: stijl['schaal.kompasRing'],
       ringDikteMm: stijl['schaal.kompasLijnMm'],
       letters: stijl['schaal.kompasLetters'],
-      letterMm: stijl['schaal.kompasLetterMm']
+      letterMm: stijl['schaal.kompasLetterMm'],
+      kleuren: stijl['schaal.kompasKleuren'],
+      noordKleur: stijl['schaal.kompasNoordKleur'],
+      staalKleur: stijl['schaal.kompasStaalKleur'],
+      schroefKleur: stijl['schaal.kompasSchroefKleur']
     })
     // Zelfde opzet als bij de markers: een buitenste groep die de plek bepaalt
     // en een binnenste die jouw verschuiving en schaal opvangt, zodat schalen om

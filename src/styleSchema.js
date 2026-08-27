@@ -265,7 +265,7 @@ export const KNOPPEN = [
   { key: 'schaal.positie', groep: 'schaal', label: 'Schaalbalk: hoek', type: 'keuze', opties: ['linksonder', 'rechtsonder', 'linksboven', 'rechtsboven'], standaard: 'linksonder' },
   { key: 'schaal.kleur', groep: 'schaal', label: 'Schaalbalk: kleur', type: 'kleur', standaard: '#8b847c'},
   { key: 'schaal.noordpijlAan', groep: 'schaal', label: 'Kompasroos', type: 'aanuit', standaard: true },
-  { key: 'schaal.kompasVorm', groep: 'schaal', label: 'Kompas: vorm', type: 'keuze', opties: ['klassiek', 'ster', 'pijl'], standaard: 'klassiek', help: 'klassiek = acht punten met ring en gradenstreepjes · ster = alleen de vier hoofdrichtingen · pijl = alleen noord-zuid' },
+  { key: 'schaal.kompasVorm', groep: 'schaal', label: 'Kompas: vorm', type: 'keuze', opties: ['klassiek', 'ster', 'pijl', 'naald'], standaard: 'klassiek', help: 'klassiek = acht punten met ring en gradenstreepjes · ster = alleen de vier hoofdrichtingen · pijl = alleen noord-zuid · naald = een magneetnaald op de wijzerplaat, rood naar het noorden' },
   { key: 'schaal.kompasMm', groep: 'schaal', label: 'Kompas: grootte', type: 'mm', min: 4, max: 40, step: 0.5, standaard: 17 },
   { key: 'schaal.kompasVolgtTitel', groep: 'schaal', label: 'Kompas: even hoog als het titelblok', type: 'aanuit', standaard: true, help: 'Het glasschijfje krijgt de hoogte van het titelblok, ook als de titel over twee regels loopt. Omdat het een cirkel van precies die hoogte is, staan boven-, onder- en middenkant dan tegelijk gelijk. De maat hierboven wordt dan niet gebruikt' },
   { key: 'schaal.kompasGlasFactor', groep: 'schaal', label: 'Kompas: hoeveel groter het glas is', type: 'getal', min: 1, max: 2.6, step: 0.05, standaard: 1.62, help: 'Ten opzichte van de roos zelf. 1 is precies eromheen, hoger geeft meer rustige ruimte rond de punten en de letters' },
@@ -277,6 +277,10 @@ export const KNOPPEN = [
   { key: 'schaal.kompasLijnMm', groep: 'schaal', label: 'Kompas: lijndikte', type: 'mm', min: 0.05, max: 1, step: 0.01, standaard: 0.18 },
   { key: 'schaal.kompasLetters', groep: 'schaal', label: 'Kompas: letters erbij', type: 'aanuit', standaard: true },
   { key: 'schaal.kompasLetterMm', groep: 'schaal', label: 'Kompas: lettergrootte', type: 'mm', min: 1.2, max: 8, step: 0.1, standaard: 2.6 },
+  { key: 'schaal.kompasKleuren', groep: 'schaal', label: 'Kompas: kleuren van een echt kompas', type: 'aanuit', standaard: true, help: 'Noordpunt rood, de andere punten van staal en een messing schroefje in het hart. Staat dit uit, dan vullen de twee kleuren hierboven de roos als vlakke inkt' },
+  { key: 'schaal.kompasNoordKleur', groep: 'schaal', label: 'Kompas: rood van het noorden', type: 'kleur', standaard: '#e03a28', help: 'De noordpunt, of bij vorm "naald" de halve naald. De belichte en de beschaduwde flank worden hieruit gemengd' },
+  { key: 'schaal.kompasStaalKleur', groep: 'schaal', label: 'Kompas: staal van de andere punten', type: 'kleur', standaard: '#c8ccd1', help: 'Blank staal tegenover het rood van het noorden' },
+  { key: 'schaal.kompasSchroefKleur', groep: 'schaal', label: 'Kompas: schroefje in het hart', type: 'kleur', standaard: '#c9a227', help: 'Messing; het schroefje wordt hieruit bol geschaduwd' },
 
   // -------------------------------------------------------------------- bron
   { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: true },

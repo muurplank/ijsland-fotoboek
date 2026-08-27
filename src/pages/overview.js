@@ -250,7 +250,11 @@ export function tekenOverzicht (svg, opschriften, reis, stijl) {
       ring: stijl['schaal.kompasRing'],
       ringDikteMm: stijl['schaal.kompasLijnMm'],
       letters: stijl['schaal.kompasLetters'],
-      letterMm: stijl['schaal.kompasLetterMm']
+      letterMm: stijl['schaal.kompasLetterMm'],
+      kleuren: stijl['schaal.kompasKleuren'],
+      noordKleur: stijl['schaal.kompasNoordKleur'],
+      staalKleur: stijl['schaal.kompasStaalKleur'],
+      schroefKleur: stijl['schaal.kompasSchroefKleur']
     })
     // buitenste groep zet de plek, binnenste vangt verschuiving en schaal op
     const anker = document.createElementNS(SVG, 'g')
