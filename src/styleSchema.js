@@ -260,7 +260,7 @@ export const KNOPPEN = [
   { key: 'inzet.afstempeling', groep: 'inzet', label: 'Postzegel: afstempeling', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.3, help: 'De vage golfjes schuin over de hoek, zoals een poststempel. Nul laat ze weg' },
 
   // ----------------------------------------------------------------- schaal
-  { key: 'schaal.balkAan', groep: 'schaal', label: 'Schaalbalk tonen', type: 'aanuit', standaard: true },
+  { key: 'schaal.balkAan', groep: 'schaal', label: 'Schaalbalk tonen', type: 'aanuit', standaard: false },
   { key: 'schaal.positie', groep: 'schaal', label: 'Schaalbalk: hoek', type: 'keuze', opties: ['linksonder', 'rechtsonder', 'linksboven', 'rechtsboven'], standaard: 'linksonder' },
   { key: 'schaal.kleur', groep: 'schaal', label: 'Schaalbalk: kleur', type: 'kleur', standaard: '#8b847c'},
   { key: 'schaal.noordpijlAan', groep: 'schaal', label: 'Kompasroos', type: 'aanuit', standaard: true },
@@ -282,7 +282,7 @@ export const KNOPPEN = [
   { key: 'schaal.kompasSchroefKleur', groep: 'schaal', label: 'Kompas: schroefje in het hart', type: 'kleur', standaard: '#c9a227', help: 'Messing; het schroefje wordt hieruit bol geschaduwd' },
 
   // -------------------------------------------------------------------- bron
-  { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: true },
+  { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: false },
   { key: 'bron.grootteMm', groep: 'bron', label: 'Grootte', type: 'mm', min: 1, max: 5, step: 0.1, standaard: 1.8 },
   { key: 'bron.kleur', groep: 'bron', label: 'Kleur', type: 'kleur', standaard: '#a8a099'},
 
