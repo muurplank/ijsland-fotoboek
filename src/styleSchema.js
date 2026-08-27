@@ -254,10 +254,9 @@ export const KNOPPEN = [
   { key: 'inzet.schaduw', groep: 'inzet', label: 'Zachte schaduw', type: 'aanuit', standaard: true },
   { key: 'inzet.randKleur', groep: 'inzet', label: 'Randlijn', type: 'kleur', standaard: '#e8e3da'},
   { key: 'inzet.randMm', groep: 'inzet', label: 'Dikte randlijn', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.12 },
-  { key: 'inzet.postzegel', groep: 'inzet', label: 'Als postzegel', type: 'aanuit', standaard: false, help: 'Kartelrand, een witte bies eromheen en een afstempeling schuin over de hoek. De kleur van het eiland zelf regel je met de landkleur hierboven' },
-  { key: 'inzet.tandMm', groep: 'inzet', label: 'Postzegel: maat van de kartels', type: 'mm', min: 0.8, max: 4, step: 0.1, standaard: 1.9, help: 'De halve rondjes langs de rand. Klein geeft een fijne, moderne zegel; groot een grove uit de jaren vijftig' },
-  { key: 'inzet.biesMm', groep: 'inzet', label: 'Postzegel: witte bies', type: 'mm', min: 0, max: 6, step: 0.1, standaard: 2, help: 'De rand papier tussen de kartels en het kaartje' },
-  { key: 'inzet.zegelTekst', groep: 'inzet', label: 'Postzegel: onderschrift', type: 'tekst', standaard: 'ÍSLAND', help: 'Komt klein onderin te staan, met het dagnummer erachter. Leeg laat het weg' },
+  { key: 'inzet.postzegel', groep: 'inzet', label: 'Als postzegel', type: 'aanuit', standaard: false, help: 'Een witte bies om het kaartje heen en een afstempeling schuin over de hoek. De kleur van het eiland zelf regel je met de landkleur hierboven' },
+  { key: 'inzet.biesMm', groep: 'inzet', label: 'Postzegel: witte bies', type: 'mm', min: 0, max: 6, step: 0.1, standaard: 2, help: 'De rand papier om het kaartje heen, overal even breed. Is ook de bies van de zegels in de band' },
+  { key: 'inzet.zegelTekst', groep: 'inzet', label: 'Postzegel: onderschrift', type: 'tekst', standaard: 'IJsland', help: 'Komt klein onderin te staan, met ", dag N" erachter. Leeg laat het weg' },
   { key: 'inzet.afstempeling', groep: 'inzet', label: 'Postzegel: afstempeling', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.3, help: 'De vage golfjes schuin over de hoek, zoals een poststempel. Nul laat ze weg' },
 
   // ----------------------------------------------------------------- schaal
@@ -395,6 +394,7 @@ export const KNOPPEN = [
   { key: 'postzegel.inkt', groep: 'postzegel', label: 'Hoe de afdruk op het vel komt', type: 'keuze', opties: ['vermenigvuldigen', 'gesleuteld'], standaard: 'gesleuteld', help: 'gesleuteld = het vel van het model is eruit gerekend en alleen de inkt blijft over, met echte doorzichtigheid - dus nooit een vlak achter de afdruk · vermenigvuldigen = de hele plaat optisch op het papier gedrukt, wat de korrel het beste heel houdt maar bij een afdruk die tot aan de plaatrand doorloopt een flauw kadertje kan geven' },
   { key: 'postzegel.dekking', groep: 'postzegel', label: 'Hoe hard aangedrukt', type: 'getal', min: 0.1, max: 1, step: 0.01, standaard: 0.62, help: 'Eén is met volle kracht aangedrukt, laag is een lichte aanraking waarbij het papier overal doorheen komt. Dit is de knop waarmee je de hele band lichter of zwaarder zet' },
   { key: 'postzegel.kartelrand', groep: 'postzegel', label: 'Kartelrand eromheen', type: 'aanuit', standaard: false, help: 'Maakt er echte postzegels van, met tandjes en een papiertintje eronder. Uit blijft het een losse afdruk op het vel' },
+  { key: 'inzet.tandMm', groep: 'postzegel', label: 'Maat van de kartels', type: 'mm', min: 0.8, max: 4, step: 0.1, standaard: 1.9, help: 'De halve rondjes langs de rand. Klein geeft een fijne, moderne zegel; groot een grove uit de jaren vijftig. Heet inzet.tandMm omdat het inzetkaartje ze vroeger ook had' },
   { key: 'postzegel.opKaart', groep: 'postzegel', label: 'Ook op de kaartpagina', type: 'aanuit', standaard: false, help: 'De eerste stempel van die dag klein in een hoek van de kaart, met het nummer eronder, zodat de twee pagina´s van een dag bij elkaar horen' },
   { key: 'postzegel.opKaartHoek', groep: 'postzegel', label: 'Op de kaart: hoek', type: 'keuze', opties: ['rechtsboven', 'linksboven', 'rechtsonder', 'linksonder'], standaard: 'linksonder' },
   { key: 'postzegel.opKaartMm', groep: 'postzegel', label: 'Op de kaart: hoogte', type: 'mm', min: 8, max: 60, step: 1, standaard: 24 },

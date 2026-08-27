@@ -223,7 +223,7 @@ const haalAchtergrond = ontdubbel(achtergrondNu, 260)
 async function silhouetNu () {
   if (!stijl['inzet.aan'] || paginaType !== 'kaart') return
 
-  const { binnenBreedte } = inzetMaten(stijl, plaatsingVoorPagina())
+  const { binnenBreedte } = inzetMaten(stijl)
   const adres = '/api/inzet?' + new URLSearchParams({
     kleur: stijl['inzet.landKleur'],
     kust: stijl['inzet.kustKleur'],
@@ -570,6 +570,10 @@ async function start () {
       stijl[key] = waarde
       paneel.zet(key, waarde)
       tekenPagina()
+      // Het inzetkaartje heeft een op maat gerenderd silhouet in zich; dat moet
+      // in zijn nieuwe breedte opgehaald worden, anders staat er een uitgerekte
+      // PNG in. Verandert de breedte niet, dan doet dit niets.
+      haalSilhouet()
       zegt(`${k.label}: ${waarde} mm — geldt voor alle dagen, nog bewaren voor het boek`)
     },
 

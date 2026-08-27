@@ -694,19 +694,6 @@ body.exporteren .snaplijn { display: none; }
 
 /* ------------------------------------------------ het inzetkaartje als zegel */
 
-/* Dezelfde kartels als bij de postzegels in de band. De maat komt van de knop,
-   via --tand, zodat een klein kaartje fijne tandjes krijgt en een groot grove -
-   net als bij echte zegels. */
-.inzet-zegel {
-  -webkit-mask:
-    radial-gradient(var(--tand) at var(--tand) 50%, #0000 98%, #000 100%)
-      0 calc(-1 * var(--tand)) / 100% calc(100% - 2 * var(--tand)) repeat-y,
-    radial-gradient(var(--tand) at 50% var(--tand), #0000 98%, #000 100%)
-      calc(-1 * var(--tand)) 0 / calc(100% - 2 * var(--tand)) 100% repeat-x;
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
-}
-
 .inzet-zegeltekst {
   font-family: "American Typewriter", "Courier New", Courier, ui-monospace, monospace;
   text-align: center;

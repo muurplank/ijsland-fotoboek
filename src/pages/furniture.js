@@ -94,15 +94,19 @@ const rond = n => Math.round(n * 1000) / 1000
 /**
  * Het inzetkaartje omtoveren tot een postzegel.
  *
- * Drie dingen maken een postzegel herkenbaar, en niet één ervan is het plaatje:
- * de kartelrand, de witte bies eromheen, en een afstempeling die er half
- * overheen loopt. Dus doen we die drie, en laten we het kaartje zelf met rust -
- * de kleur van het eiland regel je gewoon met de landkleur, en die zet de
- * kleurenset al goed.
+ * Twee dingen maken hem herkenbaar, en geen van beide is het plaatje: de witte
+ * bies eromheen en een afstempeling die er half overheen loopt. Dus doen we die
+ * twee, en laten we het kaartje zelf met rust - de kleur van het eiland regel
+ * je gewoon met de landkleur, en die zet de kleurenset al goed.
  *
- * De kartels zijn een masker van halve rondjes langs alle vier de kanten, in
- * CSS. Dat blijft scherp op elke maat; een gekartelde PNG zou dat niet doen, en
- * dit kaartje wordt nu juist opnieuw opgebouwd zodra je eraan trekt.
+ * Geen kartelrand. Halve rondjes langs de vier kanten maken van een kaartje van
+ * een paar centimeter vooral een druk randje; zonder leest het rustiger, en de
+ * bies wijst het al genoeg als zegel aan.
+ *
+ * Die bies hoort overal even breed te zijn, en dus meet de doos zichzelf hier
+ * opnieuw op. De buitenmaat van de knop rekent met inzet.padMm en de randlijn,
+ * en die zijn allebei breder dan de bies: liet je die maat staan, dan hield het
+ * kaartje rechts en onder ruimte over die links en boven niet stond.
  *
  * De afstempeling zijn een paar golfjes over een hoek. Bleek, want een echte
  * afstempeling is inkt over inkt en niet een sticker erbovenop.
@@ -110,15 +114,13 @@ const rond = n => Math.round(n * 1000) / 1000
 function maakZegel (doos, binnen, stijl, { dagNummer, breedte, hoogte }) {
   const bies = stijl['inzet.biesMm']
 
-  doos.classList.add('inzet-zegel')
-  doos.style.setProperty('--tand', mm(stijl['inzet.tandMm']))
   doos.style.background = stijl['papier.kleur']
   doos.style.padding = mm(bies)
-  doos.style.borderRadius = '0'
+  // De bies neemt de plaats in van de marge en de randlijn, dus die laatste weg.
   doos.style.borderWidth = '0'
-  // Een schaduw onder een gekarteld masker valt buiten het masker en wordt dus
-  // een rechthoekige vlek om de tandjes heen. Zegel en schaduw gaan niet samen.
-  doos.style.boxShadow = 'none'
+  doos.style.width = mm(breedte + 2 * bies)
+  // en de hoogte uit de inhoud: binnenvak, onderschrift, en onderaan weer bies
+  doos.style.height = 'auto'
 
   // ---- het onderschrift, binnen de bies
   if (stijl['inzet.zegelTekst']) {
@@ -127,8 +129,7 @@ function maakZegel (doos, binnen, stijl, { dagNummer, breedte, hoogte }) {
     regel.style.fontSize = mm(Math.max(1.8, stijl['veldnotitie.grootteMm'] * 0.8))
     regel.style.color = stijl['veldnotitie.zwakKleur']
     regel.style.letterSpacing = `${stijl['veldnotitie.letterafstand']}em`
-    regel.textContent =
-      `${stijl['inzet.zegelTekst']} · ${String(dagNummer).padStart(2, '0')}`
+    regel.textContent = `${stijl['inzet.zegelTekst']}, dag ${dagNummer}`
     doos.append(regel)
   }
 
@@ -162,14 +163,19 @@ function maakZegel (doos, binnen, stijl, { dagNummer, breedte, hoogte }) {
 }
 
 /**
- * De maten van het inzetkaartje, op een plek.
+ * De maten van het inzetkaartje.
  *
  * Zowel het tekenen als het ophalen van het silhouet heeft ze nodig: de dikte
  * van de kustlijn wordt van millimeters naar beeldpunten omgerekend, en dan
  * moeten beide kanten wel dezelfde breedte bedoelen.
+ *
+ * De breedte komt uit de instelling en niet uit de plaatsing van deze ene dag.
+ * Het inzetkaartje is een vast onderdeel van de opmaak, net als de markers: het
+ * hoort op elke bladzijde even groot te zijn, anders leest het als acht losse
+ * kaartjes in plaats van als hetzelfde kaartje op acht dagen.
  */
-export function inzetMaten (stijl, plaatsing = {}) {
-  const buiten = stijl['inzet.breedteMm'] * schaalVan(plaatsing, 'inzet')
+export function inzetMaten (stijl) {
+  const buiten = stijl['inzet.breedteMm']
   const pad = stijl['inzet.padMm']
   const rand = stijl['inzet.randMm']
   return {
@@ -308,7 +314,7 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
     // Het kaartje wordt op zijn nieuwe maat opnieuw opgebouwd in plaats van
     // beeldschermbreed uitgerekt: er zit een gerenderde PNG van IJsland in, en
     // die oprekken wordt wazig in de export.
-    const { buiten: buitenBreedte, pad, rand, binnenBreedte: breedte } = inzetMaten(stijl, plaatsing)
+    const { buiten: buitenBreedte, pad, rand, binnenBreedte: breedte } = inzetMaten(stijl)
 
     // De hulp-uitsnede past de bounds in een vierkant, alleen om de hoogte te
     // vinden; view2 hieronder projecteert in breedte bij hoogte. Die twee geven
@@ -327,6 +333,11 @@ export function tekenBijwerk (laag, gegevens, stijl, view, {
     doos.className = 'inzet'
     doos.setAttribute('data-plek', 'inzet')
     doos.setAttribute('data-schaalbaar', 'hertekenen')
+    // Het greepje verstelt de breedte in het schema en niet de schaal van dit
+    // ene kaartje: één maat voor het hele boek, zodat het kaartje niet per dag
+    // een andere grootte krijgt.
+    doos.setAttribute('data-stijlmaat', 'inzet.breedteMm')
+    doos.setAttribute('data-stijlnu', String(stijl['inzet.breedteMm']))
     doos.setAttribute('data-midden', '')
     doos.setAttribute('data-knoppen', 'inzet')
     // hoger zetten dan de bronvermelding, anders lopen ze in elkaar
