@@ -423,13 +423,26 @@ export function tekenStatistieken (svg, opschriften, gegevens, stijl) {
   // Geen weertegel ertussen. Het temperatuurbereik staat nu uur voor uur in de
   // grafiek, en de weertekens ook - allebei op de plek waar ze bij een tijdstip
   // horen in plaats van platgeslagen tot één getal per dag.
-  tekenCijferrij(opschriften, dagCijfers(gegevens), stijl, {
+  //
+  // Gespreid over de volle breedte: de kilometers tegen de linkermarge, de klim
+  // tegen de rechter, en de tijd en het hoogste punt met gelijke tussenruimtes
+  // ertussenin. In gelijke kolommen begon elk getal aan het begin van zijn
+  // kolom, en bleef er rechts van het laatste getal een gat van bijna een
+  // kolom over.
+  //
+  // Alleen zolang ze met z'n vieren op één regel passen: zet iemand het aantal
+  // kolommen lager, dan is het weer een raster dat mag afbreken.
+  const dag = dagCijfers(gegevens)
+  const kolommen = stijl['statistieken.kolommen']
+
+  tekenCijferrij(opschriften, dag, stijl, {
     plek: 'cijferrij',
     links: marge,
     boven: grafiekOnder + naamBandMm + 16,
     breedte: maat.breedteMm - 2 * marge,
-    kolommen: stijl['statistieken.kolommen'],
-    lijntjes: stijl['statistieken.lijntjes']
+    kolommen,
+    lijntjes: stijl['statistieken.lijntjes'],
+    gespreid: kolommen >= dag.length
   })
 
   // ------------------------------------------------------------- eigen tekst

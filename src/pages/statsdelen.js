@@ -164,11 +164,28 @@ export function tekenTitelblok (opschriften, stijl, { marge, boven, titel, tekst
   return blok
 }
 
-/** De rij grote getallen met hun labels eronder. */
+/**
+ * De rij grote getallen met hun labels eronder.
+ *
+ * Standaard is het een raster van gelijke kolommen: elk getal begint aan het
+ * begin van zijn kolom, en rechts van het laatste getal blijft dus een gat
+ * staan zo breed als het verschil tussen zijn kolom en zijn cijfers.
+ *
+ * Met `gespreid` hangt de rij aan allebei de randen: het eerste getal met zijn
+ * linkerkant tegen de linkermarge, het laatste met zijn rechterkant tegen de
+ * rechter, en wat overblijft wordt in gelijke porties tussen de getallen
+ * verdeeld.
+ *
+ * Niet op vaste breukdelen dus - een kwart, een derde - want de getallen zijn
+ * niet even breed. Zet je hun midden of hun linkerkant op zo'n punt, dan valt
+ * het verschil in breedte in de tussenruimtes en staat er ergens een gat waar
+ * je oog over struikelt. Gelijke tussenruimtes leest het rustigst, ook al
+ * staat geen enkel getal dan op een rond getal.
+ */
 export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   const {
     plek, links, boven, breedte, kolommen,
-    getalDeel = 1, eenheidDeel = 0.45, lijntjes = false
+    getalDeel = 1, eenheidDeel = 0.45, lijntjes = false, gespreid = false
   } = opties
 
   const rij = document.createElement('div')
@@ -180,7 +197,16 @@ export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   rij.style.left = mm(links)
   rij.style.top = mm(boven)
   rij.style.width = mm(breedte)
-  rij.style.gridTemplateColumns = `repeat(${kolommen}, 1fr)`
+  if (gespreid) {
+    // Eén regel, elk vak zo breed als zijn eigen cijfers, en de rest van de
+    // breedte gaat op aan de ruimtes ertussen. De 6 mm blijft de bodem: raakt
+    // de rij vol, dan houden de getallen elkaar nog steeds op afstand.
+    rij.style.display = 'flex'
+    rij.style.justifyContent = 'space-between'
+    rij.style.alignItems = 'flex-start'
+  } else {
+    rij.style.gridTemplateColumns = `repeat(${kolommen}, 1fr)`
+  }
   rij.style.columnGap = mm(6)
   rij.style.rowGap = mm(9)
 
@@ -214,6 +240,7 @@ export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   opschriften.append(rij)
   return rij
 }
+
 
 /** ---------------------------------------------------- de veldnotitie */
 
