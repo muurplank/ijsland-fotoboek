@@ -61,10 +61,12 @@ GOOGLE_API_KEY=AIza... node src/build.js 4
 
 ```sh
 npm run dev              # bedieningspagina op http://localhost:4321
+node src/build.js 1 voorblad  # het omslag, als PNG met doorzichtige achtergrond
 node src/build.js 4      # exporteert de kaart van dag 4 naar out/
 node src/build.js 4 stats  # en de cijferpagina van diezelfde dag
+node src/build.js 3 voortgang 9  # het strookje van dag 3, gevuld tot stop 9
 node src/stempel.js      # snijdt een stempel uit elke heropfoto
-npm test                 # 25 testbestanden
+npm test                 # 30 testbestanden
 npm run statisch         # bakt een alleen-lezen versie naar docs/
 ```
 
@@ -81,22 +83,40 @@ die op de pagina hoort.
 **De browser** (`src/pages/preview.js`) tekent al het andere als vectoren: de
 route, de richtingspijltjes, de markers, de plaatsnamen, het titelblok, het
 inzetkaartje, de schaalbalk en de kompasroos. Daarom reageert vrijwel elke knop
-meteen. Alleen de 33 instellingen die de achtergrond veranderen kosten een rondje
+meteen. Alleen de 35 instellingen die de achtergrond veranderen kosten een rondje
 langs de server; welke dat zijn staat in `ACHTERGROND_KNOPPEN` in
 `src/render/layout.js`.
 
-**De export** (`src/build.js`) start de previewserver als die nog niet loopt,
-stuurt Chromium via Playwright naar dezelfde pagina met `?export=png` of
-`?export=pdf`, en schrijft het resultaat naar `out/`. In de PDF blijven tekst en
-lijnen vectoren. Na afloop volgt een controlelijst: onder 300 dpi, minder dan
-3 mm afloop, tekst kleiner dan 1,8 mm of een lijn dunner dan 0,09 mm laat de
-export met een foutcode afgaan.
+**De export** (`src/export.js`) stuurt Chromium via Playwright naar dezelfde
+pagina met `?export=png` of `?export=pdf`, maar dan op de drukmaat en zonder
+paneel. In de PDF blijven tekst en lijnen vectoren. Na afloop volgt een
+controlelijst: onder 300 dpi, minder dan 3 mm afloop, tekst kleiner dan 1,8 mm of
+een lijn dunner dan 0,09 mm laat de export met een foutcode afgaan.
+
+Er zijn twee manieren om erbij te komen. `src/build.js` doet het vanaf de
+opdrachtregel, start de previewserver zelf op als die nog niet loopt en schrijft
+PNG én PDF naar `out/`. En onderin het paneel zit **Opslaan als JPG…**: die
+rendert het blad waar je op dat moment naar kijkt, met de knopstanden zoals ze nu
+staan - ook wat je nog niet bewaard hebt - en laat je zelf kiezen waar het
+bestand landt. Eén JPG op 95% met volle kleurresolutie, met de dpi in de kop
+zodat een fotoboekprogramma het vel meteen op de goede maat zet. Chrome vraagt
+eerst waar het heen moet, Safari laat het in je downloadmap vallen.
+
+Het voortgangsstrookje komt daar als PNG uit ook al vraagt de knop om een JPG:
+dat leeft van zijn doorzichtige achtergrond, en die bestaat niet in JPG.
+
+Het voortgangsstrookje is daar de uitzondering op: dat is geen bladzijde maar
+iets wat je over een foto legt, en komt er dus uit als één PNG met een
+doorzichtige achtergrond en zonder PDF. Welke stop de balk vult geef je als
+laatste getal mee. Zet je er papier onder met een scheurrand, dan is dat papier
+wél dekkend - dan krijg je een strookje papier op een doorzichtige achtergrond.
 
 ```
 src/
   server.js          devserver plus een kleine JSON- en PNG-API
-  build.js           de export naar PNG en PDF, met de drukcontrole
-  styleSchema.js     alle 253 instelknoppen, op één plek
+  build.js           de export vanaf de opdrachtregel, naar out/
+  export.js          het browserwerk van de export, met de drukcontrole
+  styleSchema.js     alle 314 instelknoppen, op één plek
   style.js           instellingenlagen stapelen en waarden klemmen
   pages/             wat er in de browser gebeurt
     preview.js       knoopt paneel, pagina en server aan elkaar
@@ -109,11 +129,18 @@ src/
   render/            beeld maken: achtergrond, silhouet, profielvormen
   geo/               tegels, uitsnede, hoogtemodel, afstanden
   fetch/             ophalen en cachen van tegels, routes, hoogtes, weer
+    plaatsen.js      de plaatsnamen op de kaart, uit OpenStreetMap
     geheimen.js      de sleutels, uit de omgeving of uit data/secrets.json
     nanobanana.js    beeld van Googles beeldmodel, met de schijfcache erachter
   hero.js            welke foto bij welke dag hoort, en wat we het model vragen
   stempel.js         maakt de reisstempels; het enige dat geld kost
+  pages/voorblad.js  het omslag: de omtrek van het eiland en de ring van de reis
+  render/kustringen.js  de kustlijn als gesloten ringen, uit het hoogtemodel
+  render/vlag.js     de IJslandse vlag, gesneden en met de hand aangedrukt
+  render/isolijn.js  marching squares: de lijn van gelijke hoogte door een rooster
   render/papier.js   het vel met vezels waar de veldnotitie-stijl op ligt
+  render/pen.js      lijnen, kaders en cirkels zoals een hand ze zet
+  render/hoogtelijnvulling.js  een vlak volgetekend met kringen die niet kruisen
   render/weertekens.js  het weer als notatie van een waarnemer, niet als emoji
   pages/postzegel.js de stempelband onderaan, en de afdruk op de kaart
 ```
@@ -130,6 +157,7 @@ node src/stempel.js              # alle dagen, slaat over wat er al staat
 node src/stempel.js 4            # alleen dag 4
 node src/stempel.js 4 --opnieuw  # een nieuwe afdruk kopen van dezelfde foto
 node src/stempel.js --herzet     # de bewaarde platen opnieuw bewerken, gratis
+node src/stempel.js --kleur=1    # de kleuren precies zoals het model ze gaf
 ```
 
 De foto's staan in `Hero/`, met namen als `Dag 3.ARW` of `Dag 5-2.jpg`. Het
@@ -151,11 +179,45 @@ cijfers maakt dit project zelf, op 600 dpi en uit de echte route. Laat je het
 model de hele pagina maken, dan staan er verzonnen kilometers op en is er daarna
 niets meer bij te stellen.
 
+De opdracht staat als één lange tekst in `stempelPrompt` in `src/hero.js`, en
+twee regels daarin zijn de moeite waard om te kennen, want ze zijn er allebei na
+een mislukte ronde bij gezet.
+
+**Lucht, water en verte zijn drie verschillende dingen.** Eerst stonden ze in één
+zin, alle drie als rijen streepjes. Het model doet dat dan ook: bij Búðakirkja
+liep de lucht als een dicht streepjesveld over de halve afdruk en verdween het
+zwarte kerkje erin. Nu is de lucht kaal papier, houdt het water zijn streepjes en
+is de verte één dunne contourlijn.
+
+**Het onderwerp wint.** De prompt zei nergens welk deel van het beeld het
+onderwerp is, en dus kreeg de helling achter drie schapen meer inkt dan de
+schapen zelf. Nu staat er dat niets in de achtergrond donkerder of drukker mag
+zijn dan het onderwerp, en dat je dan inkt uit de achtergrond haalt in plaats van
+er bij het onderwerp bij te doen.
+
+Wat voor één afdruk geldt en niet voor alle twaalf zet je als `nadruk` bij die
+afdruk in `data/hero/dag-NN.json`; die regel gaat als los blokje mee in de
+prompt. Zo staat er bij de vleugel van dag 8 dat de zee wél streepjes houdt en de
+lucht niet, en bij het vliegtuigwrak dat het zand oranje mag zijn. Dat veld
+schrijf je met de hand en het blijft staan als je opnieuw genereert.
+
+De kleur is daarna nog bij te stellen met `--kleur=`, en dat is de goedkope kant:
+de bewaarde platen opnieuw sleutelen kost niets. Die knop draait de kleur om de
+grijsas open of juist dicht, en weegt mee met de helderheid, zodat de sleutelinkt
+- een warm bruinzwart, geen zuiver zwart - er niet roder van wordt.
+
+Let op de richting, want die is een keer omgeklapt. Zolang de prompt om
+ingehouden kleur vroeg kwamen de platen te bleek terug en stond deze knop boven
+de 1 om ze op te halen. Nu de prompt om volle inkt vraagt komen ze er andersom
+uit - fel genoeg voor een reisposter - en houdt hij ze juist in. Vandaar dat de
+standaard `0.75` is. Zet hem op `1` en je ziet de plaat zoals het model hem gaf.
+
 ### Drie bestanden per afdruk
 
 | in `data/hero/` | wat het is |
 |---|---|
 | `ruw/dag-NN-K.jpg` | de plaat zoals het model hem gaf, op volle maat |
+| `ruw/dag-NN-K-vN.jpg` | dezelfde foto, maar een latere afdruk |
 | `plaat-dag-NN-K.jpg` | diezelfde plaat, met zijn papier naar wit teruggerekend |
 | `stempel-dag-NN-K.png` | de inkt uitgesleuteld, met echte doorzichtigheid |
 | `foto-dag-NN-K.jpg` | de heropfoto zelf, ingehouden gegradeerd met filmkorrel |
@@ -165,6 +227,12 @@ maken is: hetzelfde verzoek geeft een andere afdruk terug. Ze staan daarom in
 `.gitignore` maar wél op schijf, en omdat de projectmap in iCloud ligt zijn ze
 daarmee geback-upt. Wil je aan de bewerking draaien zonder opnieuw te betalen,
 dan is dat `--herzet`.
+
+Elke `--opnieuw` schrijft naar een nieuw bestand in plaats van over de vorige
+heen: variant 1 houdt zijn kale naam, daarna komt het nummer erachter. Vind je de
+oude afdruk toch mooier, zet dan `"variant"` terug in `data/hero/dag-NN.json` en
+draai `node src/stempel.js NN --herzet`. Dat kost niets en je bent nooit iets
+kwijt.
 
 De pagina gebruikt standaard de plaat en drukt hem er optisch op met
 vermenigvuldigen: wit vermenigvuldigt tot niets, dus het vel van het model
@@ -179,6 +247,17 @@ een verbleekte, ontzadigde kaart die naar de papierkleur trekt in plaats van
 naar wit, de typemachineletter, het vel met vezels onder de cijfers én over de
 kaart, en het inzetkaartje als postzegel met kartelrand en afstempeling.
 
+Het voortgangsstrookje doet in die stijl mee onder de naam **vak**: een met de
+pen omlijnd kader dat volgetekend is tot de stop waar je bent, op een strookje
+papier dat boven en onder uit de bladzijde gescheurd is, met het opschrift er in
+kapitalen bij getypt. Waar de inkt ophoudt sta je nu; de stops ervoor en erna
+staan als streepjes in het kader. De vulling kun je kiezen: **hoogtelijnen**
+(geneste kringen die net als op een kaart nooit kruisen - ze komen uit een echt
+hoogteveld, niet uit een stapel ovalen), **profiel** (het hoogteprofiel van die
+dag, dus het terrein waar je overheen bent gegaan), **arcering** of effen
+**inkt**. Wie de grafiek wil houden zet de gedaante terug op **balk**, en
+daartussenin staat **penlijn**: dezelfde balk, met de hand getrokken.
+
 Twee dingen om te weten:
 
 - De typemachineletter is American Typewriter, en die staat alleen op macOS. In
@@ -187,6 +266,156 @@ Twee dingen om te weten:
 - Het dagverhaal staat in kolommen. Over de volle breedte van een pagina van
   dertig centimeter wordt één kolom ruim honderdvijftig tekens per regel, en dan
   vindt je oog de volgende regel niet meer terug.
+
+## Het voorblad
+
+Het omslag is dezelfde reis als de overzichtskaart en toch een ander blad. Daar
+gaat het erom welke dag waar liep, dus staat er van alles bij: dagkleuren, een
+legenda, plaatsnamen, een schaalbalk. Hier gaat het erom dat je in één blik ziet
+wat dit boek is, en dan is alles wat je erbij zet er één te veel.
+
+Wat er staat zijn twee omtrekken die elkaar uitleggen: de vorm van het eiland en
+de vorm van de rit. De ene is een ring om de andere, en juist die gelijkenis is
+waar een rondreis om draait. Bij elke overnachting een stip met het dagnummer, in
+een hoek de vlag, en verder niets — de titel staat standaard uit, want een omslag
+dat het nog eens uitspreekt is er een dat zichzelf niet vertrouwt.
+
+De achtergrond is standaard doorzichtig. Het blad komt er dus als PNG uit en niet
+als PDF, precies zoals het voortgangsstrookje, zodat je het in het
+fotoboekprogramma over een foto of een egale kleur kunt leggen. Wil je er een
+gewone bladzijde van maken, zet dan *Doorzichtige achtergrond* uit en *Papier
+eronder* aan; dan komt er ook weer een PDF.
+
+### De vlag
+
+In een hoek staat de IJslandse vlag, en dat is de enige plek op het blad waar
+echte kleur komt. Dan moet het ook echt kleur zijn: een verbleekte vlag leest als
+een drukfout. Wat hem bij de rest laat horen is niet de kleur maar de máák —
+dezelfde gedachte als bij de reisstempels. De rand is gesneden en niet met een
+liniaal getrokken, en elke inkt is een eigen aandruk, dus het rode kruis ligt een
+haartje naast het witte.
+
+Twee maten zijn met opzet klein gehouden, allebei nadat het er één keer verkeerd
+uitzag:
+
+- **De hoekafronding stond op zes procent van de korte zijde**, en toen was het
+  geen stempel meer maar een sticker. Een mes dat door rubber gaat laat een hoek
+  staan die je net niet scherp krijgt, geen ronding waar je een munt langs kunt
+  leggen. Nu 1,2 procent.
+- **De scheve aandruk heeft een eigen bovengrens**, en die schaalt mee met de
+  vlag: een achtste eenheid. De witte baan is maar één eenheid breed — op een
+  vlag van veertig millimeter nog geen anderhalve millimeter — dus een vrije
+  verschuiving van een halve millimeter at er de helft van op, en dan raakte het
+  rood het blauw. `test/vlag.test.js` houdt vast dat er tussen rood en blauw
+  altijd wit blijft zitten, bij elke vlagbreedte en elke stand van de knop.
+
+De kleuren staan als benoemde constanten in `src/render/vlag.js` en niet als
+losse hexcodes in de tekencode, want een vlag met een net iets ander blauw is
+geen stijlkeuze maar een fout — en dat is precies het soort ding dat niemand
+nakijkt.
+
+### De kaart zit erin, maar altijd door iets heen
+
+Een gewone kaartachtergrond zou het meteen weer een kaartpagina maken. Daarom
+komt de plaat er alleen doorheen waar hij iets toevoegt, en dat regelt één knop:
+
+| stand | wat je ziet |
+|---|---|
+| `eiland` | de kaart vult het land, de zee blijft leeg — de standaard |
+| `baan` | alleen een strook kaart langs de route, met een zachte rand |
+| `lijn` | de routelijn zelf is het venster op de kaart |
+| `achter` | de hele kaart, ver weggezet als watermerk |
+| `geen` | niets: alleen de omtrek en de ring |
+
+`eiland` knipt met een `clipPath` en `baan` en `lijn` met een `mask`, en dat is
+geen willekeur. Een `clipPath` gebruikt de *vulling* van zijn inhoud en negeert
+de streek, en een baan langs de route is een dikke streek zonder vulling — daar
+kán het dus niet mee. Andersom is `clipPath` voor het eiland juist beter, want
+dat blijft in de PDF een echte snede in plaats van een gerasterde laag.
+
+De plaat zit als `<image>` ín de tekening-SVG en niet als los `<img>` erachter,
+zoals bij de andere bladen. Dat moet ook: het masker leeft in de
+millimeter-userspace van die SVG en de `<img>` in beeldpunten van de pagina. Zo
+staan plaat en masker per definitie in hetzelfde stelsel.
+
+Het voorblad kiest ook zijn eigen kaartlaag, los van de rest van het boek —
+standaard het kale reliëf, want dat heeft geen wegen en geen
+wegnummer-schildjes. Dat gaat door `lagen.stijl` te overschrijven in wat er naar
+de server gestuurd wordt en niet door het te bewaren, zodat de dagkaarten blijven
+wat ze waren.
+
+### De omtrek komt uit het hoogtemodel
+
+Niet uit een aparte kaartbron. Het inzetkaartje haalt zijn silhouet al uit het
+hoogtemodel — alles onder zeeniveau is zee, de rest is land — en het voorblad
+gebruikt exact hetzelfde masker. De kust op het omslag is dus letterlijk dezelfde
+kust als in het kaartje twintig bladzijden verderop.
+
+Nieuw is alleen dat het een *lijn* moet worden in plaats van een vlak. Dat is
+dezelfde bewerking als een hoogtelijn, maar dan op niveau nul: zeeniveau ís de
+hoogtelijn die land van water scheidt. Marching squares stond al in het project,
+verstopt in de vulling van het voortgangsvak; die drie functies staan nu in
+`src/render/isolijn.js` en worden door allebei gebruikt.
+
+Twee dingen zijn het waard om te weten:
+
+- **De knop "kleinste eiland" doet het echte werk.** Op nul komen er
+  negenenveertig ringen terug en zijn er tweeëndertig kleiner dan een vierkante
+  kilometer — rotsen, zandbanken, meertjes onder zeeniveau. Op vijf blijven het
+  vasteland, Heimaey, Hrísey en Grímsey over, en dat zijn precies de vier die je
+  op een kaart van IJsland verwacht.
+- **De omloopsrichting van een ring ligt niet vast.** Het rijgen begint bij het
+  eerste streepje dat het tegenkomt, dus of een ring met de klok mee terugkomt
+  hangt ervan af waar hij in het rooster ligt. Een vlak dat hieruit gevuld wordt
+  moet daarom `fill-rule: evenodd` gebruiken en nooit `nonzero` — anders is een
+  meer de ene keer een gat en de andere keer niet.
+
+Ter controle van het geheel: het vasteland komt er op 104.815 vierkante kilometer
+uit, en IJsland is er 103.000. Dat verschil is de halve cel die marching squares
+er per definitie omheen legt.
+
+### Het voorblad kadert op het eiland, niet op de rit
+
+De overzichtskaart past zijn uitsnede op de route. Dat kan hier niet: de ringweg
+raakt de Westfjorden en de oostpunt niet, dus een omslag dat op de rit kadert
+snijdt daar een stuk IJsland af. Het voorblad past daarom op de kustringen, en
+het heeft eigen schuifjes voor marge, zoom en verschuiven — de gedeelde
+`uitsnede.*`-knoppen zijn boekbreed en zouden de overzichtskaart meeslepen.
+
+Server en browser rekenen met precies dezelfde ringen, via `voorbladView` in
+`src/render/layout.js`. Zolang dat zo blijft kunnen de plaat en de getekende kust
+niet uit elkaar lopen.
+
+## Alle letters op de kaart zijn van jou
+
+De kaartachtergrond komt als plaatje binnen, dus de plaatsnamen die Mapbox erin
+tekent zijn rasterletters: in hún letter, in hún kleur, en op 600 dpi zacht
+opgeblazen. Naast een naam die het boek zelf zet valt dat meteen op — en de helft
+van de tijd staat dezelfde plaats er dan twee keer, in twee verschillende letters.
+
+Daarom worden ze uit de plaat gepoetst en zetten we ze zelf opnieuw:
+
+1. **Wissen.** `src/render/shields.js` zoekt de kaarttekst op aan het patroon dat
+   letters altijd hebben — ingehouden donkere inkt met iets veel helderders er
+   vlak naast, in een compact blokje — en vult alleen die pixels op met de kleur
+   van de dichtstbijzijnde buurman die blijft. Een kustlijn onder een naam blijft
+   daardoor gewoon doorlopen. De wegnummer-schildjes blijven staan: die zijn geen
+   letter maar een bordje, en ze verbleken netjes mee met de rest van de kaart.
+2. **Zelf zetten.** `src/fetch/plaatsen.js` haalt de plaatsnamen als gegevens op
+   bij OpenStreetMap. De browser tekent ze als vector in de letter van het boek,
+   in de kleur en de maat die je onder "Labels" instelt.
+
+Welke namen je krijgt regel je met twee knoppen. *Hoe klein mag een plaats zijn*
+loopt van 1 (alleen Reykjavík) tot 19 (elk gehucht); *hoogstens zoveel plaatsen*
+zet er een dak op. Wat niet past valt vanzelf af: een naam wijkt voor je route,
+je stops, het titelblok en de wegnummers, probeert een plekje ernaast, en laat
+het anders zitten. Een plaats waar je zelf al een stop met een naam hebt staan
+wordt overgeslagen — die staat er dan al.
+
+Een naam die je toch niet wilt haal je met Delete of een dubbelklik van de
+kaart; dat blijft bewaard, net als het verslepen ervan. En wil je het oude gedrag terug, dan zet
+*Mapbox: eigen plaatsnamen* op `optillen` (uitknippen en over de route leggen)
+of `laten` (gewoon laten staan, mee-verbleekt met de kaart).
 
 ## De instellingen
 
@@ -219,11 +448,12 @@ Daarvoor sleep je gewoon.
 |---|---|
 | slepen | verschuift het onderdeel; het midden en gelijke hoogtes snappen |
 | slepen met Alt | zonder snappen, als je er net naast wilt |
-| greepje rechtsonder | schalen — op een marker verzet dat de maat voor álle markers van die soort |
+| greepje rechtsonder | schalen — op een marker of het inzetkaartje verzet dat de maat voor het hele boek |
 | greepje op het dagverhaal | het vak smaller of breder maken; de tekst herwikkelt zich erin en de letter blijft even groot |
 | dubbelklik op het greepje | terug naar de standaardmaat |
 | dubbelklik op tekst | titel, dagverhaal of plaatsnaam ter plekke aanpassen |
 | Delete op een icoontje | haalt de stip weg; de naam en de voortgangsbalk blijven |
+| dubbelklik op een icoontje | hetzelfde, zonder eerst te hoeven aanwijzen wat je bedoelt |
 | klikken | het paneel springt naar de knoppen van dat onderdeel |
 
 Verschuivingen worden als afwijking bewaard en niet als absolute positie, zodat
@@ -267,6 +497,7 @@ route blijft staan — je reed er langs, dus de kilometers kloppen.
 |---|---|
 | [Mapbox](https://mapbox.com) | de kaartachtergrond |
 | [OSRM](https://project-osrm.org) | de route tussen de waypoints |
+| [Overpass](https://overpass-api.de) (OpenStreetMap) | de plaatsnamen op de kaart |
 | [Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (AWS) | hoogtes voor het profiel, het reliëf en de kustlijn |
 | [Open-Meteo](https://open-meteo.com) | het weer per dag, voor de temperatuurlijn |
 | Esri | luchtfoto's |
@@ -281,16 +512,16 @@ de eerste keer even duurt en daarna niet meer.
 server kunt neerzetten, bijvoorbeeld op GitHub Pages (instellingen: main / docs).
 
 Het werkt doordat de zware kant en de bedienbare kant hier al gescheiden zijn.
-De elf antwoorden van de server worden één keer opgehaald en als bestand
+De twaalf antwoorden van de server worden één keer opgehaald en als bestand
 weggeschreven — de JSON van het schema, de dagen en de reis, plus per dag de
-achtergrondplaat en de plaatsnamenlaag. `src/pages/statisch-schil.js` onderschept
+achtergrondplaat en het lijstje plaatsnamen. `src/pages/statisch-schil.js` onderschept
 de aanroepen en haalt in plaats daarvan die bestanden op, zodat de tekencode
 zelf niet weet of er een server is en er maar één versie van bestaat.
 
 Bij elkaar ongeveer 21 MB. Wat blijft werken is alles wat de browser tekent:
 route, pijltjes, markers, plaatsnamen, typografie, titelblok, inzetkaartje,
 schaalbalk, kompas, en de kleurensets. Wat vastligt is de kaartachtergrond — de
-33 knoppen uit `ACHTERGROND_KNOPPEN` doen daar niets meer, want die plaat is
+35 knoppen uit `ACHTERGROND_KNOPPEN` doen daar niets meer, want die plaat is
 gebakken. Opslaan doet niets: wat je verzet blijft in dat tabblad staan en
 verdwijnt bij het herladen.
 
@@ -300,8 +531,8 @@ op internet.
 ## Bij het werken hieraan
 
 De testbestanden dekken het rekenwerk: tegels, uitsnedes, hoogtemodel,
-kleurverlopen, profielvormen, het opsporen van wegnummer-badges, en de
-invarianten van het instellingenschema. Het tekenwerk in de browser is niet
+kleurverlopen, profielvormen, het opsporen van kaarttekst en wegnummer-badges,
+het rangschikken van plaatsnamen, en de invarianten van het instellingenschema. Het tekenwerk in de browser is niet
 getest — daarvoor is de preview er.
 
 Eén valkuil is het waard om te weten: `node src/build.js` hergebruikt een
