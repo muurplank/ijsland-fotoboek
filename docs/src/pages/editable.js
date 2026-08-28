@@ -45,6 +45,21 @@ const STIJLMAAT = 'data-stijlmaat'
 /** De maat die die instelling nu heeft, in millimeters. */
 const STIJLNU = 'data-stijlnu'
 
+/**
+ * Onderdelen die zichzelf hertekenen maar tijdens het slepen wél mogen meegroeien.
+ *
+ * Normaal wacht een hertekenend onderdeel tot je loslaat: het inzetkaartje op
+ * elke muisbeweging opnieuw opbouwen is te traag, en een schaalbalk die je ziet
+ * uitrekken liegt over zijn kilometers.
+ *
+ * Bij een afdruk is dat allebei niet zo. Uitrekken is daar precies wat er gaat
+ * gebeuren, dus een voorbeeld met een transform vertelt de waarheid. En zonder
+ * dat voorbeeld sleep je blind: je ziet pas wat je gedaan hebt als je loslaat,
+ * en dan is een stempel zomaar een kwart van zijn maat en niet meer terug te
+ * vinden.
+ */
+const VOORBEELD = 'data-voorbeeld'
+
 /** Elementen die je met Delete van de pagina af kunt halen. */
 const WEGHAAL = 'data-weghaalbaar'
 
@@ -63,6 +78,14 @@ const SNAP_PX = 7
 /** Grenzen aan het schalen: kleiner wordt onzichtbaar, groter is nooit bedoeld. */
 const SCHAAL_MIN = 0.25
 const SCHAAL_MAX = 4
+
+/**
+ * De kleinste doos waar nog iets in past, in millimeters.
+ *
+ * Onder deze maat wringt de tekst zich in een kolom van één woord breed en is er
+ * niets meer terug te slepen omdat het greepje op de tekst zelf valt.
+ */
+const DOOS_MIN_MM = 20
 
 const isSvg = node => node.namespaceURI === 'http://www.w3.org/2000/svg'
 
@@ -125,12 +148,77 @@ function grenzenVan (node, laag) {
 
 const klemIn = (waarde, min, max) => Math.min(max, Math.max(min, waarde))
 
+/** Onder deze maat wordt tekst in de druk lastig leesbaar; zie build.js. */
+const KLEINSTE_TEKST_MM = 1.8
+
+/**
+ * De tekst binnen zijn vak houden door de letter te laten krimpen.
+ *
+ * Maak je het vak kleiner dan wat erin past, dan moet er iets wijken. Tekst
+ * eronderuit laten lopen is het slechtste van de drie mogelijkheden: hij komt
+ * dan over de stempels en de bronvermelding heen te staan en je ziet pas op de
+ * drukproef dat het misging. Afkappen is nog erger, want dan verdwijnt er
+ * stilletjes een stuk van je dagverhaal.
+ *
+ * Dus krimpt de letter, net als de autofit van een presentatieprogramma: alles
+ * blijft leesbaar en alles blijft er. Tot 1,8 millimeter, want daaronder klaagt
+ * de drukcontrole terecht - wordt het vak nóg kleiner, dan is overflow: hidden
+ * in het stijlblad de laatste stop.
+ *
+ * Krimpen gebeurt alleen als het nodig is. Past de tekst gewoon, dan blijft het
+ * corps precies wat de instelling zegt.
+ */
+function pasTekstInVak (node, mmPx) {
+  if (!node.clientHeight) return
+
+  const basis = parseFloat(getComputedStyle(node).fontSize)
+  if (!basis) return
+
+  // Let op de breedte, niet alleen de hoogte.
+  //
+  // Dit vak staat in kolommen, en dan loopt te veel tekst niet naar beneden maar
+  // opzij: de browser maakt er gewoon een kolom bij, buiten het vak. De hoogte
+  // blijft dan keurig kloppen terwijl er een halve alinea naast staat. Alleen op
+  // scrollHeight letten liet het daardoor stil misgaan.
+  const past = () =>
+    node.scrollHeight <= node.clientHeight + 1 &&
+    node.scrollWidth <= node.clientWidth + 1
+
+  // Het aanwijskadertje telt mee in die maten - het ligt een paar pixels buiten
+  // het element - en dan past de tekst per definitie nooit. Dus even weg.
+  node.classList.add('meten')
+  try {
+    if (past()) return
+
+    let laag = KLEINSTE_TEKST_MM * mmPx
+    let hoog = basis
+
+    // Halveren in plaats van stapje voor stapje: elke poging kost een
+    // herberekening van de opmaak, en tien halveringen zijn nauwkeuriger dan
+    // dertig stapjes.
+    for (let i = 0; i < 12 && hoog - laag > 0.1; i++) {
+      const midden = (laag + hoog) / 2
+      node.style.fontSize = `${midden}px`
+      if (past()) laag = midden
+      else hoog = midden
+    }
+    node.style.fontSize = `${laag}px`
+  } finally {
+    node.classList.remove('meten')
+  }
+}
+
 /**
  * Zet de bewaarde verschuivingen en schalen op de elementen.
  * De opmaakcode hoeft hier niets van te weten: die tekent gewoon op de
  * standaardplek, en dit legt de correctie eroverheen.
  */
 export function pasPlaatsingToe (laag, plaatsing) {
+  // De tekstvakken die nog moeten krimpen, om ze in één keer af te handelen
+  // nadat alle maten staan. Meten dwingt de browser tot herberekenen, en dat
+  // wil je niet halverwege het zetten van de rest.
+  const krimpers = []
+
   for (const node of laag.querySelectorAll(`[${SLEEP}]`)) {
     const id = node.getAttribute(SLEEP)
     const p = plaatsing?.[id]
@@ -142,7 +230,27 @@ export function pasPlaatsingToe (laag, plaatsing) {
     // beeldschaal: een schaalbalk die je uitrekt liegt over zijn kilometers,
     // en een uitgerekt inzetkaartje wordt wazig in de export. Die lezen hun
     // schaal uit de plaatsing en bouwen zichzelf opnieuw op.
-    if (node.getAttribute(SCHAAL) !== 'hertekenen') {
+    // Een tekstvak wordt niet geschaald maar verruimd: de doos verandert van
+    // maat en de tekst herwikkelt zich erin, zoals in een presentatieprogramma.
+    // De letter blijft dus even groot, en dat is precies het verschil - schalen
+    // maakt de letter mee groot en dan klopt de typografie van de pagina niet
+    // meer.
+    const soort = node.getAttribute(SCHAAL)
+    if (soort === 'doos') {
+      node.style.setProperty('--s', '1')
+      if (Number.isFinite(p?.breedteMm)) node.style.width = alsLengte(node, p.breedteMm)
+      if (Number.isFinite(p?.hoogteMm)) {
+        node.style.height = alsLengte(node, p.hoogteMm)
+        // pas nadat de hoogte staat, anders meet hij tegen het oude vak
+        krimpers.push(node)
+      }
+    } else if (soort === 'hertekenen') {
+      // Deze bouwen zichzelf al op de goede maat op, dus de transform hoort op
+      // een te staan. Expliciet zetten en niet overslaan: na een voorbeeld
+      // tijdens het slepen staat er anders nog een schaal van dat slepen op, en
+      // dan is het onderdeel twee keer zo groot als het zou moeten zijn.
+      node.style.setProperty('--s', '1')
+    } else {
       node.style.setProperty('--s', String(p?.schaal ?? 1))
     }
 
@@ -159,6 +267,11 @@ export function pasPlaatsingToe (laag, plaatsing) {
 
     node.style.setProperty('--dx', alsLengte(node, round2(dx)))
     node.style.setProperty('--dy', alsLengte(node, round2(dy)))
+  }
+
+  if (krimpers.length) {
+    const mmPx = parseFloat(getComputedStyle(laag).getPropertyValue('--mm')) || 1
+    for (const node of krimpers) pasTekstInVak(node, mmPx)
   }
 }
 
@@ -196,6 +309,7 @@ export function maakBewerkbaar (pagina, {
   huidigePlaatsing,
   bijVerschuiven,
   bijSchalen,
+  bijDoos,
   bijStijlMaat,
   bijWeghalen,
   bijTekst,
@@ -223,7 +337,7 @@ export function maakBewerkbaar (pagina, {
   const greep = document.createElement('div')
   greep.className = 'schaalgreep'
   greep.hidden = true
-  greep.title = 'slepen om te schalen, dubbelklik zet hem terug'
+  greep.title = 'slepen om te schalen of het vak te verruimen, dubbelklik zet hem terug'
   pagina.append(greep)
 
   let greepDoel = null
@@ -270,6 +384,8 @@ export function maakBewerkbaar (pagina, {
     const begin = Math.hypot(e.clientX - midX, e.clientY - midY)
 
     const stijlKey = greepDoel.getAttribute(STIJLMAAT)
+    const soort = greepDoel.getAttribute(SCHAAL)
+    const mmPx = mmInPx()
 
     schalen = {
       node: greepDoel,
@@ -279,7 +395,17 @@ export function maakBewerkbaar (pagina, {
       midY,
       begin: begin || 1,
       beginSchaal: schaalVan(huidigePlaatsing(), id),
-      hertekenen: greepDoel.getAttribute(SCHAAL) === 'hertekenen',
+      hertekenen: soort === 'hertekenen',
+      voorbeeld: greepDoel.hasAttribute(VOORBEELD),
+      // Een tekstvak volgt de muis met zijn hoek in plaats van met een factor
+      // vanaf zijn hart: je pakt de hoek van een doos vast en zet hem waar je
+      // hem hebben wilt, en dan hoort die hoek onder je vinger te blijven.
+      doos: soort === 'doos',
+      muisX: e.clientX,
+      muisY: e.clientY,
+      beginBreedte: r.width / mmPx,
+      beginHoogte: r.height / mmPx,
+      laatsteDoos: null,
       // een maat uit het schema in plaats van een schaal op dit ene element
       stijlKey,
       beginMaat: stijlKey ? Number(greepDoel.getAttribute(STIJLNU)) : null,
@@ -294,7 +420,8 @@ export function maakBewerkbaar (pagina, {
     if (!greepDoel) return
 
     const stijlKey = greepDoel.getAttribute(STIJLMAAT)
-    if (stijlKey) bijStijlMaat?.(stijlKey, null)
+    if (greepDoel.getAttribute(SCHAAL) === 'doos') bijDoos?.(greepDoel.getAttribute(SLEEP), null)
+    else if (stijlKey) bijStijlMaat?.(stijlKey, null)
     else bijSchalen?.(greepDoel.getAttribute(SLEEP), 1)
   })
 
@@ -373,6 +500,24 @@ export function maakBewerkbaar (pagina, {
 
   pagina.addEventListener('pointermove', e => {
     // ---- schalen gaat voor: als je aan het greepje trekt sleep je niet
+    if (schalen?.doos) {
+      const mmPx = mmInPx()
+      const breedte = Math.max(DOOS_MIN_MM,
+        schalen.beginBreedte + (e.clientX - schalen.muisX) / mmPx)
+      const hoogte = Math.max(DOOS_MIN_MM,
+        schalen.beginHoogte + (e.clientY - schalen.muisY) / mmPx)
+
+      schalen.laatsteDoos = { breedteMm: round2(breedte), hoogteMm: round2(hoogte) }
+      schalen.node.style.width = alsLengte(schalen.node, schalen.laatsteDoos.breedteMm)
+      schalen.node.style.height = alsLengte(schalen.node, schalen.laatsteDoos.hoogteMm)
+      // meteen meekrimpen, zodat je onder je vinger ziet wat er gebeurt in
+      // plaats van pas als je loslaat
+      schalen.node.style.removeProperty('font-size')
+      pasTekstInVak(schalen.node, mmPx)
+      toonGreep(schalen.node)
+      return
+    }
+
     if (schalen) {
       const afstand = Math.hypot(e.clientX - schalen.midX, e.clientY - schalen.midY)
       const s = Math.min(SCHAAL_MAX, Math.max(SCHAAL_MIN,
@@ -386,10 +531,12 @@ export function maakBewerkbaar (pagina, {
         for (const n of pagina.querySelectorAll(`[${STIJLMAAT}="${schalen.stijlKey}"]`)) {
           n.style.setProperty('--s', String(schalen.laatste))
         }
-      } else if (!schalen.hertekenen) {
-        // onderdelen die zichzelf hertekenen kunnen niet live meebewegen; die
-        // wachten tot je loslaat, anders herbouwen we het inzetkaartje bij elke
-        // muisbeweging
+      } else if (!schalen.hertekenen || schalen.voorbeeld) {
+        // Onderdelen die zichzelf hertekenen bewegen normaal niet mee - dan
+        // zouden we het inzetkaartje bij elke muisbeweging herbouwen. Met
+        // data-voorbeeld erop mag het wel: dan is een transform tijdens het
+        // slepen een eerlijk voorbeeld van wat er komt, en bij het loslaten
+        // bouwt het onderdeel zich alsnog scherp op zijn nieuwe maat op.
         schalen.node.style.setProperty('--s', String(schalen.laatste))
       }
       toonGreep(schalen.node)
@@ -446,6 +593,12 @@ export function maakBewerkbaar (pagina, {
   })
 
   const stop = () => {
+    if (schalen?.doos) {
+      if (schalen.laatsteDoos) bijDoos?.(schalen.id, schalen.laatsteDoos)
+      schalen = null
+      return
+    }
+
     if (schalen) {
       if (schalen.laatste !== null && schalen.laatste !== schalen.beginSchaal) {
         // Een maat uit het schema krijgt de nieuwe millimeters; de factor waarmee
@@ -498,6 +651,27 @@ export function maakBewerkbaar (pagina, {
 
     e.preventDefault()
     bijWeghalen?.(greepDoel.getAttribute(SLEEP))
+    toonGreep(null)
+  })
+
+  // Dubbelklikken doet hetzelfde, en dat is de weg waarop je het vanzelf
+  // probeert: je wijst een stop aan die je niet wilt en klikt hem weg, zonder
+  // eerst te bedenken dat het greepje jouw selectie is en dat Delete dus over
+  // dít icoontje gaat.
+  //
+  // Een tekst wint altijd: op een plaatsnaam die je kunt aanpassen opent
+  // dezelfde dubbelklik de tekst, en die mag hier niet onder vandaan gehaald
+  // worden. Op de kaart is dat nu geen van beide tegelijk, maar het scheelt
+  // een naam die verdwijnt zodra iemand er ooit allebei op zet.
+  pagina.addEventListener('dblclick', e => {
+    if (bezig || schalen) return
+    if (e.target.closest?.(`[${TEKST}]`)) return
+
+    const node = e.target.closest?.(`[${WEGHAAL}]`)
+    if (!node) return
+
+    e.preventDefault()
+    bijWeghalen?.(node.getAttribute(SLEEP))
     toonGreep(null)
   })
 

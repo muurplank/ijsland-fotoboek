@@ -18,6 +18,7 @@
 
 export const GROEPEN = [
   { id: 'pagina', label: 'Pagina' },
+  { id: 'papier', label: 'Papier' },
   { id: 'uitsnede', label: 'Uitsnede' },
   { id: 'kaartvorm', label: 'Kaartvorm' },
   { id: 'lagen', label: 'Lagen' },
@@ -33,9 +34,12 @@ export const GROEPEN = [
   { id: 'inzet', label: 'Inzetkaartje' },
   { id: 'schaal', label: 'Schaalbalk & kompas' },
   { id: 'bron', label: 'Bronvermelding' },
+  { id: 'voorblad', label: 'Voorblad' },
   { id: 'voortgang', label: 'Voortgangsbalk' },
   { id: 'profiel', label: 'Hoogteprofiel' },
-  { id: 'statistieken', label: 'Statistieken' }
+  { id: 'statistieken', label: 'Statistieken' },
+  { id: 'postzegel', label: 'Postzegels' },
+  { id: 'veldnotitie', label: 'Veldnotitie' }
 ]
 
 /**
@@ -50,6 +54,22 @@ export const KNOPPEN = [
   { key: 'pagina.dpi', groep: 'pagina', label: 'Resolutie', type: 'keuze', opties: [300, 400, 600, 800, 1200], standaard: 600, help: 'Drukkerijen vragen 300. Standaard staat het dubbele ingesteld' },
   { key: 'pagina.achtergrond', groep: 'pagina', label: 'Paginakleur', type: 'kleur', standaard: '#ffffff' },
   { key: 'pagina.snijtekens', groep: 'pagina', label: 'Snijtekens tonen', type: 'aanuit', standaard: false },
+
+  // ----------------------------------------------------------------- papier
+  //
+  // Het vel waar de veldnotitie-stijl op ligt. Staat als eigen groep en niet
+  // onder "statistieken", want dezelfde textuur gaat ook over de kaartpagina.
+  { key: 'papier.kleur', groep: 'papier', label: 'Papierkleur', type: 'kleur', standaard: '#f2ebdc', help: 'Warm gebroken wit. Koeler dan dit leest als printerpapier, warmer als vergeeld pakpapier' },
+  { key: 'papier.vezelKleur', groep: 'papier', label: 'Kleur van de vezels', type: 'kleur', standaard: '#b8a98c', help: 'Ook de kleur van de vlekken en de vuile randen. Een tint uit dezelfde familie als het papier houdt het vel rustig' },
+  { key: 'papier.vezels', groep: 'papier', label: 'Hoeveel vezels', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.5, help: 'Nul geeft een effen vel. Eén is zestienhonderd haarlijntjes: nog steeds vectoren, maar de PDF wordt er wel groter van' },
+  { key: 'papier.vezelMm', groep: 'papier', label: 'Lengte van de vezels', type: 'mm', min: 0.5, max: 6, step: 0.1, standaard: 2.2 },
+  { key: 'papier.vlekken', groep: 'papier', label: 'Gebruikssporen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.5, help: 'Een vouw en een paar vage vlekken. Hoog gezet wordt het een geschilderde koffievlek, en dan valt het juist op' },
+  { key: 'papier.randSlijtage', groep: 'papier', label: 'Vuile randen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.28, help: 'Papier vergeelt van buiten naar binnen, want daar komt de lucht bij. Zonder dit leest het vel als een egale digitale vulling' },
+  { key: 'papier.korrelAan', groep: 'papier', label: 'Korrel erover', type: 'aanuit', standaard: false, help: 'Het enige stuk dat in de PDF een raster wordt. Over een hele pagina is dat een zware plaat, dus standaard uit' },
+  { key: 'papier.korrelFijnheid', groep: 'papier', label: 'Korrel: fijnheid', type: 'getal', min: 0.2, max: 4, step: 0.05, standaard: 1.6, help: 'Hoger is fijner. Rond 1,6 lijkt het op de korrel van gewoon offsetpapier' },
+  { key: 'papier.korrelDekking', groep: 'papier', label: 'Korrel: dekking', type: 'getal', min: 0, max: 0.4, step: 0.01, standaard: 0.07 },
+  { key: 'papier.overKaart', groep: 'papier', label: 'Ook over de kaart', type: 'aanuit', standaard: false, help: 'Legt hetzelfde vel over de kaartpagina, boven de kaart maar onder de route. Zo lijken de kaart- en de cijferpagina op hetzelfde papier gedrukt' },
+  { key: 'papier.overKaartDekking', groep: 'papier', label: 'Over de kaart: dekking', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.55, help: 'Alleen de vezels en de sporen gaan mee, niet het grondvlak - anders verdwijnt de kaart eronder' },
 
   // -------------------------------------------------------------- uitsnede
   { key: 'uitsnede.zoom', groep: 'uitsnede', label: 'Zoom', type: 'getal', min: 0.2, max: 8, step: 0.01, standaard: 1 },
@@ -81,12 +101,13 @@ export const KNOPPEN = [
   { key: 'lagen.hoogtelijnenKleur', groep: 'lagen', label: 'Hoogtelijnkleur', type: 'kleur', standaard: '#c9c2b6' },
   { key: 'lagen.mapboxLabelMm', groep: 'lagen', label: 'Mapbox: tekstgrootte', type: 'mm', min: 1.5, max: 9, step: 0.1, standaard: 3, help: 'Alleen voor de mapbox-stijlen. Hun plaatsnamen zitten met een vaste pixelgrootte in het beeld, dus dit bepaalt tegelijk hoe scherp de achtergrond wordt: grotere tekst betekent een zachtere kaart eronder' },
   { key: 'lagen.badgesWeg', groep: 'lagen', label: 'Wegnummers onder de route weghalen', type: 'aanuit', standaard: true, help: 'Mapbox zet witte wegnummer-badges langs de wegen. Die onder je eigen routelijn liggen zeggen niets en zien er rommelig uit; deze poetst alleen die weg' },
-  { key: 'lagen.tekstBoven', groep: 'lagen', label: 'Plaatsnamen boven de route', type: 'aanuit', standaard: true, help: 'De plaatsnamen worden uit de kaart geknipt en als eigen laag over de routelijn gelegd. De stapeling is dan: kaart, routelijn, plaatsnamen' },
+  { key: 'lagen.mapboxTekst', groep: 'lagen', label: 'Mapbox: eigen plaatsnamen', type: 'keuze', opties: ['wissen', 'optillen', 'laten'], standaard: 'wissen', help: 'Wissen poetst Mapbox\' namen uit de kaart, zodat alleen jouw eigen namen er staan - zet dan "Bekende plaatsen erbij" aan. Optillen knipt ze uit en legt ze over de routelijn. Laten laat ze staan waar ze staan, mee-verbleekt met de kaart' },
   { key: 'lagen.badgesBoven', groep: 'lagen', label: 'Wegnummers juist bovenop leggen', type: 'aanuit', standaard: false, help: 'In plaats van weghalen: uitknippen en over de routelijn heen leggen, zodat de tekst leesbaar blijft' },
   { key: 'lagen.achtergrondDekking', groep: 'lagen', label: 'Dekking achtergrond', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 1 },
-  { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken naar wit', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.1, help: 'Trekt de achtergrond richting het wit van het papier, zodat je route ervoor knalt' },
+  { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.1, help: 'Trekt de achtergrond richting de kleur hieronder, zodat je route ervoor knalt' },
+  { key: 'lagen.verbleekNaar', groep: 'lagen', label: 'Verbleken naar welke kleur', type: 'kleur', standaard: '#ffffff', help: 'Standaard het wit van het papier. Zet je hem op de kleur van een oud vel, dan komen de kaart en de bladzijde uit dezelfde inktbak in plaats van dat de kaart zichtbaar van een ander, koeler vel is' },
   { key: 'lagen.verdonkering', groep: 'lagen', label: 'Verdonkeren naar zwart', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0, help: 'Het omgekeerde van verbleken. Hiermee maak je van Outdoors alsnog een donkere kaart met zijn hoogtelijnen erin - zet dan wel "Opgetilde namen" op licht, anders verdwijnen de plaatsnamen in het donker' },
-  { key: 'lagen.tekstKleur', groep: 'lagen', label: 'Opgetilde namen', type: 'keuze', opties: ['origineel', 'licht', 'donker'], standaard: 'origineel', help: 'De plaatsnamen die boven de route worden gelegd. Op een donkere kaart zijn ze zwart op zwart; met "licht" worden ze wit overgezet' },
+  { key: 'lagen.tekstKleur', groep: 'lagen', label: 'Opgetilde namen', type: 'keuze', opties: ['origineel', 'licht', 'donker'], standaard: 'origineel', help: 'Alleen als hierboven "optillen" staat. Op een donkere kaart zijn de opgetilde namen zwart op zwart; met "licht" worden ze wit overgezet' },
   { key: 'lagen.ontzadiging', groep: 'lagen', label: 'Ontzadigen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.28, help: 'Haalt kleur uit de achtergrond zodat hij niet vloekt met je foto\'s' },
 
   // ---------------------------------------------------------------- relief
@@ -183,16 +204,20 @@ export const KNOPPEN = [
   { key: 'labels.hoofdletters', groep: 'labels', label: 'Hoofdletters', type: 'aanuit', standaard: false },
   { key: 'labels.letterafstand', groep: 'labels', label: 'Letterafstand', type: 'getal', min: -0.05, max: 0.4, step: 0.01, standaard: 0.01, eenheid: 'em' },
   { key: 'labels.lijntjes', groep: 'labels', label: 'Lijntje naar de marker', type: 'aanuit', standaard: true },
-  { key: 'labels.omgevingAan', groep: 'labels', label: 'Bekende plaatsen erbij', type: 'aanuit', standaard: true, help: 'Plaatsen waar je niet stopte, voor de oriëntatie' },
+  { key: 'labels.omgevingAan', groep: 'labels', label: 'Bekende plaatsen erbij', type: 'aanuit', standaard: true, help: 'Plaatsen waar je niet stopte, voor de oriëntatie. In de letter van het boek, dus scherp in de druk - anders dan de namen die in de kaartplaat gebakken zitten' },
   { key: 'labels.omgevingKleur', groep: 'labels', label: 'Kleur bekende plaatsen', type: 'kleur', standaard: '#8b857c' },
   { key: 'labels.omgevingGrootteMm', groep: 'labels', label: 'Grootte bekende plaatsen', type: 'mm', min: 1, max: 8, step: 0.1, standaard: 2.2 },
+  { key: 'labels.omgevingBelang', groep: 'labels', label: 'Hoe klein mag een plaats zijn', type: 'getal', min: 1, max: 19, step: 1, standaard: 13, help: 'Mapbox geeft elke plaats een rang van 1 (Reykjavík) tot 19 (een gehucht). Hoger betekent dat er ook kleinere dorpen bij mogen' },
+  { key: 'labels.omgevingMax', groep: 'labels', label: 'Hoogstens zoveel plaatsen', type: 'getal', min: 0, max: 40, step: 1, standaard: 14, help: 'Wat er niet meer bij past valt vanzelf af, de onbelangrijkste eerst' },
 
   // ------------------------------------------------------------ typografie
-  { key: 'typografie.lettertype', groep: 'typografie', label: 'Lettertype', type: 'keuze', opties: ['systeem-schreefloos', 'systeem-schreef'], standaard: 'systeem-schreefloos' },
+  { key: 'typografie.lettertype', groep: 'typografie', label: 'Lettertype', type: 'keuze', opties: ['systeem-schreefloos', 'systeem-schreef', 'typemachine'], standaard: 'systeem-schreefloos', help: 'typemachine is de letter van de veldnotitie-stijl. Op deze Mac is dat American Typewriter; op een machine zonder die letter valt hij terug op Courier New' },
   { key: 'typografie.titelMm', groep: 'typografie', label: 'Titelgrootte', type: 'mm', min: 3, max: 40, step: 0.5, standaard: 11 },
   { key: 'typografie.datumMm', groep: 'typografie', label: 'Datumgrootte', type: 'mm', min: 2, max: 20, step: 0.5, standaard: 4 },
   { key: 'typografie.tekstMm', groep: 'typografie', label: 'Lopende tekst', type: 'mm', min: 1.5, max: 12, step: 0.1, standaard: 3.4 },
   { key: 'typografie.regelafstand', groep: 'typografie', label: 'Regelafstand', type: 'getal', min: 1, max: 2.4, step: 0.05, standaard: 1.5 },
+  { key: 'typografie.kolommen', groep: 'typografie', label: 'Kolommen dagverhaal', type: 'getal', min: 1, max: 4, step: 1, standaard: 2, help: 'Over de volle breedte van een pagina van dertig centimeter wordt één kolom ruim honderdvijftig tekens per regel, en dan raakt je oog bij het terugspringen de goede regel niet meer. Twee kolommen brengt dat terug naar iets van vijfenzeventig, wat leest' },
+  { key: 'typografie.kolomGangMm', groep: 'typografie', label: 'Ruimte tussen de kolommen', type: 'mm', min: 3, max: 30, step: 1, standaard: 10 },
 
   // ------------------------------------------------------------- titelblok
   { key: 'titelblok.aan', groep: 'titelblok', label: 'Titelblok tonen', type: 'aanuit', standaard: true },
@@ -232,13 +257,17 @@ export const KNOPPEN = [
   { key: 'inzet.schaduw', groep: 'inzet', label: 'Zachte schaduw', type: 'aanuit', standaard: true },
   { key: 'inzet.randKleur', groep: 'inzet', label: 'Randlijn', type: 'kleur', standaard: '#e8e3da'},
   { key: 'inzet.randMm', groep: 'inzet', label: 'Dikte randlijn', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.12 },
+  { key: 'inzet.postzegel', groep: 'inzet', label: 'Als postzegel', type: 'aanuit', standaard: false, help: 'Een witte bies om het kaartje heen en een afstempeling schuin over de hoek. De kleur van het eiland zelf regel je met de landkleur hierboven' },
+  { key: 'inzet.biesMm', groep: 'inzet', label: 'Postzegel: witte bies', type: 'mm', min: 0, max: 6, step: 0.1, standaard: 2, help: 'De rand papier om het kaartje heen, overal even breed. Is ook de bies van de zegels in de band' },
+  { key: 'inzet.zegelTekst', groep: 'inzet', label: 'Postzegel: onderschrift', type: 'tekst', standaard: 'IJsland', help: 'Komt klein onderin te staan, met ", dag N" erachter. Leeg laat het weg' },
+  { key: 'inzet.afstempeling', groep: 'inzet', label: 'Postzegel: afstempeling', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.3, help: 'De vage golfjes schuin over de hoek, zoals een poststempel. Nul laat ze weg' },
 
   // ----------------------------------------------------------------- schaal
-  { key: 'schaal.balkAan', groep: 'schaal', label: 'Schaalbalk tonen', type: 'aanuit', standaard: true },
+  { key: 'schaal.balkAan', groep: 'schaal', label: 'Schaalbalk tonen', type: 'aanuit', standaard: false },
   { key: 'schaal.positie', groep: 'schaal', label: 'Schaalbalk: hoek', type: 'keuze', opties: ['linksonder', 'rechtsonder', 'linksboven', 'rechtsboven'], standaard: 'linksonder' },
   { key: 'schaal.kleur', groep: 'schaal', label: 'Schaalbalk: kleur', type: 'kleur', standaard: '#8b847c'},
   { key: 'schaal.noordpijlAan', groep: 'schaal', label: 'Kompasroos', type: 'aanuit', standaard: true },
-  { key: 'schaal.kompasVorm', groep: 'schaal', label: 'Kompas: vorm', type: 'keuze', opties: ['klassiek', 'ster', 'pijl'], standaard: 'klassiek', help: 'klassiek = acht punten met ring en gradenstreepjes · ster = alleen de vier hoofdrichtingen · pijl = alleen noord-zuid' },
+  { key: 'schaal.kompasVorm', groep: 'schaal', label: 'Kompas: vorm', type: 'keuze', opties: ['klassiek', 'ster', 'pijl', 'naald'], standaard: 'klassiek', help: 'klassiek = acht punten met ring en gradenstreepjes · ster = alleen de vier hoofdrichtingen · pijl = alleen noord-zuid · naald = een magneetnaald op de wijzerplaat, rood naar het noorden' },
   { key: 'schaal.kompasMm', groep: 'schaal', label: 'Kompas: grootte', type: 'mm', min: 4, max: 40, step: 0.5, standaard: 17 },
   { key: 'schaal.kompasVolgtTitel', groep: 'schaal', label: 'Kompas: even hoog als het titelblok', type: 'aanuit', standaard: true, help: 'Het glasschijfje krijgt de hoogte van het titelblok, ook als de titel over twee regels loopt. Omdat het een cirkel van precies die hoogte is, staan boven-, onder- en middenkant dan tegelijk gelijk. De maat hierboven wordt dan niet gebruikt' },
   { key: 'schaal.kompasGlasFactor', groep: 'schaal', label: 'Kompas: hoeveel groter het glas is', type: 'getal', min: 1, max: 2.6, step: 0.05, standaard: 1.62, help: 'Ten opzichte van de roos zelf. 1 is precies eromheen, hoger geeft meer rustige ruimte rond de punten en de letters' },
@@ -250,18 +279,115 @@ export const KNOPPEN = [
   { key: 'schaal.kompasLijnMm', groep: 'schaal', label: 'Kompas: lijndikte', type: 'mm', min: 0.05, max: 1, step: 0.01, standaard: 0.18 },
   { key: 'schaal.kompasLetters', groep: 'schaal', label: 'Kompas: letters erbij', type: 'aanuit', standaard: true },
   { key: 'schaal.kompasLetterMm', groep: 'schaal', label: 'Kompas: lettergrootte', type: 'mm', min: 1.2, max: 8, step: 0.1, standaard: 2.6 },
+  { key: 'schaal.kompasKleuren', groep: 'schaal', label: 'Kompas: kleuren van een echt kompas', type: 'aanuit', standaard: true, help: 'Noordpunt rood, de andere punten van staal en een messing schroefje in het hart. Staat dit uit, dan vullen de twee kleuren hierboven de roos als vlakke inkt' },
+  { key: 'schaal.kompasNoordKleur', groep: 'schaal', label: 'Kompas: rood van het noorden', type: 'kleur', standaard: '#e03a28', help: 'De noordpunt, of bij vorm "naald" de halve naald. De belichte en de beschaduwde flank worden hieruit gemengd' },
+  { key: 'schaal.kompasStaalKleur', groep: 'schaal', label: 'Kompas: staal van de andere punten', type: 'kleur', standaard: '#c8ccd1', help: 'Blank staal tegenover het rood van het noorden' },
+  { key: 'schaal.kompasSchroefKleur', groep: 'schaal', label: 'Kompas: schroefje in het hart', type: 'kleur', standaard: '#c9a227', help: 'Messing; het schroefje wordt hieruit bol geschaduwd' },
 
   // -------------------------------------------------------------------- bron
-  { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: true },
+  { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: false },
   { key: 'bron.grootteMm', groep: 'bron', label: 'Grootte', type: 'mm', min: 1, max: 5, step: 0.1, standaard: 1.8 },
   { key: 'bron.kleur', groep: 'bron', label: 'Kleur', type: 'kleur', standaard: '#a8a099'},
 
+  // -------------------------------------------------------------- voorblad
+  //
+  // Het omslag: dezelfde reis als op de overzichtskaart, maar teruggebracht tot
+  // de vorm van het eiland en de vorm van de rit. Geen legenda, geen
+  // plaatsnamen, geen schaalbalk - wat er niet op staat is hier de helft van
+  // het ontwerp.
+  //
+  // De kaart zelf is er wel, maar altijd door iets heen gezien. Welke van de
+  // vier dat is staat hieronder; dat is de knop waar dit blad om draait.
+  { key: 'voorblad.kaart', groep: 'voorblad', label: 'Hoe de kaart meedoet', type: 'keuze', opties: ['eiland', 'baan', 'achter', 'lijn', 'geen'], standaard: 'eiland', help: 'eiland = de kaart vult alleen het land en de zee blijft kaal papier · baan = alleen een strook kaart langs de route, de rest papier · achter = de hele kaart als flauw watermerk onder alles · lijn = de routelijn zelf is een venster op de kaart · geen = alleen de omtrek en de ring' },
+  { key: 'voorblad.baanMm', groep: 'voorblad', label: 'Breedte van de baan', type: 'mm', min: 1, max: 80, step: 0.5, standaard: 16, help: 'Alleen bij baan en lijn. Bij baan is dit hoe breed de strook kaart langs de weg is; bij lijn hoe dik de routeband zelf wordt' },
+  { key: 'voorblad.kaartLaag', groep: 'voorblad', label: 'Welke kaart', type: 'keuze', opties: ['relief', 'zoals het boek', 'satelliet'], standaard: 'relief', help: 'relief = alleen het landschap uit het hoogtemodel, zonder wegen en zonder wegnummer-schildjes, en dat is op een omslag meestal de rustigste · zoals het boek = dezelfde kaartlaag als de dagkaarten · satelliet = luchtfoto. Geldt alleen voor dit blad; de andere bladzijden blijven wat ze waren' },
+  { key: 'voorblad.kaartDekking', groep: 'voorblad', label: 'Hoe sterk de kaart doorkomt', type: 'getal', min: 0.05, max: 1, step: 0.05, standaard: 0.9, help: 'Bij achter is dit hoe flauw het watermerk is; daar hoort iets van 0,2. Bij de andere standen dempt het de uitgeknipte kaart, zodat de lijnen erover heen blijven leiden' },
+  { key: 'voorblad.zachteRandMm', groep: 'voorblad', label: 'Zachte rand', type: 'mm', min: 0, max: 20, step: 0.5, standaard: 0, help: 'Laat de uitgeknipte kaart naar het papier toe uitdoven in plaats van met een scherpe rand op te houden. Nul is de kartelvrije snede' },
+
+  // De omtrek. Op deze schaal is de kust van IJsland een lijn van ruim duizend
+  // punten; de detailknop bepaalt vooral wat er níét getekend wordt.
+  { key: 'voorblad.kustAan', groep: 'voorblad', label: 'De kust natrekken', type: 'aanuit', standaard: true },
+  { key: 'voorblad.kustMm', groep: 'voorblad', label: 'Dikte van de kustlijn', type: 'mm', min: 0.08, max: 2, step: 0.02, standaard: 0.3, help: 'De drukcontrole klaagt onder 0,09 mm, dus dat is de bodem' },
+  { key: 'voorblad.kustKleur', groep: 'voorblad', label: 'Kleur van de kustlijn', type: 'kleur', standaard: '#3a352e' },
+  { key: 'voorblad.kustDetail', groep: 'voorblad', label: 'Kleinste eiland', type: 'getal', min: 0, max: 200, step: 1, standaard: 5, eenheid: 'km²', help: 'Eilanden kleiner dan dit doen niet mee. Op nul komen er negenenveertig ringen terug en zijn er tweeëndertig kleiner dan een vierkante kilometer - rotsen, zandbanken, meertjes onder zeeniveau, die van een afstand als vuil op het papier lezen. Op vijf blijven het vasteland, Heimaey, Hrísey en Grímsey over' },
+
+  // De ring. Eén doorlopende lijn, want het is één rit; de dagen zijn te lezen
+  // aan de stips en de nummers en hoeven niet ook nog eens acht kleuren te
+  // krijgen. Wie dat toch wil zet de dagkleuren aan.
+  { key: 'voorblad.routeMm', groep: 'voorblad', label: 'Dikte van de route', type: 'mm', min: 0.2, max: 6, step: 0.1, standaard: 1.3 },
+  { key: 'voorblad.routeKleur', groep: 'voorblad', label: 'Kleur van de route', type: 'kleur', standaard: '#9c5a3c' },
+  { key: 'voorblad.dagkleuren', groep: 'voorblad', label: 'Elke dag een eigen kleur', type: 'aanuit', standaard: false, help: 'Uit is één doorlopende lijn: het was één rit. Aan geeft de acht kleuren van de overzichtskaart, wat drukker oogt maar wel laat zien waar een dag ophield' },
+  { key: 'voorblad.stipMm', groep: 'voorblad', label: 'Stip bij de overnachting', type: 'mm', min: 0, max: 8, step: 0.1, standaard: 2.4, help: 'Nul laat ze weg; dan is de ring een kale lijn' },
+  { key: 'voorblad.dagnummersAan', groep: 'voorblad', label: 'Dagnummers erbij', type: 'aanuit', standaard: true, help: 'Het nummer naast elke slaapplek. Daarmee lees je de reis als een volgorde en niet alleen als een vorm' },
+  { key: 'voorblad.dagnummerMm', groep: 'voorblad', label: 'Grootte van de dagnummers', type: 'mm', min: 1.8, max: 12, step: 0.1, standaard: 3.2 },
+
+  // De hand. Zonder dit is het een strakke computerlijn, en dat vloekt met de
+  // gestempelde rest van het boek.
+  { key: 'voorblad.penAan', groep: 'voorblad', label: 'Met de hand getrokken', type: 'aanuit', standaard: true, help: 'Legt een lichte wiebel over de kust en de route, zoals een pen die een kaart natrekt. Uit geeft de exacte lijn terug' },
+  { key: 'voorblad.penWiebelMm', groep: 'voorblad', label: 'Onvaste hand', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.25, help: 'Hoe ver de pen van de echte kustlijn afdwaalt. Gezaaid, dus dezelfde stand geeft altijd dezelfde hand' },
+
+  // De vlag. De enige plek op dit blad waar echte kleur komt, en dan moet het
+  // ook echt kleur zijn - een verbleekte vlag leest als een drukfout. Wat hem
+  // bij de rest laat horen is de máák en niet de kleur: gesneden rand, en elke
+  // inkt een eigen aandruk die net naast de vorige valt.
+  { key: 'voorblad.vlagAan', groep: 'voorblad', label: 'De vlag erbij', type: 'aanuit', standaard: true },
+  { key: 'voorblad.vlagBreedteMm', groep: 'voorblad', label: 'Breedte van de vlag', type: 'mm', min: 6, max: 140, step: 1, standaard: 38 },
+  { key: 'voorblad.vlagHoek', groep: 'voorblad', label: 'Waar de vlag staat', type: 'keuze', opties: ['linksonder', 'linksboven', 'rechtsonder', 'rechtsboven'], standaard: 'linksonder', help: 'Je kunt hem daarna alsnog naar elke plek slepen en aan het greepje groter maken; dit is waar hij begint' },
+  { key: 'voorblad.vlagDekking', groep: 'voorblad', label: 'Hoe hard aangedrukt', type: 'getal', min: 0.15, max: 1, step: 0.05, standaard: 1, help: 'Eén is volle inkt. Lager laat het papier of de achtergrond erdoorheen komen, alsof de stempel maar half is aangeraakt' },
+  { key: 'voorblad.vlagHandMm', groep: 'voorblad', label: 'Onvaste aandruk', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.35, help: 'Twee dingen tegelijk: hoe onvast de rand gesneden is, en hoe ver de drie inkten naast elkaar vallen. Dat tweede heeft een eigen bovengrens die met de vlag meeschaalt, want anders eet de verschuiving de witte baan op en raakt het rood het blauw. Op nul krijg je de vlag zoals een tekenprogramma hem maakt, strak en zonder aandruk' },
+  { key: 'voorblad.vlagRandMm', groep: 'voorblad', label: 'Lijn om de vlag', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.3, help: 'De sleutelinkt eromheen, in de kleur van de kustlijn. Nul laat hem weg en dan is de vlag alleen kleur' },
+
+  // De letters. Standaard staat er niets: het eiland en de ring zeggen het al,
+  // en een omslag dat het nog eens uitspreekt is er een dat zichzelf niet
+  // vertrouwt. Wie de titel wél wil heeft hem hier compleet liggen - hij komt
+  // uit data/book.json en is op de bladzijde zelf bij te schaven.
+  { key: 'voorblad.titelAan', groep: 'voorblad', label: 'Titel op het voorblad', type: 'aanuit', standaard: false, help: 'Uit is kaal: alleen de omtrek, de ring en de dagnummers. Aan zet de titel, de ondertitel en de bijregel uit data/book.json neer, en die kun je daarna ter plekke aanpassen en verslepen' },
+  { key: 'voorblad.titelMm', groep: 'voorblad', label: 'Grootte van de titel', type: 'mm', min: 4, max: 80, step: 0.5, standaard: 24 },
+  { key: 'voorblad.ondertitelMm', groep: 'voorblad', label: 'Grootte van de ondertitel', type: 'mm', min: 1.8, max: 24, step: 0.2, standaard: 5 },
+  { key: 'voorblad.regelMm', groep: 'voorblad', label: 'Grootte van de bijregel', type: 'mm', min: 1.8, max: 16, step: 0.1, standaard: 3.4, help: 'De regel met het aantal dagen, de kilometers en de datums' },
+  { key: 'voorblad.titelKleur', groep: 'voorblad', label: 'Kleur van de letters', type: 'kleur', standaard: '#3a352e' },
+  { key: 'voorblad.titelHoek', groep: 'voorblad', label: 'Waar de titel staat', type: 'keuze', opties: ['linksonder', 'linksboven', 'rechtsonder', 'rechtsboven'], standaard: 'linksonder', help: 'Je kunt het blok daarna alsnog naar elke plek slepen; dit is waar het begint' },
+  { key: 'voorblad.bijregel', groep: 'voorblad', label: 'De bijregel tonen', type: 'aanuit', standaard: true },
+
+  // De uitsnede. Eigen knoppen en niet die uit de groep Uitsnede, want die
+  // zijn boekbreed: aan het voorblad schuiven zou dan ook de overzichtskaart
+  // verzetten, en die twee bladen kaderen juist met opzet verschillend - het
+  // overzicht op de rit, het voorblad op het eiland.
+  { key: 'voorblad.margeMm', groep: 'voorblad', label: 'Ruimte om het eiland', type: 'mm', min: -60, max: 90, step: 1, standaard: 22, help: 'Negatief mag: dan loopt IJsland van de bladzijde af, en dat is op een omslag vaak juist goed' },
+  { key: 'voorblad.zoom', groep: 'voorblad', label: 'Zoom', type: 'getal', min: 0.3, max: 4, step: 0.01, standaard: 1 },
+  { key: 'voorblad.panXMm', groep: 'voorblad', label: 'Verschuiven ⟷', type: 'mm', min: -200, max: 200, step: 1, standaard: 0 },
+  { key: 'voorblad.panYMm', groep: 'voorblad', label: 'Verschuiven ↕', type: 'mm', min: -200, max: 200, step: 1, standaard: 0 },
+
+  // Het vel. Zelfde papier als onder de cijferpagina's, met een eigen zaad,
+  // zodat het voorblad niet toevallig dezelfde vlek heeft als bladzijde vier.
+  { key: 'voorblad.doorzichtig', groep: 'voorblad', label: 'Doorzichtige achtergrond', type: 'aanuit', standaard: true, help: 'Het voorblad krijgt geen paginakleur, zodat de PNG los over een foto of een achtergrond te leggen is. Op het scherm zie je het ruitjespatroon van het werkblad erdoorheen. Er komt dan ook geen PDF: doorzichtigheid bestaat daar niet op een manier die een fotoboekprogramma begrijpt' },
+  { key: 'voorblad.papierAan', groep: 'voorblad', label: 'Papier eronder', type: 'aanuit', standaard: false, help: 'Een vel met vezels over de hele bladzijde. Staat uit, want dat vel is dekkend en maakt de doorzichtige achtergrond hierboven ongedaan. Aan als het voorblad wél een eigen bladzijde wordt' },
+  { key: 'voorblad.papierOverKaart', groep: 'voorblad', label: 'Papier ook over de kaart', type: 'aanuit', standaard: true, help: 'Legt hetzelfde vel nog eens over het eiland heen, onder de lijnen door. Zonder dit ligt er een wit eiland op crème papier en vallen die twee uit elkaar; ermee loopt de vezel over allebei door en is het één vel waar iets op gedrukt staat' },
+  { key: 'voorblad.papierOverDekking', groep: 'voorblad', label: 'Hoe dekkend dat vel is', type: 'getal', min: 0, max: 1, step: 0.05, standaard: 0.6, help: 'Hoger trekt de kaart verder naar de papierkleur toe. Op één is het eiland weer even leeg als de zee' },
+  { key: 'voorblad.zaad', groep: 'voorblad', label: 'Zaad van het vel', type: 'getal', min: 1, max: 999, step: 1, standaard: 7, help: 'Verander dit en je krijgt hetzelfde papier met andere vezels en vlekken, en een andere hand' },
+
   // ------------------------------------------------------------- voortgang
+  //
+  // Drie gedaantes van hetzelfde. De balk is de grafiek; penlijn en vak horen
+  // bij de veldnotitie-stijl, waar een strakke balk met ronde stippen als het
+  // enige schermelement op een papieren bladzijde blijft liggen.
+  { key: 'voortgang.vorm', groep: 'voortgang', label: 'Gedaante', type: 'keuze', opties: ['balk', 'penlijn', 'vak'], standaard: 'balk', help: 'balk = een rechte baan met stippen erop · penlijn = dezelfde lijn met de hand getrokken, met streepjes op de stops en een cirkel om waar je nu bent · vak = een met de pen omlijnd vak dat volgetekend is tot waar je gekomen bent' },
+  { key: 'voortgang.vulling', groep: 'voortgang', label: 'Vulling van het vak', type: 'keuze', opties: ['inkt', 'hoogtelijnen', 'arcering', 'profiel'], standaard: 'hoogtelijnen', help: 'Alleen bij de gedaante vak. hoogtelijnen = geneste kringen die nooit kruisen, zoals op de kaart · profiel = het echte hoogteprofiel van die dag, dus het terrein waar je overheen bent gegaan · arcering = schuine haaltjes · inkt = effen' },
+  { key: 'voortgang.vakHoogteMm', groep: 'voortgang', label: 'Hoogte van het vak', type: 'mm', min: 3, max: 20, step: 0.5, standaard: 7 },
+  { key: 'voortgang.kaderMm', groep: 'voortgang', label: 'Dikte van het kader', type: 'mm', min: 0.1, max: 1.2, step: 0.05, standaard: 0.35 },
+  { key: 'voortgang.penJitter', groep: 'voortgang', label: 'Onvaste hand', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.5, help: 'Hoe ver de pen van de liniaal afwijkt. Nul geeft de rechte lijn terug. Gezaaid op het dagnummer, dus dezelfde dag geeft altijd dezelfde hand' },
+  { key: 'voortgang.doorzichtig', groep: 'voortgang', label: 'Doorzichtige achtergrond', type: 'aanuit', standaard: true, help: 'Het strookje krijgt geen paginakleur, zodat de PNG los over een foto te leggen is. Op het scherm zie je het ruitjespatroon van het werkblad erdoorheen. Zet je hier papier onder, dan is dat papier wél dekkend - met een scheurrand krijg je zo een strookje papier op een doorzichtige achtergrond' },
+  { key: 'voortgang.papierAan', groep: 'voortgang', label: 'Papier eronder', type: 'aanuit', standaard: false, help: 'Legt hetzelfde vel met vezels onder het strookje als onder de cijfers. Zonder ondergrond blijft het een balkje dat op de pagina zweeft' },
+  { key: 'voortgang.scheurAan', groep: 'voortgang', label: 'Uit een blaadje gescheurd', type: 'aanuit', standaard: false, help: 'Boven- en onderrand van het papier krijgen een scheurrand, net binnen de snijlijn. Links en rechts loopt het gewoon paginabreed door' },
+  { key: 'voortgang.getyptAan', groep: 'voortgang', label: 'Opschriften getypt', type: 'aanuit', standaard: false, help: 'Zet de naam, de kilometers en de dagregel letter voor letter iets uit het lood, met dezelfde onvaste aanslag als de veldnotitie onder de stempels' },
+  { key: 'voortgang.hoofdletters', groep: 'voortgang', label: 'Opschriften in kapitalen', type: 'aanuit', standaard: false },
+  { key: 'voortgang.onderstreepAan', groep: 'voortgang', label: 'Dagregel onderstreept', type: 'aanuit', standaard: false, help: 'Een haal met de pen onder Dag en titel, zoals je een kop in een schrift onderstreept' },
+  { key: 'voortgang.procentAan', groep: 'voortgang', label: 'Percentage erbij', type: 'aanuit', standaard: false, help: 'Zet achter de kilometers hoeveel procent van de dag je gehad hebt' },
   { key: 'voortgang.hoogteMm', groep: 'voortgang', label: 'Hoogte van het strookje', type: 'mm', min: 8, max: 80, step: 1, standaard: 24, help: 'Het strookje wordt zo hoog als je hier zet, en net zo breed als de pagina. Bedoeld om onder een foto te plaatsen' },
   { key: 'voortgang.dikteMm', groep: 'voortgang', label: 'Dikte van de balk', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 1.8 },
   { key: 'voortgang.kernDekking', groep: 'voortgang', label: 'Dekking van de kern', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.47, help: 'De rand blijft altijd dekkend; dit is alleen de binnenkant, net als bij de routelijn op de kaart' },
-  { key: 'voortgang.buitenExtraMm', groep: 'voortgang', label: 'Rand extra dik', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.35 },
-  { key: 'voortgang.gehadFactor', groep: 'voortgang', label: 'Stippen die je gehad hebt', type: 'getal', min: 0.42, max: 1, step: 0.01, standaard: 0.62, help: 'Hoeveel groter de stops die je al gehad hebt zijn dan de stops die nog komen' },
+  { key: 'voortgang.buitenExtraMm', groep: 'voortgang', label: 'Rand extra dik', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.35, help: 'Alleen bij de gedaante balk' },
+  { key: 'voortgang.gehadFactor', groep: 'voortgang', label: 'Stippen die je gehad hebt', type: 'getal', min: 0.42, max: 1, step: 0.01, standaard: 0.62, help: 'Alleen bij de gedaante balk: hoeveel groter de stops die je al gehad hebt zijn dan de stops die nog komen' },
   { key: 'voortgang.eenKleur', groep: 'voortgang', label: 'Alles in één kleur', type: 'aanuit', standaard: false, help: 'Baan, balk, stippen en teksten krijgen dezelfde kleur. Je leest de voortgang dan aan de stipgroottes af in plaats van aan het kleurverschil' },
   { key: 'voortgang.kleur', groep: 'voortgang', label: 'Die ene kleur', type: 'kleur', standaard: '#8c2f39' },
   { key: 'voortgang.legeDekking', groep: 'voortgang', label: 'Dekking van wat nog komt', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.22, help: 'Alleen in één kleur: hoe licht het stuk staat dat je nog voor de boeg hebt' },
@@ -282,6 +408,12 @@ export const KNOPPEN = [
   { key: 'profiel.reisBreedte', groep: 'profiel', label: 'Reisgrafiek: breedte', type: 'getal', min: 0.3, max: 1, step: 0.01, standaard: 1, help: 'Alleen op de reiscijfer-pagina: deel van de beschikbare breedte dat het hoogteprofiel van de hele reis inneemt' },
   { key: 'profiel.weertekensAan', groep: 'profiel', label: 'Weertekens in de temperatuurgrafiek', type: 'aanuit', standaard: true, help: 'Om de twee uur een tekentje langs de bovenkant: zon, bewolking, regen of sneeuw op het moment zelf' },
   { key: 'profiel.weertekenMm', groep: 'profiel', label: 'Weertekens: grootte', type: 'mm', min: 1.5, max: 8, step: 0.1, standaard: 3.2 },
+  { key: 'profiel.weertekenVorm', groep: 'profiel', label: 'Weertekens: vorm', type: 'keuze', opties: ['gekleurd', 'notatie', 'emoji'], standaard: 'gekleurd', help: 'gekleurd = zelfgetekende zon-en-wolk plaatjes in kleuren die kloppen: oker voor de zon, leisteengrijs voor de wolk, blauw voor regen · notatie = de tekens waarmee weerwaarnemers het op hun kaarten zetten, mooi maar je moet ze kennen · emoji = de plaatjes uit je besturingssysteem, bont en op elke machine anders' },
+  { key: 'profiel.weerZon', groep: 'profiel', label: 'Weer: kleur van de zon', type: 'kleur', standaard: '#d9a441', help: 'Ook de kleur van de bliksemschicht' },
+  { key: 'profiel.weerWolk', groep: 'profiel', label: 'Weer: kleur van de wolk', type: 'kleur', standaard: '#9aa0a6', help: 'Ook de mistlijnen' },
+  { key: 'profiel.weerNeerslag', groep: 'profiel', label: 'Weer: kleur van de regen', type: 'kleur', standaard: '#5b7c99' },
+  { key: 'profiel.weerSneeuw', groep: 'profiel', label: 'Weer: kleur van de sneeuw', type: 'kleur', standaard: '#a9c6dc' },
+  { key: 'profiel.weertekenKleur', groep: 'profiel', label: 'Weertekens: inktkleur', type: 'kleur', standaard: '#5a5349', help: 'Alleen voor de notatie; emoji hebben hun eigen kleuren' },
   { key: 'profiel.tempLijnKleur', groep: 'profiel', label: 'Temperatuur: lijnkleur', type: 'kleur', standaard: '#c2571f' },
   { key: 'profiel.tempVulKleur', groep: 'profiel', label: 'Temperatuur: vulkleur', type: 'kleur', standaard: '#e8a06a' },
   { key: 'profiel.hoogteMm', groep: 'profiel', label: 'Hoogte van de grafiek', type: 'mm', min: 20, max: 200, step: 1, standaard: 70 },
@@ -317,7 +449,7 @@ export const KNOPPEN = [
   { key: 'statistieken.kolomWeerEm', groep: 'statistieken', label: 'Kolom: weer', type: 'getal', min: 2, max: 16, step: 0.1, standaard: 5.4 },
 
   // ------------------------------------------- achtergrond van de statistiekpagina
-  { key: 'statistieken.achtergrond', groep: 'statistieken', label: 'Achtergrond', type: 'keuze', opties: ['geen', 'verloop', 'hoogtesilhouet', 'raster', 'kaart', 'draadmodel'], standaard: 'geen', help: 'geen = effen papier · verloop = zachte kleurovergang · hoogtesilhouet = het profiel van deze dag groot en bleek onderaan · raster = ruitjespapier · kaart = de dagkaart zelf, ver weggezet · draadmodel = een doorzichtig isometrisch draadmodel van het onderwerp van die dag' },
+  { key: 'statistieken.achtergrond', groep: 'statistieken', label: 'Achtergrond', type: 'keuze', opties: ['geen', 'verloop', 'hoogtesilhouet', 'raster', 'kaart', 'draadmodel', 'papier'], standaard: 'geen', help: 'papier = een oud vel met vezels en gebruikssporen, de ondergrond van de veldnotitie-stijl · geen = effen papier · verloop = zachte kleurovergang · hoogtesilhouet = het profiel van deze dag groot en bleek onderaan · raster = ruitjespapier · kaart = de dagkaart zelf, ver weggezet · draadmodel = een doorzichtig isometrisch draadmodel van het onderwerp van die dag' },
   { key: 'statistieken.achtergrondKleur', groep: 'statistieken', label: 'Achtergrond: kleur', type: 'kleur', standaard: '#d9d3c8' },
   { key: 'statistieken.achtergrondKleur2', groep: 'statistieken', label: 'Achtergrond: tweede kleur', type: 'kleur', standaard: '#f7f4ee', help: 'Waar het verloop naartoe gaat, en de lijn op de bergkam bij het hoogtesilhouet' },
   { key: 'statistieken.achtergrondDekking', groep: 'statistieken', label: 'Achtergrond: dekking', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.45 },
@@ -341,7 +473,42 @@ export const KNOPPEN = [
   { key: 'statistieken.labelMm', groep: 'statistieken', label: 'Grootte van de labels', type: 'mm', min: 1.5, max: 10, step: 0.1, standaard: 2.6 },
   { key: 'statistieken.getalKleur', groep: 'statistieken', label: 'Kleur getallen', type: 'kleur', standaard: '#2b2926'},
   { key: 'statistieken.labelKleur', groep: 'statistieken', label: 'Kleur labels', type: 'kleur', standaard: '#8b847c'},
-  { key: 'statistieken.lijntjes', groep: 'statistieken', label: 'Scheidingslijntjes', type: 'aanuit', standaard: false }
+  { key: 'statistieken.lijntjes', groep: 'statistieken', label: 'Scheidingslijntjes', type: 'aanuit', standaard: false },
+
+  // ------------------------------------------------------------ postzegels
+  //
+  // De band onderaan de statistiekpagina: per foto van die dag een gesneden
+  // rubberstempel, met de veldnotitie eronder. De stempels komen van
+  // src/stempel.js; hier staat alleen hoe ze op de pagina terechtkomen.
+  { key: 'postzegel.aan', groep: 'postzegel', label: 'Stempelband tonen', type: 'aanuit', standaard: true, help: 'Onderaan de statistiekpagina. Dagen zonder foto krijgen niets, en de dagtekst mag dan doorlopen' },
+  { key: 'postzegel.inhoud', groep: 'postzegel', label: 'Wat er in de band staat', type: 'keuze', opties: ['stempel', 'foto'], standaard: 'stempel', help: 'stempel = de gesneden afdruk die het model van de foto maakte · foto = de foto zelf, ingehouden gegradeerd met filmkorrel' },
+  { key: 'postzegel.hoogteMm', groep: 'postzegel', label: 'Hoogte', type: 'mm', min: 12, max: 120, step: 1, standaard: 56, help: 'Van de afdruk alleen; het onderschrift komt daaronder. Klein houden is het hele idee - een stempel die uitgroeit tot illustratie is geen stempel meer' },
+  { key: 'postzegel.tussenruimteMm', groep: 'postzegel', label: 'Ruimte ertussen', type: 'mm', min: 2, max: 40, step: 1, standaard: 14 },
+  { key: 'postzegel.onderMm', groep: 'postzegel', label: 'Van de onderrand af', type: 'mm', min: 0, max: 60, step: 1, standaard: 6, help: 'Gerekend vanaf de veilige marge, dus niet vanaf de snijlijn' },
+  { key: 'postzegel.uitlijning', groep: 'postzegel', label: 'Uitlijning', type: 'keuze', opties: ['links', 'midden', 'rechts', 'gespreid'], standaard: 'links', help: 'gespreid duwt de eerste tegen de linkermarge en de laatste tegen de rechter' },
+  { key: 'postzegel.scheefGraden', groep: 'postzegel', label: 'Scheefte', type: 'getal', min: 0, max: 6, step: 0.1, standaard: 1.2, eenheid: '°', help: 'Elke stempel krijgt een eigen hoek binnen dit bereik, gezaaid op de dag. Nul zet ze kaarsrecht en dat verraadt meteen de machine' },
+  { key: 'postzegel.inkt', groep: 'postzegel', label: 'Hoe de afdruk op het vel komt', type: 'keuze', opties: ['vermenigvuldigen', 'gesleuteld'], standaard: 'gesleuteld', help: 'gesleuteld = het vel van het model is eruit gerekend en alleen de inkt blijft over, met echte doorzichtigheid - dus nooit een vlak achter de afdruk · vermenigvuldigen = de hele plaat optisch op het papier gedrukt, wat de korrel het beste heel houdt maar bij een afdruk die tot aan de plaatrand doorloopt een flauw kadertje kan geven' },
+  { key: 'postzegel.dekking', groep: 'postzegel', label: 'Hoe hard aangedrukt', type: 'getal', min: 0.1, max: 1, step: 0.01, standaard: 0.62, help: 'Eén is met volle kracht aangedrukt, laag is een lichte aanraking waarbij het papier overal doorheen komt. Dit is de knop waarmee je de hele band lichter of zwaarder zet' },
+  { key: 'postzegel.kartelrand', groep: 'postzegel', label: 'Kartelrand eromheen', type: 'aanuit', standaard: false, help: 'Maakt er echte postzegels van, met tandjes en een papiertintje eronder. Uit blijft het een losse afdruk op het vel' },
+  { key: 'inzet.tandMm', groep: 'postzegel', label: 'Maat van de kartels', type: 'mm', min: 0.8, max: 4, step: 0.1, standaard: 1.9, help: 'De halve rondjes langs de rand. Klein geeft een fijne, moderne zegel; groot een grove uit de jaren vijftig. Heet inzet.tandMm omdat het inzetkaartje ze vroeger ook had' },
+  { key: 'postzegel.opKaart', groep: 'postzegel', label: 'Ook op de kaartpagina', type: 'aanuit', standaard: false, help: 'De eerste stempel van die dag klein in een hoek van de kaart, met het nummer eronder, zodat de twee pagina´s van een dag bij elkaar horen' },
+  { key: 'postzegel.opKaartHoek', groep: 'postzegel', label: 'Op de kaart: hoek', type: 'keuze', opties: ['rechtsboven', 'linksboven', 'rechtsonder', 'linksonder'], standaard: 'linksonder' },
+  { key: 'postzegel.opKaartMm', groep: 'postzegel', label: 'Op de kaart: hoogte', type: 'mm', min: 8, max: 60, step: 1, standaard: 24 },
+
+  // ----------------------------------------------------------- veldnotitie
+  //
+  // De getypte regels onder een stempel: plaatsnaam, nummer, jaar en drie
+  // trefwoorden. Wat er staat komt uit data/hero/dag-NN.json en is met de hand
+  // bij te schaven; hier staat alleen hoe het eruitziet.
+  { key: 'veldnotitie.aan', groep: 'veldnotitie', label: 'Onderschrift tonen', type: 'aanuit', standaard: false, help: 'De getypte regels onder een stempel: plaatsnaam, nummer, trefwoorden, jaartal. Staat uit - de afdruk doet het werk. Wat er komt te staan haal je uit data/hero/dag-NN.json' },
+  { key: 'veldnotitie.grootteMm', groep: 'veldnotitie', label: 'Lettergrootte', type: 'mm', min: 1.8, max: 8, step: 0.1, standaard: 2.4, help: 'Klein en terughoudend. De drukcontrole klaagt onder 1,8 mm, en dat is hier ook echt de bodem' },
+  { key: 'veldnotitie.regelafstand', groep: 'veldnotitie', label: 'Regelafstand', type: 'getal', min: 1, max: 2.4, step: 0.05, standaard: 1.55 },
+  { key: 'veldnotitie.letterafstand', groep: 'veldnotitie', label: 'Letterafstand', type: 'getal', min: -0.02, max: 0.4, step: 0.01, standaard: 0.12, eenheid: 'em', help: 'Ruim gezet leest als een stempelkussen-alfabet dat letter voor letter is aangedrukt' },
+  { key: 'veldnotitie.kleur', groep: 'veldnotitie', label: 'Kleur', type: 'kleur', standaard: '#3a352e' },
+  { key: 'veldnotitie.zwakKleur', groep: 'veldnotitie', label: 'Kleur van de bijregels', type: 'kleur', standaard: '#8b847c', help: 'Het nummer, het jaar en de trefwoorden. De plaatsnaam houdt de kleur hierboven' },
+  { key: 'veldnotitie.jitter', groep: 'veldnotitie', label: 'Onvaste aanslag', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.45, help: 'Zet de losse letters een haartje scheef en hoog of laag, zoals een typemachine waarvan de hamertjes niet allemaal even hard aankomen. Nul geeft de strakke computerregel terug' },
+  { key: 'veldnotitie.trefwoordScheiding', groep: 'veldnotitie', label: 'Tussen de trefwoorden', type: 'tekst', standaard: ' / ' },
+  { key: 'veldnotitie.hoofdletters', groep: 'veldnotitie', label: 'Plaatsnaam in kapitalen', type: 'aanuit', standaard: true, help: 'Alleen de plaatsnaam. Het nummer en het jaartal blijven zoals ze zijn, en de trefwoorden staan altijd in onderkast - juist dat verschil laat het als aantekening lezen en niet als opschrift' }
 ]
 
 // De logica die met dit schema werkt (standaardwaarden, samenvoegen, controleren)

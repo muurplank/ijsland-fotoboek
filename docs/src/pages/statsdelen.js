@@ -13,6 +13,7 @@
 
 import { bouwDraadmodel, kiesModel, MODEL_INFO } from '../render/draadmodellen.js'
 import { draadmodelKnopen } from '../render/isometrie.js'
+import { papierKnopen, zaadje } from '../render/papier.js'
 import { bouwSvg } from '../render/profielvorm.js'
 import { zetGlas } from './furniture.js'
 
@@ -163,11 +164,28 @@ export function tekenTitelblok (opschriften, stijl, { marge, boven, titel, tekst
   return blok
 }
 
-/** De rij grote getallen met hun labels eronder. */
+/**
+ * De rij grote getallen met hun labels eronder.
+ *
+ * Standaard is het een raster van gelijke kolommen: elk getal begint aan het
+ * begin van zijn kolom, en rechts van het laatste getal blijft dus een gat
+ * staan zo breed als het verschil tussen zijn kolom en zijn cijfers.
+ *
+ * Met `gespreid` hangt de rij aan allebei de randen: het eerste getal met zijn
+ * linkerkant tegen de linkermarge, het laatste met zijn rechterkant tegen de
+ * rechter, en wat overblijft wordt in gelijke porties tussen de getallen
+ * verdeeld.
+ *
+ * Niet op vaste breukdelen dus - een kwart, een derde - want de getallen zijn
+ * niet even breed. Zet je hun midden of hun linkerkant op zo'n punt, dan valt
+ * het verschil in breedte in de tussenruimtes en staat er ergens een gat waar
+ * je oog over struikelt. Gelijke tussenruimtes leest het rustigst, ook al
+ * staat geen enkel getal dan op een rond getal.
+ */
 export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   const {
     plek, links, boven, breedte, kolommen,
-    getalDeel = 1, eenheidDeel = 0.45, lijntjes = false
+    getalDeel = 1, eenheidDeel = 0.45, lijntjes = false, gespreid = false
   } = opties
 
   const rij = document.createElement('div')
@@ -179,7 +197,16 @@ export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   rij.style.left = mm(links)
   rij.style.top = mm(boven)
   rij.style.width = mm(breedte)
-  rij.style.gridTemplateColumns = `repeat(${kolommen}, 1fr)`
+  if (gespreid) {
+    // Eén regel, elk vak zo breed als zijn eigen cijfers, en de rest van de
+    // breedte gaat op aan de ruimtes ertussen. De 6 mm blijft de bodem: raakt
+    // de rij vol, dan houden de getallen elkaar nog steeds op afstand.
+    rij.style.display = 'flex'
+    rij.style.justifyContent = 'space-between'
+    rij.style.alignItems = 'flex-start'
+  } else {
+    rij.style.gridTemplateColumns = `repeat(${kolommen}, 1fr)`
+  }
   rij.style.columnGap = mm(6)
   rij.style.rowGap = mm(9)
 
@@ -212,6 +239,96 @@ export function tekenCijferrij (opschriften, cijfers, stijl, opties) {
   }
   opschriften.append(rij)
   return rij
+}
+
+
+/** ---------------------------------------------------- de veldnotitie */
+
+/**
+ * Eén getypte regel, letter voor letter iets uit het lood.
+ *
+ * Een typemachine slaat niet elke letter even hard of even recht aan, en juist
+ * dat verschil maakt het verschil tussen een getypte regel en een gezette regel.
+ * Dus krijgt elke letter zijn eigen spanje met een minieme verschuiving en
+ * draaiing - gezaaid, zodat dezelfde dag altijd dezelfde onvolkomenheden heeft
+ * en de export niet afwijkt van wat je op het scherm zag.
+ *
+ * Spaties blijven met rust: een span om een spatie heen laat de regel afbreken
+ * op plekken waar dat niet hoort.
+ */
+export function typRegel (tekst, { jitter, rnd }) {
+  const regel = document.createElement('div')
+  regel.className = 'veldnotitie-regel'
+
+  if (jitter <= 0) {
+    regel.textContent = tekst
+    return regel
+  }
+
+  for (const teken of tekst) {
+    if (teken === ' ') {
+      regel.append(' ')
+      continue
+    }
+    const letter = document.createElement('span')
+    letter.textContent = teken
+    // klein houden: 0,22 mm en 1,4 graden is op leesafstand precies genoeg om
+    // "met de hand" te lezen, en groter wordt het een grapje
+    const dy = (rnd() - 0.5) * jitter * 0.22
+    const hoek = (rnd() - 0.5) * jitter * 1.4
+    letter.style.display = 'inline-block'
+    letter.style.transform = `translateY(calc(${dy.toFixed(3)} * var(--mm))) rotate(${hoek.toFixed(2)}deg)`
+    regel.append(letter)
+  }
+  return regel
+}
+
+/**
+ * Het onderschrift onder een stempel: plaatsnaam, nummer en jaar, trefwoorden.
+ *
+ * Wat er staat komt uit data/hero/dag-NN.json. Lege regels vallen weg, zodat een
+ * dag waarvan de trefwoorden nog niet ingevuld zijn gewoon een regel minder
+ * heeft in plaats van een lege plek of een streepje naar niets.
+ */
+export function tekenVeldnotitie (ouder, { plaats, nummer, jaar, trefwoorden }, stijl, zaad = 1) {
+  if (!stijl['veldnotitie.aan']) return null
+
+  const woorden = (trefwoorden ?? []).filter(w => w && w.trim())
+
+  // Vier regels onder elkaar, elk met zijn eigen kast. Niet samengevoegd tot
+  // "No. 03 · 2026": het jaartal is een eigen gegeven en hoort op zijn eigen
+  // regel, net als in een echt notitieboek waar je het er later bij zet.
+  //
+  // De trefwoorden staan bewust in kleine letters. Alles in kapitalen maakt van
+  // een aantekening een opschrift, en juist het verschil tussen de plaatsnaam in
+  // kapitalen en de woorden eronder in onderkast laat het als notitie lezen.
+  const regels = [
+    { tekst: plaats, sterk: true, kast: stijl['veldnotitie.hoofdletters'] ? 'uppercase' : 'none' },
+    { tekst: nummer, sterk: false, kast: 'none' },
+    { tekst: woorden.join(stijl['veldnotitie.trefwoordScheiding']), sterk: false, kast: 'lowercase' },
+    { tekst: jaar, sterk: false, kast: 'none' }
+  ].filter(r => r.tekst)
+
+  if (!regels.length) return null
+
+  const blok = document.createElement('div')
+  blok.className = 'veldnotitie'
+  blok.style.fontSize = mm(stijl['veldnotitie.grootteMm'])
+  blok.style.lineHeight = String(stijl['veldnotitie.regelafstand'])
+  blok.style.letterSpacing = `${stijl['veldnotitie.letterafstand']}em`
+
+  const rnd = zaadje(zaad * 97 + 13)
+  const jitter = stijl['veldnotitie.jitter']
+
+  for (const regel of regels) {
+    const el = typRegel(regel.tekst, { jitter, rnd })
+    el.style.color = regel.sterk ? stijl['veldnotitie.kleur'] : stijl['veldnotitie.zwakKleur']
+    el.style.textTransform = regel.kast
+    blok.append(el)
+  }
+
+  ouder.append(blok)
+  return blok
 }
 
 export function tekenBron (opschriften, stijl, maat, marge) {
@@ -255,6 +372,17 @@ export function tekenAchtergrond (svg, stijl, maat, opties = {}) {
   const kleur = stijl['statistieken.achtergrondKleur']
   const kleur2 = stijl['statistieken.achtergrondKleur2']
   const dekking = stijl['statistieken.achtergrondDekking']
+
+  if (soort === 'papier') {
+    // Het vel waar de hele veldnotitie-stijl op ligt. Gaat als eerste op de
+    // pagina, dus alles komt er vanzelf overheen te staan.
+    for (const knoop of papierKnopen({
+      breedteMm: maat.breedteMm, hoogteMm: maat.hoogteMm, stijl, zaad, id
+    })) {
+      svg.append(bouwSvg(knoop))
+    }
+    return
+  }
 
   if (soort === 'draadmodel') {
     // Een doorzichtig isometrisch draadmodel van het onderwerp van deze dag,

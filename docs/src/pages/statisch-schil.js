@@ -64,11 +64,16 @@
 
     if (naam === 'achtergrond') {
       const overzicht = u.searchParams.get('overzicht') === '1'
-      const sleutel = overzicht ? 'overzicht' : dag
-      if (!overzicht) laatsteDag = dag
+      const voorblad = u.searchParams.get('voorblad') === '1'
+      const sleutel = voorblad ? 'voorblad' : overzicht ? 'overzicht' : dag
+      if (!overzicht && !voorblad) laatsteDag = dag
       return plaat(`api/achtergrond-${sleutel}.png`, `api/achtergrond-${sleutel}.json`, 'x-plaatsing')
     }
     if (naam === 'bovenlaag') return plaat(`api/bovenlaag-${laatsteDag}.png`)
+    if (naam === 'plaatsen') {
+      const sleutel = u.searchParams.get('overzicht') === '1' ? 'overzicht' : dag
+      return echteFetch(naar(`api/plaatsen-${sleutel}.json`))
+    }
     if (naam === 'inzet') return plaat('api/inzet.png', 'api/inzet.json', 'x-bounds')
     if (naam === 'dag') return echteFetch(naar(`api/dag-${dag}.json`))
 
@@ -92,14 +97,15 @@
     })
   }
 
-  // Geen server om naar te bewaren, dus die knoppen verbergen.
+  // Geen server om naar te bewaren en geen Chromium om op drukmaat te renderen,
+  // dus die knoppen verbergen.
   //
   // Verbergen en niet weghalen: de tekencode hangt er later een handler op, en
   // als het element dan weg is loopt die vast nog voordat de eerste kaart staat.
   // Dat kostte me een lege pagina bij het openen, terwijl van dag wisselen wel
   // werkte - precies het soort fout dat je alleen ziet als je het echt opent.
   addEventListener('DOMContentLoaded', () => {
-    for (const id of ['bewaar-boek', 'bewaar-dag']) {
+    for (const id of ['bewaar-boek', 'bewaar-dag', 'exporteer']) {
       const knop = document.getElementById(id)
       if (knop) { knop.hidden = true; knop.disabled = true }
     }

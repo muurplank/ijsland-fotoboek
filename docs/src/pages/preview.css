@@ -218,6 +218,20 @@ button {
 button:hover { background: #8a5c3f; }
 button.stil { background: none; color: #7d766e; font-weight: 450; }
 button.stil:hover { background: #e6e3df; color: #2b2926; }
+button:disabled { background: #b5afa8; cursor: progress; }
+
+/* De knop waarmee je weggaat met een bestand. Inktzwart in plaats van bruin,
+   want het is een ander soort handeling dan bewaren: bewaren legt instellingen
+   vast, dit levert het blad zelf op. En een streep eronder om die twee uit
+   elkaar te houden. */
+#exporteer {
+  background: #2b2926;
+  margin-bottom: 5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2ded9;
+  border-radius: 6px;
+}
+#exporteer:hover:not(:disabled) { background: #3f3b36; }
 
 /* --------------------------------------------- opschriften op de kaart */
 
@@ -231,6 +245,19 @@ button.stil:hover { background: #e6e3df; color: #2b2926; }
   font-weight: 560;
   paint-order: stroke fill;
   -webkit-text-stroke: var(--halo) var(--halokleur);
+}
+
+/* Een bekende plaats waar je niet stopte. Zelfde letter en zelfde witrand als
+   de stops - het is één familie - maar lichter en kleiner, want het is een
+   aanwijzing voor de oriëntatie en niet een plek waar je geweest bent.
+
+   En hij staat midden op de plaats in plaats van erboven: er is geen marker om
+   boven te hangen, dus de naam wijst zelf de plek aan. */
+.plaatsnaam.omgeving {
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
+  font-size: var(--omgevinggrootte);
+  color: var(--omgevingkleur);
+  font-weight: 460;
 }
 
 /* Exportmodus: alleen de pagina, verder niets. */
@@ -341,7 +368,14 @@ body.exporteren #pagina { box-shadow: none; }
 .cijfer-label { margin-top: .5em; letter-spacing: .04em; }
 .cijfer.metlijn { border-top: 1px solid #e0dcd5; padding-top: .6em; }
 
-.dagtekst { white-space: pre-wrap; }
+/* pre-wrap houdt de lege regels tussen de alinea's uit het dagbestand. In
+   kolommen mag een alinea wel breken, anders staat er onderaan een kolom een
+   gat zodra een alinea er net niet meer in past. */
+/* overflow: hidden is de laatste stop. De letter krimpt eerst mee met het vak
+   (zie pasTekstInVak in editable.js); pas als het vak zó klein wordt dat zelfs
+   1,8 mm niet meer past, wordt er afgekapt in plaats van dat de tekst over de
+   stempels heen loopt. */
+.dagtekst { white-space: pre-wrap; orphans: 2; widows: 2; overflow: hidden; }
 
 /* -------------------------------------------------------- overzichtskaart */
 
@@ -350,6 +384,24 @@ body.exporteren #pagina { box-shadow: none; }
   color: #fff; font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+/* ------------------------------------------------------------- het voorblad
+
+   Het dagnummer staat náást de stip en niet erin: op het voorblad zijn de
+   stippen klein en zou een cijfer erin onleesbaar worden. Een halve regel
+   naar rechtsboven houdt hem van de routelijn af. */
+.voorblad-dagnummer {
+  transform: translate(calc(.55em + var(--dx, 0px)), calc(-1.05em + var(--dy, 0px)));
+  font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.voorblad-titel { line-height: 1.12; }
+.voorblad-hoofd { line-height: 1; }
+/* De ondertitel en de bijregel staan losser dan de titel: dat maakt van drie
+   regels één blok in plaats van drie losse mededelingen. */
+.voorblad-onder { margin-top: .5em; opacity: .85; }
+.voorblad-bijregel { margin-top: .9em; opacity: .7; letter-spacing: .06em; }
+
 .legenda { display: flex; align-items: center; gap: .6em; }
 .legenda-balk { border-radius: 99px; }
 
@@ -359,7 +411,7 @@ body.exporteren #pagina { box-shadow: none; }
    de standaardopmaak leidend blijft en jouw correctie er alleen overheen ligt. */
 /* Alles wat zijn eigen uitlijning heeft (gecentreerd, rechts uitgelijnd) regelt
    de verschuiving zelf; deze regel is voor de rest. */
-#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
+#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.voorblad-dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
   transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--s, 1));
 }
 
@@ -482,9 +534,16 @@ body:not(.exporteren) #pagina [data-plek]::before {
   border-radius: 4px;
 }
 
+/* Weg terwijl er gemeten wordt of de tekst nog in zijn vak past.
+   Dit kadertje ligt zeven bij negen pixels buiten het element, en het telt mee
+   in scrollHeight en scrollWidth. Daardoor "paste" de tekst nooit en kromp de
+   letter door tot de ondergrens - ook als er ruimte zat. */
+body:not(.exporteren) #pagina [data-plek].meten::before { content: none; }
+
 body:not(.exporteren) #pagina .plaatsnaam,
 body:not(.exporteren) #pagina .profiel-stop,
 body:not(.exporteren) #pagina .dagnummer,
+body:not(.exporteren) #pagina .voorblad-dagnummer,
 body:not(.exporteren) #pagina .profiel-top { position: absolute; }
 
 /* duidelijker aanwijzen wat je kunt pakken */
@@ -616,4 +675,99 @@ body.exporteren .snaplijn { display: none; }
   white-space: nowrap;
   letter-spacing: .03em;
 }
+
+/* De haal met de pen onder de dagregel. Rekt met de tekst mee: het svg'tje is
+   honderd eenheden breed en wordt zonder verhoudingsbewaking uitgerekt tot de
+   breedte van de regel, dus de streep is altijd precies zo lang als wat eronder
+   staat - hoe lang de titel van die dag ook is. De hoogte doet dat niet mee,
+   dus de haal blijft even dik. */
+.voortgang-onderstreep {
+  position: absolute;
+  left: 0;
+  bottom: -.08em;
+  width: 100%;
+  height: .32em;
+  overflow: visible;
+  pointer-events: none;
+}
 .kiezer.verborgen { display: none; }
+
+/* ------------------------------------------------------------ postzegels */
+
+/* Elke afdruk staat op zichzelf en wordt los versleept en geschaald. Geen rij
+   eromheen: die zou bepalen waar ze staan, en een stempel op papier ligt waar
+   je hem hebt neergedrukt.
+
+   line-height op nul zodat het blokje precies om de afbeelding sluit. Anders
+   houdt het een paar tienden regelhoogte over en zie je bij het aanwijzen een
+   kader dat groter is dan de afdruk. */
+.postzegel { line-height: 0; }
+
+/* Alleen nog voor de afdruk in de hoek van de kaartpagina, waar wel een
+   onderschrift onder past. */
+.postzegel-kolom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .55em;
+}
+
+.postzegel-afdruk {
+  display: block;
+  width: auto;
+  /* Een afdruk is inkt op papier en heeft geen eigen wit nodig; zonder dit
+     krijgt een JPEG-foto in de band wel een rand en een stempel-PNG niet, en
+     dan staan ze niet meer op één lijn. */
+  background: none;
+}
+
+/* De kartelrand. Twee rijen halve rondjes die uit de vorm gehapt worden - één
+   langs de staande kanten, één langs de liggende - en dan de doorsnede van die
+   twee. Blijft scherp op elke maat, wat een gekartelde PNG niet doet. */
+.postzegel-vel {
+  --tand: 1.9mm;
+  display: inline-block;
+  -webkit-mask:
+    radial-gradient(var(--tand) at var(--tand) 50%, #0000 98%, #000 100%)
+      0 calc(-1 * var(--tand)) / 100% calc(100% - 2 * var(--tand)) repeat-y,
+    radial-gradient(var(--tand) at 50% var(--tand), #0000 98%, #000 100%)
+      calc(-1 * var(--tand)) 0 / calc(100% - 2 * var(--tand)) 100% repeat-x;
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* --------------------------------------------------------- veldnotitie */
+
+/* Altijd de typemachineletter, ook als de rest van het boek schreefloos staat.
+   Dit is geen lopende tekst maar een getypt etiket: plaatsnaam, nummer, jaar.
+   In een andere letter leest het als een onderschrift bij een illustratie, en
+   dat is precies wat het niet is. */
+.veldnotitie {
+  font-family: "American Typewriter", "Courier New", Courier, ui-monospace, monospace;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.veldnotitie-regel { white-space: nowrap; }
+
+/* De stempel in een hoek van de kaartpagina. */
+.postzegel-opkaart { align-items: center; }
+
+/* ------------------------------------------------ het inzetkaartje als zegel */
+
+.inzet-zegeltekst {
+  font-family: "American Typewriter", "Courier New", Courier, ui-monospace, monospace;
+  text-align: center;
+  line-height: 1;
+  padding-top: .5em;
+  white-space: nowrap;
+}
+
+/* De afstempeling ligt over het kaartje heen, binnen het vak dat al afknipt. */
+.inzet-afstempeling {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
