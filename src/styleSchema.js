@@ -100,13 +100,13 @@ export const KNOPPEN = [
   { key: 'lagen.hoogtelijnenKleur', groep: 'lagen', label: 'Hoogtelijnkleur', type: 'kleur', standaard: '#c9c2b6' },
   { key: 'lagen.mapboxLabelMm', groep: 'lagen', label: 'Mapbox: tekstgrootte', type: 'mm', min: 1.5, max: 9, step: 0.1, standaard: 3, help: 'Alleen voor de mapbox-stijlen. Hun plaatsnamen zitten met een vaste pixelgrootte in het beeld, dus dit bepaalt tegelijk hoe scherp de achtergrond wordt: grotere tekst betekent een zachtere kaart eronder' },
   { key: 'lagen.badgesWeg', groep: 'lagen', label: 'Wegnummers onder de route weghalen', type: 'aanuit', standaard: true, help: 'Mapbox zet witte wegnummer-badges langs de wegen. Die onder je eigen routelijn liggen zeggen niets en zien er rommelig uit; deze poetst alleen die weg' },
-  { key: 'lagen.tekstBoven', groep: 'lagen', label: 'Plaatsnamen boven de route', type: 'aanuit', standaard: true, help: 'De plaatsnamen worden uit de kaart geknipt en als eigen laag over de routelijn gelegd. De stapeling is dan: kaart, routelijn, plaatsnamen' },
+  { key: 'lagen.mapboxTekst', groep: 'lagen', label: 'Mapbox: eigen plaatsnamen', type: 'keuze', opties: ['wissen', 'optillen', 'laten'], standaard: 'wissen', help: 'Wissen poetst Mapbox\' namen uit de kaart, zodat alleen jouw eigen namen er staan - zet dan "Bekende plaatsen erbij" aan. Optillen knipt ze uit en legt ze over de routelijn. Laten laat ze staan waar ze staan, mee-verbleekt met de kaart' },
   { key: 'lagen.badgesBoven', groep: 'lagen', label: 'Wegnummers juist bovenop leggen', type: 'aanuit', standaard: false, help: 'In plaats van weghalen: uitknippen en over de routelijn heen leggen, zodat de tekst leesbaar blijft' },
   { key: 'lagen.achtergrondDekking', groep: 'lagen', label: 'Dekking achtergrond', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 1 },
   { key: 'lagen.verbleking', groep: 'lagen', label: 'Verbleken', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.1, help: 'Trekt de achtergrond richting de kleur hieronder, zodat je route ervoor knalt' },
   { key: 'lagen.verbleekNaar', groep: 'lagen', label: 'Verbleken naar welke kleur', type: 'kleur', standaard: '#ffffff', help: 'Standaard het wit van het papier. Zet je hem op de kleur van een oud vel, dan komen de kaart en de bladzijde uit dezelfde inktbak in plaats van dat de kaart zichtbaar van een ander, koeler vel is' },
   { key: 'lagen.verdonkering', groep: 'lagen', label: 'Verdonkeren naar zwart', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0, help: 'Het omgekeerde van verbleken. Hiermee maak je van Outdoors alsnog een donkere kaart met zijn hoogtelijnen erin - zet dan wel "Opgetilde namen" op licht, anders verdwijnen de plaatsnamen in het donker' },
-  { key: 'lagen.tekstKleur', groep: 'lagen', label: 'Opgetilde namen', type: 'keuze', opties: ['origineel', 'licht', 'donker'], standaard: 'origineel', help: 'De plaatsnamen die boven de route worden gelegd. Op een donkere kaart zijn ze zwart op zwart; met "licht" worden ze wit overgezet' },
+  { key: 'lagen.tekstKleur', groep: 'lagen', label: 'Opgetilde namen', type: 'keuze', opties: ['origineel', 'licht', 'donker'], standaard: 'origineel', help: 'Alleen als hierboven "optillen" staat. Op een donkere kaart zijn de opgetilde namen zwart op zwart; met "licht" worden ze wit overgezet' },
   { key: 'lagen.ontzadiging', groep: 'lagen', label: 'Ontzadigen', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.28, help: 'Haalt kleur uit de achtergrond zodat hij niet vloekt met je foto\'s' },
 
   // ---------------------------------------------------------------- relief
@@ -203,9 +203,11 @@ export const KNOPPEN = [
   { key: 'labels.hoofdletters', groep: 'labels', label: 'Hoofdletters', type: 'aanuit', standaard: false },
   { key: 'labels.letterafstand', groep: 'labels', label: 'Letterafstand', type: 'getal', min: -0.05, max: 0.4, step: 0.01, standaard: 0.01, eenheid: 'em' },
   { key: 'labels.lijntjes', groep: 'labels', label: 'Lijntje naar de marker', type: 'aanuit', standaard: true },
-  { key: 'labels.omgevingAan', groep: 'labels', label: 'Bekende plaatsen erbij', type: 'aanuit', standaard: true, help: 'Plaatsen waar je niet stopte, voor de oriëntatie' },
+  { key: 'labels.omgevingAan', groep: 'labels', label: 'Bekende plaatsen erbij', type: 'aanuit', standaard: true, help: 'Plaatsen waar je niet stopte, voor de oriëntatie. In de letter van het boek, dus scherp in de druk - anders dan de namen die in de kaartplaat gebakken zitten' },
   { key: 'labels.omgevingKleur', groep: 'labels', label: 'Kleur bekende plaatsen', type: 'kleur', standaard: '#8b857c' },
   { key: 'labels.omgevingGrootteMm', groep: 'labels', label: 'Grootte bekende plaatsen', type: 'mm', min: 1, max: 8, step: 0.1, standaard: 2.2 },
+  { key: 'labels.omgevingBelang', groep: 'labels', label: 'Hoe klein mag een plaats zijn', type: 'getal', min: 1, max: 19, step: 1, standaard: 13, help: 'Mapbox geeft elke plaats een rang van 1 (Reykjavík) tot 19 (een gehucht). Hoger betekent dat er ook kleinere dorpen bij mogen' },
+  { key: 'labels.omgevingMax', groep: 'labels', label: 'Hoogstens zoveel plaatsen', type: 'getal', min: 0, max: 40, step: 1, standaard: 14, help: 'Wat er niet meer bij past valt vanzelf af, de onbelangrijkste eerst' },
 
   // ------------------------------------------------------------ typografie
   { key: 'typografie.lettertype', groep: 'typografie', label: 'Lettertype', type: 'keuze', opties: ['systeem-schreefloos', 'systeem-schreef', 'typemachine'], standaard: 'systeem-schreefloos', help: 'typemachine is de letter van de veldnotitie-stijl. Op deze Mac is dat American Typewriter; op een machine zonder die letter valt hij terug op Courier New' },

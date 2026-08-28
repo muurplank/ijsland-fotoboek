@@ -20,7 +20,8 @@ export function vindWitteVlakken (beeld, {
   drempel = 235,
   minOppervlak = 100,
   maxOppervlak = 6000,
-  maxVerhouding = 4
+  maxVerhouding = 4,
+  minVulgraad = 0.45
 } = {}) {
   const { data, width, height } = beeld
   // De kaarttegels komen als rgba binnen, losse proefbeelden als rgb. Het
@@ -92,7 +93,7 @@ export function vindWitteVlakken (beeld, {
     if (verhouding > maxVerhouding) continue
 
     // een badge is grotendeels gevuld; een grillige vorm is iets anders
-    if (oppervlak / (breedte * hoogte) < 0.45) continue
+    if (oppervlak / (breedte * hoogte) < minVulgraad) continue
 
     vlakken.push({ x0, y0, breedte, hoogte, oppervlak })
   }
@@ -130,62 +131,111 @@ function raaktRoute (vlak, route, marge) {
 /**
  * Vult een rechthoekje op met de kleuren eromheen.
  *
- * Werkt van de rand naar binnen: elke lege pixel krijgt het gemiddelde van zijn
- * al gevulde buren. Daardoor loopt de omgeving vloeiend door in plaats van dat
- * er een egaal blok verschijnt.
+ * Elke lege pixel krijgt de kleur van de dichtstbijzijnde pixel die wél blijft,
+ * en daarna gaat er een paar keer een zachte veeg over de naden. Zo groeit de
+ * zee het gat in vanaf de zeekant en het land vanaf de landkant, en blijft een
+ * kustlijn die onder een naam door liep gewoon staan.
+ *
+ * Uitmiddelen deed dat niet: dat trok de kleuren van beide kanten door elkaar,
+ * en omdat het in leesvolgorde ging kwam er een diagonale veeg uit. Bij een
+ * wegnummer-badge van veertig bij vijfentwintig zag je dat niet, bij een
+ * plaatsnaam over een fjord des te meer.
+ *
+ * Met een masker wordt alleen ingevuld wat daarin staat; de rest van het
+ * rechthoekje blijft zoals het was en doet mee als bron.
  */
-function vulOp (beeld, x0, y0, breedte, hoogte) {
+function vulOp (beeld, x0, y0, breedte, hoogte, masker = null) {
   const { data, width, height } = beeld
   const kanalen = beeld.kanalen ?? 3
 
-  const leeg = new Uint8Array(breedte * hoogte).fill(1)
-  const kleur = new Float32Array(breedte * hoogte * 3)
+  // Eén pixel ruimer werken, zodat de rand eromheen als bron meedoet. Anders
+  // heeft een vakje dat helemaal ingevuld moet worden nergens kleur vandaan.
+  const B = breedte + 2
+  const H = hoogte + 2
 
-  for (let ronde = 0; ronde < breedte + hoogte; ronde++) {
-    let ingevuld = 0
+  const leeg = new Uint8Array(B * H)
+  const kleur = new Float32Array(B * H * 3)
+  const wachtrij = new Int32Array(B * H)
+  let kop = 0
+  let staart = 0
 
-    for (let y = 0; y < hoogte; y++) {
-      for (let x = 0; x < breedte; x++) {
-        const l = y * breedte + x
-        if (!leeg[l]) continue
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < B; x++) {
+      const l = y * B + x
+      const gx = x0 + x - 1
+      const gy = y0 + y - 1
 
-        let r = 0; let g = 0; let b = 0; let n = 0
+      // Buiten het beeld is geen bron. Klemmen op de laatste rij leek onschuldig,
+      // maar bij een naam die tegen de rand van de kaart aan ligt werd de tekst
+      // dan zijn eigen bron: de letters groeiden als een streepjescode omhoog.
+      const inBeeld = gx >= 0 && gy >= 0 && gx < width && gy < height
+      const inVak = x > 0 && y > 0 && x < B - 1 && y < H - 1
 
-        for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-          const bx = x + dx
-          const by = y + dy
+      if (!inBeeld || (inVak && (!masker || masker[gy * width + gx]))) { leeg[l] = 1; continue }
 
-          if (bx < 0 || by < 0 || bx >= breedte || by >= hoogte) {
-            // buiten het gat: pak de echte pixel uit het beeld
-            const gx = Math.min(width - 1, Math.max(0, x0 + bx))
-            const gy = Math.min(height - 1, Math.max(0, y0 + by))
-            const p = (gy * width + gx) * kanalen
-            r += data[p]; g += data[p + 1]; b += data[p + 2]; n++
-          } else if (!leeg[by * breedte + bx]) {
-            const q = (by * breedte + bx) * 3
-            r += kleur[q]; g += kleur[q + 1]; b += kleur[q + 2]; n++
-          }
-        }
-
-        if (!n) continue
-        const q = l * 3
-        kleur[q] = r / n; kleur[q + 1] = g / n; kleur[q + 2] = b / n
-        leeg[l] = 0
-        ingevuld++
-      }
+      const p = (gy * width + gx) * kanalen
+      kleur[l * 3] = data[p]
+      kleur[l * 3 + 1] = data[p + 1]
+      kleur[l * 3 + 2] = data[p + 2]
+      wachtrij[staart++] = l
     }
-
-    if (!ingevuld) break
   }
 
-  for (let y = 0; y < hoogte; y++) {
-    for (let x = 0; x < breedte; x++) {
-      const l = y * breedte + x
-      const p = ((y0 + y) * width + (x0 + x)) * kanalen
-      const q = l * 3
-      data[p] = kleur[q]
-      data[p + 1] = kleur[q + 1]
-      data[p + 2] = kleur[q + 2]
+  // niets om uit te putten; dan is niets doen beter dan er zwart van maken
+  if (!staart) return
+
+  const inTeVullen = leeg.slice()
+
+  // vanuit alle bronnen tegelijk naar binnen groeien; wie er het eerst is, wint
+  while (kop < staart) {
+    const l = wachtrij[kop++]
+    const x = l % B
+    const y = (l / B) | 0
+
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nx = x + dx
+      const ny = y + dy
+      if (nx < 0 || ny < 0 || nx >= B || ny >= H) continue
+
+      const n = ny * B + nx
+      if (!leeg[n]) continue
+
+      leeg[n] = 0
+      kleur[n * 3] = kleur[l * 3]
+      kleur[n * 3 + 1] = kleur[l * 3 + 1]
+      kleur[n * 3 + 2] = kleur[l * 3 + 2]
+      wachtrij[staart++] = n
+    }
+  }
+
+  // De naden waar twee bronnen elkaar tegenkwamen zachtjes wegwerken. Hoe groter
+  // het gat, hoe langer die naden zijn en hoe meer vegen er nodig is: bij een
+  // brede plek waar de kleur alleen van boven en onder kon komen bleef er anders
+  // een streepjespatroon staan, als een streepjescode over de kaart.
+  const rondes = Math.min(12, 3 + Math.round(Math.min(breedte, hoogte) / 4))
+  for (let ronde = 0; ronde < rondes; ronde++) {
+    const vorige = Float32Array.from(kleur)
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < B - 1; x++) {
+        const l = y * B + x
+        if (!inTeVullen[l]) continue
+        for (let k = 0; k < 3; k++) {
+          kleur[l * 3 + k] = (vorige[l * 3 + k] + vorige[(l - 1) * 3 + k] +
+            vorige[(l + 1) * 3 + k] + vorige[(l - B) * 3 + k] + vorige[(l + B) * 3 + k]) / 5
+        }
+      }
+    }
+  }
+
+  for (let y = 1; y < H - 1; y++) {
+    for (let x = 1; x < B - 1; x++) {
+      const l = y * B + x
+      if (!inTeVullen[l]) continue
+
+      const p = ((y0 + y - 1) * width + (x0 + x - 1)) * kanalen
+      data[p] = kleur[l * 3]
+      data[p + 1] = kleur[l * 3 + 1]
+      data[p + 2] = kleur[l * 3 + 2]
     }
   }
 }
@@ -281,15 +331,42 @@ export function behandelSchilden (beeld, route, {
 /**
  * Zoekt gebieden die eruitzien als kaarttekst.
  *
+ * Twee dingen scheiden een woord van het landschap, en allebei zijn ze nodig.
+ *
+ * De inkt van een letter is *ingehouden van kleur*: Mapbox zet zijn namen in
+ * donkergrijs, en zijn natuurgebieden in een donkergroen. Diep in een schaduw of
+ * onder een gletsjerrand ligt ook iets donkers naast iets lichts, maar dat
+ * donker heeft altijd een stevige kleurzweem. Op alleen helderheid toetsen
+ * leverde daarom halve kustlijnen op, en die kwamen als cyane vlekken mee.
+ *
+ * En "licht" betekent hier helder, niet wit. Mapbox zet lang niet om elke naam
+ * een witrand - op lichte landcover staat de tekst er kaal op - en waar wel een
+ * rand staat neemt die de kleur van de ondergrond aan. Op bijna-wit toetsen
+ * vond "Akureyri" alleen langs de wegen die er toevallig doorheen lopen, en van
+ * "Breiðafjörður" bleef "Brei" staan omdat de zee eronder wel helder is maar
+ * niet wit. Op de helderste kanaalwaarde toetsen vangt allebei die gevallen.
+ *
+ * En de vorm van een woord is *compact*: nadat de losse letters aan elkaar
+ * gegroeid zijn is het een gevuld blokje van een paar regels hoog. Een kustlijn
+ * groeit tot een slinger met een enorme omhullende rechthoek waar bijna niets
+ * in zit, en een gletsjer tot een egale plak zonder inkt.
+ *
  * @param {{data: Buffer, width: number, height: number, kanalen?: number}} beeld
  */
 export function vindTekstVlakken (beeld, {
   donker = 110,
-  licht = 235,
+  licht = 205,
+  neutraal = 70,
   venster = 5,
   minOppervlak = 120,
   maxOppervlak = 60000,
-  gatDichten = 6
+  gatDichten = 6,
+  maskerGroei = 3,
+  negeer = [],
+  maxHoogte = Infinity,
+  minVulgraad = 0.5,
+  inktMin = 0.02,
+  inktMax = 0.45
 } = {}) {
   const { data, width, height } = beeld
   const kanalen = beeld.kanalen ?? 3
@@ -301,8 +378,8 @@ export function vindTekstVlakken (beeld, {
     const p = i * kanalen
     const min = Math.min(data[p], data[p + 1], data[p + 2])
     const max = Math.max(data[p], data[p + 1], data[p + 2])
-    if (max <= donker) isDonker[i] = 1
-    if (min >= licht) isLicht[i] = 1
+    if (max <= donker && max - min <= neutraal) isDonker[i] = 1
+    if (max >= licht) isLicht[i] = 1
   }
 
   // een pixel telt als tekst als er binnen een klein venster zowel iets heel
@@ -324,21 +401,70 @@ export function vindTekstVlakken (beeld, {
     }
   }
 
-  // losse letters aan elkaar plakken tot een woord
-  const gedicht = verbreed(tekst, width, height, gatDichten)
+  // Losse letters aan elkaar plakken tot een woord - breder dan hoog. Een naam
+  // loopt horizontaal, dus horizontaal mag het gat groot zijn. Verticaal juist
+  // niet: twee namen boven elkaar horen twee vlakken te blijven, anders wordt
+  // hun gezamenlijke rechthoek te hoog en valt hij alsnog af.
+  const gedicht = verbreed(tekst, width, height, gatDichten, Math.max(1, Math.round(gatDichten / 2)))
 
-  const vlakken = vlakkenUitMasker(gedicht, width, height, { minOppervlak, maxOppervlak })
+  // De wegnummer-schildjes uit het masker knippen, ná het dichten.
+  //
+  // Ervoor knippen werkte niet: het dichten groeide er gewoon overheen. En het
+  // moet gebeuren, want anders groeit een naam vlakbij aan het schildje vast en
+  // wordt hun gezamenlijke rechthoek te leeg om nog voor tekst door te gaan. Zo
+  // bleven "Akureyri" naast de 1 en "Húsavík" onder de 85 op de kaart staan.
+  //
+  // De marge is ruim: het gevonden witte vlak is alleen het bínnenwerk van het
+  // schildje, en daar zitten de rand, de witrand en het dichten nog omheen.
+  for (const vlak of negeer) wisUitMasker(gedicht, width, height, vlak, gatDichten + 8)
 
-  // het nauwe masker meesturen: bij het optillen willen we alleen de letters en
-  // hun rand meenemen, niet het hele rechthoek eromheen. Anders valt er een blok
-  // uit de routelijn in plaats van dat de tekst er netjes overheen staat.
-  vlakken.masker = verbreed(tekst, width, height, 2)
+  const ruw = vlakkenUitMasker(gedicht, width, height, { minOppervlak, maxOppervlak })
+
+  const vlakken = ruw.filter(v => {
+    if (v.hoogte > maxHoogte) return false
+    if (v.oppervlak / (v.breedte * v.hoogte) < minVulgraad) return false
+
+    // hoeveel van de omhullende rechthoek echt inkt is. Een woord zit rond een
+    // vijfde vol; een egale donkere plak zit er ver boven en een toevallig
+    // gevonden stukje landschap ver onder.
+    const inkt = aandeelInkt(isDonker, width, v)
+    return inkt >= inktMin && inkt <= inktMax
+  })
+
+  // Het nauwe masker meesturen: er hoeven alleen de letters en hun witrand uit,
+  // niet het hele rechthoek eromheen. Bij het optillen zou er anders een blok
+  // uit de routelijn vallen in plaats van dat de tekst er netjes overheen staat,
+  // en bij het wissen zou er meer landschap sneuvelen dan nodig is.
+  vlakken.masker = verbreed(tekst, width, height, maskerGroei, maskerGroei)
   return vlakken
 }
 
+/** Haalt een rechthoekje uit een masker, met wat marge eromheen. */
+function wisUitMasker (masker, width, height, vlak, marge) {
+  const x0 = Math.max(0, vlak.x0 - marge)
+  const y0 = Math.max(0, vlak.y0 - marge)
+  const x1 = Math.min(width, vlak.x0 + vlak.breedte + marge)
+  const y1 = Math.min(height, vlak.y0 + vlak.hoogte + marge)
+
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) masker[y * width + x] = 0
+  }
+}
+
+/** Welk deel van de omhullende rechthoek van dit vlak echt inkt is. */
+function aandeelInkt (isDonker, width, vlak) {
+  let n = 0
+  for (let y = vlak.y0; y < vlak.y0 + vlak.hoogte; y++) {
+    for (let x = vlak.x0; x < vlak.x0 + vlak.breedte; x++) {
+      if (isDonker[y * width + x]) n++
+    }
+  }
+  return n / (vlak.breedte * vlak.hoogte)
+}
+
 /** Verbreedt een masker met een aantal pixels, zodat losse stukjes aan elkaar groeien. */
-function verbreed (masker, width, height, straal) {
-  if (straal <= 0) return masker
+function verbreed (masker, width, height, straalX, straalY = straalX) {
+  if (straalX <= 0 && straalY <= 0) return masker
   const uit = new Uint8Array(width * height)
 
   // horizontaal en verticaal apart: veel sneller dan een rond venster
@@ -346,7 +472,7 @@ function verbreed (masker, width, height, straal) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (!masker[y * width + x]) continue
-      for (let dx = -straal; dx <= straal; dx++) {
+      for (let dx = -straalX; dx <= straalX; dx++) {
         const nx = x + dx
         if (nx >= 0 && nx < width) tussen[y * width + nx] = 1
       }
@@ -355,7 +481,7 @@ function verbreed (masker, width, height, straal) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (!tussen[y * width + x]) continue
-      for (let dy = -straal; dy <= straal; dy++) {
+      for (let dy = -straalY; dy <= straalY; dy++) {
         const ny = y + dy
         if (ny >= 0 && ny < height) uit[ny * width + x] = 1
       }
@@ -479,5 +605,121 @@ function hertintLaag (laag, naar) {
     laag[i + 1] = waarde
     laag[i + 2] = waarde
     laag[i + 3] = Math.round(a * Math.min(1, sterkte * 1.15))
+  }
+}
+
+/**
+ * Poetst de kaarttekst uit het beeld weg, zodat wij de namen zelf kunnen zetten.
+ *
+ * Het spiegelbeeld van `tilTekstOp`: die tilt Mapbox' letters op om ze te
+ * bewaren, deze haalt ze juist weg. De naam komt daarna als vector terug in de
+ * letter van het boek, en dan hoort er geen tweede versie in de kaart te zitten.
+ *
+ * Wegpoetsen is vergevingsgezinder dan optillen. Een vlak dat iets te ruim
+ * genomen is levert een onopvallend zachte plek op, maar een woord dat maar
+ * half opgetild werd zag je meteen. Vandaar dat de gaten hier royaal gedicht
+ * worden: liever een naam te veel meepakken dan een halve laten staan.
+ *
+ * De wegnummers blijven wel staan. Die zijn geen letter maar een schildje, ze
+ * horen bij de weg, en ze verbleken straks netjes mee met de rest van de kaart.
+ * Waar ze staan gaat mee terug, zodat de browser er zijn eigen namen niet
+ * bovenop zet.
+ *
+ * @param {{data: Buffer, width: number, height: number, kanalen?: number}} beeld
+ * @returns {{aantal: number, schilden: Array}} hoeveel namen er weggepoetst zijn
+ */
+export function wisTekst (beeld, { rand = 3, spaarSchilden = true, ...opties } = {}) {
+  // Eerst de schildjes, want die bepalen mede waar de tekst gezocht wordt.
+  //
+  // Alleen echt schildvormige witte vlakken tellen mee: bijna helemaal gevuld,
+  // niet te groot, en altijd breder dan hoog - er staat immers een nummer in.
+  // Die laatste eis houdt de staande speldjes van bezienswaardigheden erbuiten.
+  // Zonder die eis werd het witte speldje midden in "Breiðafjörður" voor een
+  // wegnummer aangezien, en dan knipte het de naam doormidden: "Brei" en "fjö"
+  // bleven staan met een gat ertussen.
+  const schilden = spaarSchilden
+    ? vindWitteVlakken(beeld, { minOppervlak: 150, maxOppervlak: 4000, maxVerhouding: 3, minVulgraad: 0.7 })
+      .filter(s => s.breedte >= s.hoogte * 1.15)
+    : []
+
+  // Ruimer masker dan bij het optillen: de witrand om een naam dooft geleidelijk
+  // uit, en wat daarvan blijft staan lees je als een lichte schim op de plek waar
+  // het woord stond. Dat mag weg - de opvulling houdt de randen toch wel scherp.
+  const vlakken = vindTekstVlakken(beeld, { ...opties, maskerGroei: 7, negeer: schilden })
+  const masker = vlakken.masker
+  const kanalen = beeld.kanalen ?? 3
+
+  // Om het uitgeknipte schildje blijft een randje masker over - zijn eigen
+  // witrand. Dat is geen naam maar een lijstje om het nummer, en dat hoort te
+  // blijven. Herkenbaar doordat het niet veel groter is dan het schildje zelf.
+  const speling = 2 * ((opties.gatDichten ?? 6) + 6)
+  const isSchild = vlak => schilden.some(s =>
+    vlak.x0 >= s.x0 - speling && vlak.y0 >= s.y0 - speling &&
+    vlak.x0 + vlak.breedte <= s.x0 + s.breedte + speling &&
+    vlak.y0 + vlak.hoogte <= s.y0 + s.hoogte + speling)
+
+  let aantal = 0
+
+  for (const vlak of vlakken) {
+    if (isSchild(vlak)) continue
+
+    const x0 = Math.max(0, vlak.x0 - rand)
+    const y0 = Math.max(0, vlak.y0 - rand)
+    const x1 = Math.min(beeld.width, vlak.x0 + vlak.breedte + rand)
+    const y1 = Math.min(beeld.height, vlak.y0 + vlak.hoogte + rand)
+
+    // Een schildje dat toevallig binnen deze rechthoek valt hoort te blijven.
+    // Het wordt bewaard, de naam wordt weggepoetst, en daarna komt het schildje
+    // terug op zijn plek - eromheen loopt de opvulling gewoon door.
+    const teBewaren = schilden
+      .filter(s => s.x0 < x1 && x0 < s.x0 + s.breedte && s.y0 < y1 && y0 < s.y0 + s.hoogte)
+      .map(s => ({ s, pixels: knip(beeld, s, rand) }))
+
+    vulOp(beeld, x0, y0, x1 - x0, y1 - y0, masker)
+    for (const { s, pixels } of teBewaren) plak(beeld, s, rand, pixels, kanalen)
+
+    aantal++
+  }
+
+  return { aantal, schilden }
+}
+
+/** Bewaart de pixels van een rechthoekje, met marge. */
+function knip (beeld, vlak, marge) {
+  const kanalen = beeld.kanalen ?? 3
+  const { x0, y0, x1, y1 } = binnen(beeld, vlak, marge)
+  const uit = Buffer.alloc((x1 - x0) * (y1 - y0) * kanalen)
+
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const bron = (y * beeld.width + x) * kanalen
+      const doel = ((y - y0) * (x1 - x0) + (x - x0)) * kanalen
+      for (let k = 0; k < kanalen; k++) uit[doel + k] = beeld.data[bron + k]
+    }
+  }
+
+  return uit
+}
+
+/** Zet bewaarde pixels terug op hun plek. */
+function plak (beeld, vlak, marge, pixels, kanalen) {
+  const { x0, y0, x1, y1 } = binnen(beeld, vlak, marge)
+
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const doel = (y * beeld.width + x) * kanalen
+      const bron = ((y - y0) * (x1 - x0) + (x - x0)) * kanalen
+      for (let k = 0; k < kanalen; k++) beeld.data[doel + k] = pixels[bron + k]
+    }
+  }
+}
+
+/** Een rechthoekje met marge, geklemd binnen het beeld. */
+function binnen (beeld, vlak, marge) {
+  return {
+    x0: Math.max(0, vlak.x0 - marge),
+    y0: Math.max(0, vlak.y0 - marge),
+    x1: Math.min(beeld.width, vlak.x0 + vlak.breedte + marge),
+    y1: Math.min(beeld.height, vlak.y0 + vlak.hoogte + marge)
   }
 }

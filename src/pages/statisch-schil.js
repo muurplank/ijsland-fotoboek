@@ -69,6 +69,10 @@
       return plaat(`api/achtergrond-${sleutel}.png`, `api/achtergrond-${sleutel}.json`, 'x-plaatsing')
     }
     if (naam === 'bovenlaag') return plaat(`api/bovenlaag-${laatsteDag}.png`)
+    if (naam === 'plaatsen') {
+      const sleutel = u.searchParams.get('overzicht') === '1' ? 'overzicht' : dag
+      return echteFetch(naar(`api/plaatsen-${sleutel}.json`))
+    }
     if (naam === 'inzet') return plaat('api/inzet.png', 'api/inzet.json', 'x-bounds')
     if (naam === 'dag') return echteFetch(naar(`api/dag-${dag}.json`))
 

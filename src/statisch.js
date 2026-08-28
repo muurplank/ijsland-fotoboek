@@ -191,16 +191,18 @@ for (const d of dagen) {
     join(UIT, 'api', `achtergrond-${d.dag}.png`),
     'x-plaatsing', join(UIT, 'api', `achtergrond-${d.dag}.json`))
   const b = await bewaar('/api/bovenlaag', join(UIT, 'api', `bovenlaag-${d.dag}.png`))
-  totaal += n + (b || 0)
+  const p = await bewaar(`/api/plaatsen?dag=${d.dag}`, join(UIT, 'api', `plaatsen-${d.dag}.json`))
+  totaal += n + (b || 0) + (p || 0)
   console.log(`  dag ${String(d.dag).padStart(2)}`.padEnd(28) +
-    `achtergrond ${kb(n)}${b ? `, plaatsnamen ${kb(b)}` : ''}`)
+    `achtergrond ${kb(n)}${b ? `, opgetild ${kb(b)}` : ''}${p ? `, plaatsnamen ${kb(p)}` : ''}`)
 }
 
 const o = await bewaar('/api/achtergrond?dag=1&overzicht=1',
   join(UIT, 'api', 'achtergrond-overzicht.png'),
   'x-plaatsing', join(UIT, 'api', 'achtergrond-overzicht.json'))
 await bewaar('/api/bovenlaag', join(UIT, 'api', 'bovenlaag-overzicht.png'))
-totaal += o
+totaal += o + (await bewaar('/api/plaatsen?dag=1&overzicht=1',
+  join(UIT, 'api', 'plaatsen-overzicht.json')) || 0)
 console.log('  hele reis'.padEnd(28) + `achtergrond ${kb(o)}`)
 
 // Het inzetkaartje hangt aan de kleuren en de breedte uit het boek, dus haal de

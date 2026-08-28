@@ -14,7 +14,7 @@ import { kleurKaart } from './colorize.js'
 import { kleurTerrein } from './terrain.js'
 import { fetchImagery } from '../fetch/imagery.js'
 import { fetchMapboxKaart } from '../fetch/mapbox.js'
-import { behandelSchilden, tilTekstOp } from './shields.js'
+import { behandelSchilden, tilTekstOp, wisTekst } from './shields.js'
 import { expandBounds } from '../geo/viewport.js'
 import { lonLatToTile, metersPerPixel as gronddekking, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
 
@@ -186,6 +186,28 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
   const doel = (mPerMm * stijl['lagen.mapboxLabelMm']) / LABEL_PX
 
   const beeld = await fetchMapboxKaart(zicht, { stijl: mapboxStijl, metersPerPixel: doel, onProgress })
+  const raster = { ...beeld, kanalen: beeld.channels }
+
+  // Hoe hoog een letter in dít raster staat. De maten waarmee de tekst gezocht
+  // wordt hangen daaraan: het zoomniveau is hierboven juist zo gekozen dat een
+  // naam LABEL_PX hoog is, dus dat is de enige maat die we hoeven te kennen.
+  const letterPx = LABEL_PX * (beeld.schaal ?? 1)
+  const tekstMaten = {
+    gatDichten: Math.max(4, Math.round(letterPx * 0.35)),
+    maxHoogte: letterPx * 4,
+    minOppervlak: Math.round(letterPx * letterPx * 0.5)
+  }
+
+  // Wat er met Mapbox' eigen letters gebeurt. Standaard verdwijnen ze: de namen
+  // komen daarna als vector terug in de letter van het boek.
+  const watMetTekst = stijl['lagen.mapboxTekst'] ?? 'wissen'
+
+  let schilden = []
+  if (watMetTekst === 'wissen') {
+    const uit = wisTekst(raster, tekstMaten)
+    if (uit.aantal) onProgress?.(`${uit.aantal} kaartnaam/namen weggepoetst`)
+    schilden = uit.schilden
+  }
 
   // De witte wegnummer-badges die onder de route vallen zeggen niets - die weg
   // volg je juist - en ze ogen rommelig. Ze worden weggepoetst of juist
@@ -200,8 +222,6 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
     const breedteMm = stijl['route.dikteMm'] + 2 * stijl['route.buitenExtraMm']
     const dikteInPixels = Math.max(6, (breedteMm * rasterPxPerMm) / 2 + 4)
 
-    const raster = { ...beeld, kanalen: beeld.channels }
-
     // Wegnummers weg: die weg volg je nu juist, dus het nummer zegt niets.
     if (stijl['lagen.badgesWeg']) {
       const uit = behandelSchilden(raster, inPixels, { wat: 'wissen', lijnDikte: dikteInPixels })
@@ -209,8 +229,9 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
     }
 
     // Plaatsnamen juist optillen: die wil je lezen, dus die horen boven de lijn.
-    if (stijl['lagen.tekstBoven']) {
+    if (watMetTekst === 'optillen') {
       const uit = tilTekstOp(raster, inPixels, {
+        ...tekstMaten,
         lijnDikte: dikteInPixels,
         alles: true,
         hertint: stijl['lagen.tekstKleur']
@@ -259,7 +280,17 @@ export async function mapboxAchtergrond ({ view, stijl, dpi, mapboxStijl, route,
       .toBuffer()
   }
 
-  return { ...uit, bovenPng, bronvermelding: '© Mapbox, © OpenStreetMap' }
+  // Waar de wegnummers op de pagina belanden. De browser zet zijn eigen
+  // plaatsnamen daar niet bovenop: die schildjes zitten in de plaat gebakken en
+  // zijn dus onzichtbaar voor alles wat er in de browser overheen getekend wordt.
+  const schildenMm = schilden.map(s => ({
+    xMm: uit.xMm + (s.x0 / beeld.width) * uit.breedteMm,
+    yMm: uit.yMm + (s.y0 / beeld.height) * uit.hoogteMm,
+    breedteMm: (s.breedte / beeld.width) * uit.breedteMm,
+    hoogteMm: (s.hoogte / beeld.height) * uit.hoogteMm
+  }))
+
+  return { ...uit, bovenPng, schilden: schildenMm, bronvermelding: '© Mapbox, © OpenStreetMap' }
 }
 
 /** De route omgerekend naar pixels binnen dit achtergrondraster. */

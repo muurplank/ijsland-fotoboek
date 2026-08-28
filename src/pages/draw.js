@@ -602,3 +602,153 @@ export function teken (svg, opschriften, gegevens, stijl, svgBoven = null) {
 
   return view
 }
+
+/**
+ * Binnen hoeveel graden een stop "in deze plaats" ligt: ongeveer twee kilometer.
+ *
+ * Veel ruimer dan ZELFDE_PLEK_GRADEN, en met opzet. Dat is de marge om te zien
+ * of twee punten dezelfde parkeerplaats zijn; dit is de vraag of je stop in dit
+ * dorp lag. Het punt dat OpenStreetMap voor een plaats aanhoudt ligt op de kerk
+ * of het gemeentehuis, en waar jij stopte kan makkelijk een kilometer verderop
+ * zijn. Op zestig meter toetsen zette "Akureyri" dus alsnog naast je eigen stop.
+ */
+const IN_DEZELFDE_PLAATS_GRADEN = 0.02
+
+/**
+ * Zoekt een plekje voor deze naam waar hij niets raakt.
+ *
+ * Eerst midden op de plaats; past dat niet, dan er net boven, onder, rechts of
+ * links van. Zonder die uitwijk verdween bijna elke naam, want een plaats waar
+ * je langsreed heeft vaak al een stip, en daar ligt de naam dan bovenop.
+ */
+function pasIn (naam, p, bezet, lucht, mmPx, buren, onderling) {
+  const vrij = vak =>
+    !bezet.some(b => botst(b, vak, lucht)) &&
+    !buren.some(b => botst(b, vak, onderling))
+
+  let vak = naam.getBoundingClientRect()
+  if (vrij(vak)) return vak
+
+  const breedteMm = vak.width / mmPx
+  const hoogteMm = vak.height / mmPx
+  const zij = breedteMm / 2 + 1.6
+  const op = hoogteMm + 0.8
+
+  for (const [dx, dy] of [[0, -op], [0, op], [zij, 0], [-zij, 0], [zij, -op], [-zij, -op]]) {
+    naam.style.left = `calc(${p.x + dx} * var(--mm))`
+    naam.style.top = `calc(${p.y + dy} * var(--mm))`
+
+    vak = naam.getBoundingClientRect()
+    if (vrij(vak)) return vak
+  }
+
+  return null
+}
+
+/** Raken deze twee schermrechthoeken elkaar, met wat lucht ertussen? */
+function botst (a, b, lucht) {
+  return a.left - lucht < b.right && b.left - lucht < a.right &&
+    a.top - lucht < b.bottom && b.top - lucht < a.bottom
+}
+
+/**
+ * De bekende plaatsen uit de omgeving, voor de oriëntatie.
+ *
+ * Deze namen stonden vroeger in de kaartplaat gebakken, in de letter van
+ * Mapbox: rasterletters die op 600 dpi zacht werden opgeblazen en niet bij het
+ * boek pasten. Ze worden nu uit de plaat gepoetst en hier opnieuw gezet - als
+ * vector, in dezelfde letter als de rest van de kaart.
+ *
+ * Ze komen als laatste aan de beurt, ná de route, de stops en het bijwerk. Dat
+ * is met opzet: een bekende plaats is een toevoeging en nooit belangrijker dan
+ * de reis zelf. Past hij niet tussen wat er al staat, dan komt hij er niet.
+ *
+ * @param {HTMLElement} pagina de hele pagina, om te meten wat er al staat
+ * @param {HTMLElement} opschriften de laag waar de namen in komen
+ * @param {object} stijl
+ * @param {object} view de kaartuitsnede die `teken` teruggaf
+ * @param {object} opties
+ * @param {Array<{naam: string, lat: number, lon: number, belang: number}>} opties.plaatsen
+ * @param {Array<{lat: number, lon: number}>} opties.punten plekken die we zelf al aanwijzen
+ * @param {object} opties.plaatsing de verschuivingen van deze pagina
+ * @param {Array} opties.gebakken rechthoeken die al in de kaartplaat zitten
+ */
+export function tekenOmgevingsnamen (pagina, opschriften, stijl, view, {
+  plaatsen = [],
+  punten = [],
+  plaatsing = {},
+  gebakken = []
+} = {}) {
+  for (const oud of opschriften.querySelectorAll('.plaatsnaam.omgeving')) oud.remove()
+
+  const hoogstens = stijl['labels.omgevingMax']
+  if (!stijl['labels.omgevingAan'] || !view || !hoogstens || !plaatsen.length) return
+
+  const maat = paginaMaat(stijl)
+
+  // Wat er al met zoveel woorden staat, hoeft er niet nog eens te staan. Op de
+  // tekst en niet op de plek: Mapbox zet zijn labelpunt zelden precies waar jij
+  // je stop aantikte, en dan zou "Akureyri" er alsnog twee keer staan.
+  const alGezet = new Set(
+    [...opschriften.querySelectorAll('.plaatsnaam')].map(n => n.textContent.trim())
+  )
+
+  // alles wat er al staat, als rechthoek op het scherm - plus wat er in de
+  // kaartplaat gebakken zit en dus niet op te meten valt
+  const bezet = [...pagina.querySelectorAll(`[${SLEEP}]`)]
+    .map(n => n.getBoundingClientRect())
+    .filter(r => r.width > 0 && r.height > 0)
+    .concat(gebakken)
+
+  const mmPx = parseFloat(getComputedStyle(pagina).getPropertyValue('--mm')) || 1
+  const lucht = 0.6 * mmPx
+
+  // Onderling houden de namen veel meer afstand dan tot de rest van de pagina.
+  // Anders vult één stedelijk gebied de hele kaart met zijn buitenwijken: rond
+  // Reykjavík stonden Garðabær, Seltjarnarnes, Mosfellsbær en Vogar er wel, en
+  // Reykjavík zelf paste er niet meer bij.
+  const onderling = stijl['labels.omgevingGrootteMm'] * 4 * mmPx
+  const gezetteVakken = []
+
+  let gezet = 0
+
+  for (const plaats of plaatsen) {
+    if (gezet >= hoogstens) break
+    if (plaats.belang > stijl['labels.omgevingBelang']) continue
+    if (alGezet.has(plaats.naam)) continue
+    if (plaatsing[`plaats:${plaats.naam}`]?.verborgen) continue
+    if (punten.some(w =>
+      Math.abs(w.lat - plaats.lat) <= IN_DEZELFDE_PLAATS_GRADEN &&
+      Math.abs(w.lon - plaats.lon) <= IN_DEZELFDE_PLAATS_GRADEN)) continue
+
+    const p = view.project(plaats.lon, plaats.lat)
+
+    // wat in de afloop valt wordt weggesneden, dus dat hoeft niet gezet
+    if (p.x < maat.afloopMm || p.y < maat.afloopMm ||
+        p.x > maat.breedteMm - maat.afloopMm || p.y > maat.hoogteMm - maat.afloopMm) continue
+
+    const naam = document.createElement('div')
+    naam.className = 'plaatsnaam omgeving'
+    naam.setAttribute(SLEEP, `plaats:${plaats.naam}`)
+    naam.setAttribute(KNOPPEN, 'labels')
+    naam.setAttribute(WEGHAAL, '')
+    naam.textContent = plaats.naam
+    naam.style.left = `calc(${p.x} * var(--mm))`
+    naam.style.top = `calc(${p.y} * var(--mm))`
+    opschriften.append(naam)
+
+    // Meten kan pas als hij staat. Dat kost een herberekening per poging, maar
+    // het gaat om een stuk of vijftien namen, en zelf de tekstbreedte schatten
+    // klopt nooit - zeker niet met een letter die per boek verschilt.
+    const vak = pasIn(naam, p, bezet, lucht, mmPx, gezetteVakken, onderling)
+    if (!vak) {
+      naam.remove()
+      continue
+    }
+
+    bezet.push(vak)
+    gezetteVakken.push(vak)
+    alGezet.add(plaats.naam)
+    gezet++
+  }
+}

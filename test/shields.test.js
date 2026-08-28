@@ -137,7 +137,7 @@ test('leest ook een raster met een alfakanaal goed uit', () => {
 
 // ---------------------------------------------------------------- tekstlabels
 
-import { vindTekstVlakken, tilTekstOp } from '../src/render/shields.js'
+import { vindTekstVlakken, tilTekstOp, wisTekst } from '../src/render/shields.js'
 
 /** Bootst een plaatsnaam na: donkere letters met een witte rand eromheen. */
 function tekst (b, x0, y0, letters = 5) {
@@ -224,4 +224,95 @@ test('tilt alleen de letters op, niet het hele rechthoek eromheen', () => {
   const bovenTekst = (60 * 400 + 63) * 4
   assert.equal(laag[bovenTekst + 3], 0,
     'ruimte boven de tekst hoort niet mee opgetild te worden')
+})
+
+/* ========================================================================
+ * Kaarttekst wegpoetsen
+ * ===================================================================== */
+
+/** Een wegnummer-schildje: een gevuld wit blok met een paar cijferstreepjes. */
+function schildje (b, x0, y0, breedte = 40, hoogte = 26) {
+  blok(b, x0, y0, breedte, hoogte, 250)
+  for (let n = 0; n < 3; n++) blok(b, x0 + 8 + n * 9, y0 + 6, 4, 14, 40)
+}
+
+/** Een grillige donkere slinger met licht ernaast, zoals een kustlijn. */
+function kustlijn (b, van, tot) {
+  for (let s = van; s <= tot; s++) {
+    for (let d = 0; d < 3; d++) {
+      const i = ((s + d) * b.width + s) * 3
+      b.data[i] = b.data[i + 1] = b.data[i + 2] = 45
+      const j = ((s + d + 5) * b.width + s) * 3
+      b.data[j] = b.data[j + 1] = b.data[j + 2] = 250
+    }
+  }
+}
+
+test('poetst een plaatsnaam uit de kaart', () => {
+  const b = beeld(300, 200, 150)
+  tekst(b, 60, 90)
+
+  // midden op de derde letter, voor en na
+  const opLetter = [88, 97]
+  assert.equal(pixel(b, ...opLetter), 45, 'de letter hoort er eerst te staan')
+
+  const { aantal } = wisTekst(b)
+  assert.equal(aantal, 1, 'één naam gevonden')
+  assert.ok(pixel(b, ...opLetter) > 120, 'de letter hoort weg te zijn')
+})
+
+test('laat het landschap buiten de naam met rust', () => {
+  const b = beeld(300, 200, 150)
+  tekst(b, 60, 90)
+  blok(b, 220, 30, 40, 40, 90)   // een donkere plek ver van de tekst
+
+  wisTekst(b)
+  assert.equal(pixel(b, 240, 50), 90, 'de plek ver weg hoort onaangeraakt te blijven')
+})
+
+test('laat een kustlijn staan: die is te grillig voor een woord', () => {
+  const b = beeld(220, 220, 150)
+  kustlijn(b, 10, 190)
+  const voor = Buffer.from(b.data)
+
+  const { aantal } = wisTekst(b)
+  assert.equal(aantal, 0, 'een slinger is geen tekst')
+  assert.ok(b.data.equals(voor), 'er hoort niets veranderd te zijn')
+})
+
+test('laat een wegnummer staan, ook naast een naam', () => {
+  const b = beeld(360, 200, 150)
+  schildje(b, 40, 40)
+  tekst(b, 40, 90)
+
+  wisTekst(b)
+
+  assert.equal(pixel(b, 44, 44), 250, 'het witte vlak van het schildje hoort te blijven')
+  assert.equal(pixel(b, 50, 52), 40, 'het cijfer erin ook')
+  assert.ok(pixel(b, 68, 97) > 120, 'de naam eronder hoort wel weg te zijn')
+})
+
+test('plakt losse letters tot één woord', () => {
+  const b = beeld(300, 200, 150)
+  tekst(b, 60, 90, 5)
+
+  const vlakken = vindTekstVlakken(b)
+  assert.equal(vlakken.length, 1, 'vijf letters horen één vlak te worden, geen vijf')
+  assert.ok(vlakken[0].breedte > 50, `het vlak hoort het hele woord te beslaan (${vlakken[0].breedte})`)
+})
+
+test('vult een naam over een kustlijn van de goede kant op', () => {
+  // links donkerder land, rechts lichte zee, met de naam er dwars overheen
+  const b = beeld(300, 200, 120)
+  blok(b, 150, 0, 150, 200, 230)
+  tekst(b, 110, 90, 6)
+
+  wisTekst(b)
+
+  // Beide kanten houden hun eigen kleur: het gat groeit dicht vanaf de
+  // dichtstbijzijnde bron, en niet als een veeg van links naar rechts.
+  assert.ok(Math.abs(pixel(b, 118, 97) - 120) < 25,
+    `links hoort de landkleur te krijgen, kreeg ${pixel(b, 118, 97)}`)
+  assert.ok(Math.abs(pixel(b, 178, 97) - 230) < 25,
+    `rechts hoort de zeekleur te krijgen, kreeg ${pixel(b, 178, 97)}`)
 })

@@ -23,6 +23,7 @@ import { achtergrondVoorStijl } from './render/basemap.js'
 import { ijslandSilhouet } from './render/inset.js'
 import { maakView } from './render/layout.js'
 import { fetchDem } from './fetch/elevation.js'
+import { haalPlaatsen } from './fetch/plaatsen.js'
 import { expandBounds } from './geo/viewport.js'
 import { mergeStijl } from './style.js'
 import { GROEPEN, KNOPPEN } from './styleSchema.js'
@@ -345,11 +346,41 @@ const server = createServer(async (req, res) => {
         'x-plaatsing': JSON.stringify({
           xMm: r.xMm, yMm: r.yMm, breedteMm: r.breedteMm, hoogteMm: r.hoogteMm,
           bronvermelding: r.bronvermelding,
-          bovenlaag: !!r.bovenPng
+          bovenlaag: !!r.bovenPng,
+          schilden: r.schilden ?? []
         }),
         'cache-control': 'no-store'
       })
       return res.end(r.png)
+    }
+
+    // ------------------------------------------------------- plaatsnamen
+    //
+    // De namen die de browser zelf op de kaart zet. Ze komen van dezelfde bron
+    // als de labels die Mapbox in de plaat bakt, maar dan als gegevens, zodat
+    // ze in de letter van het boek getekend kunnen worden.
+    if (pad === '/api/plaatsen') {
+      const nummer = Number(url.searchParams.get('dag') ?? 1)
+      const overzicht = url.searchParams.get('overzicht') === '1'
+
+      const d = await dagGegevens(nummer)
+      const eigen = JSON.parse(url.searchParams.get('stijl') ?? '{}')
+      const { stijl } = mergeStijl(d.boek.stijl, overzicht ? {} : d.dag.stijl, eigen)
+
+      const coords = overzicht ? await heleReisCoords() : d.route.coordinates
+      const zicht = expandBounds(maakView(coords, stijl).visibleBounds(), 0.04)
+
+      try {
+        const plaatsen = await haalPlaatsen(zicht, {
+          onProgress: b => process.stdout.write(`  ... ${b}\n`)
+        })
+        return json(res, { plaatsen })
+      } catch (fout) {
+        // Zonder namen tekent de kaart gewoon door. Een ontbrekende token of een
+        // dienst die er even uit ligt mag geen lege pagina opleveren.
+        process.stdout.write(`  ... plaatsnamen mislukt: ${fout.message}\n`)
+        return json(res, { plaatsen: [], fout: fout.message })
+      }
     }
 
     // ------------------------------------------- opgetilde plaatsnamen

@@ -12,7 +12,7 @@
  */
 
 import { bouwPaneel } from './panel.js'
-import { teken } from './draw.js'
+import { teken, tekenOmgevingsnamen } from './draw.js'
 import { tekenBijwerk, inzetMaten } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
@@ -52,6 +52,9 @@ let huidigeDag = Number(params.get('dag') ?? 1)
 let paginaType = params.get('pagina') ?? 'kaart'
 let silhouet = null
 let silhouetSleutel = null
+let plaatsen = []          // bekende plaatsen binnen de uitsnede
+let plaatsenSleutel = null
+let schilden = []          // waar de wegnummers in de kaartplaat staan
 let vorigeAchtergrondSleutel = null
 let boek = {}
 let presets = []
@@ -128,6 +131,8 @@ function zetTypografie () {
   p.setProperty('--halo', `calc(${stijl['labels.haloMm']} * var(--mm))`)
   p.setProperty('--letterafstand', `${stijl['labels.letterafstand']}em`)
   p.setProperty('--hoofdletters', stijl['labels.hoofdletters'] ? 'uppercase' : 'none')
+  p.setProperty('--omgevingkleur', stijl['labels.omgevingKleur'])
+  p.setProperty('--omgevinggrootte', `calc(${stijl['labels.omgevingGrootteMm']} * var(--mm))`)
   p.fontFamily = LETTERS[stijl['typografie.lettertype']] ?? LETTERS['systeem-schreefloos']
 }
 
@@ -170,6 +175,7 @@ async function achtergrondNu () {
     if (!antwoord.ok) throw new Error((await antwoord.text()).slice(0, 200))
 
     const plaatsing = JSON.parse(antwoord.headers.get('x-plaatsing'))
+    schilden = plaatsing.schilden ?? []
     const blob = await antwoord.blob()
 
     const oud = achtergrond.src
@@ -252,6 +258,47 @@ async function silhouetNu () {
 // anders een nieuwe render van het hele eiland uitlokken.
 const haalSilhouet = ontdubbel(silhouetNu, 260)
 
+/**
+ * De bekende plaatsen binnen deze uitsnede.
+ *
+ * Alleen de knoppen die de uitsnede bepalen gaan mee, en die vormen meteen de
+ * sleutel: aan een kleur draaien hoeft geen namen op te halen, aan de zoom wel.
+ * De server cachet het antwoord op schijf, dus dezelfde uitsnede is daarna gratis.
+ */
+const UITSNEDE_KNOPPEN = [
+  'pagina.breedteMm', 'pagina.hoogteMm', 'pagina.afloopMm',
+  'uitsnede.zoom', 'uitsnede.panXMm', 'uitsnede.panYMm', 'uitsnede.margeMm'
+]
+
+async function haalPlaatsnamen () {
+  const kaartachtig = paginaType === 'kaart' || paginaType === 'overzicht'
+  if (!kaartachtig || !stijl['labels.omgevingAan']) return
+  if (paginaType === 'kaart' && !gegevens) return
+
+  const vraag = new URLSearchParams({
+    dag: String(huidigeDag),
+    stijl: JSON.stringify(Object.fromEntries(UITSNEDE_KNOPPEN.map(k => [k, stijl[k]])))
+  })
+  if (paginaType === 'overzicht') vraag.set('overzicht', '1')
+
+  const adres = `/api/plaatsen?${vraag}`
+  if (adres === plaatsenSleutel) return
+  plaatsenSleutel = adres
+
+  try {
+    const antwoord = await fetch(adres)
+    if (!antwoord.ok) throw new Error(await antwoord.text())
+    const uit = await antwoord.json()
+    plaatsen = uit.plaatsen ?? []
+    if (uit.fout) zegt(`plaatsnamen: ${uit.fout}`)
+    tekenPagina()
+  } catch (fout) {
+    // de kaart tekent zonder bekende plaatsen gewoon door
+    plaatsenSleutel = null
+    zegt(`plaatsnamen ophalen mislukt: ${fout.message}`)
+  }
+}
+
 /** De hele reis, voor de vage lijn op het inzetkaartje. */
 async function haalReis () {
   if (reis || paginaType !== 'kaart' || !stijl['inzet.aan']) return
@@ -287,7 +334,12 @@ function tekenPagina () {
 
   if (paginaType === 'overzicht') {
     if (!reis) return
-    tekenOverzicht(tekening, opschriften, reis, stijl)
+    const view = tekenOverzicht(tekening, opschriften, reis, stijl)
+    // De overzichtskaart zet geen namen bij de stops - alleen dagnummers - dus
+    // er is ook niets dat een bekende plaats overbodig maakt. Zou hier de lijst
+    // met stops meegaan, dan viel juist Reykjavík af terwijl zijn buitenwijken
+    // bleven staan.
+    zetOmgevingsnamen(view, [])
   } else if (!gegevens) {
     return
   } else if (paginaType === 'stats') {
@@ -305,12 +357,53 @@ function tekenPagina () {
       { silhouet, reis, svgLaag: tekeningBoven, plaatsing: plaatsingVoorPagina() })
     tekenStempelOpKaart(opschriften, heros[huidigeDag], stijl,
       paginaMaat(stijl), paginaMaat(stijl).afloopMm + stijl['pagina.veiligeMargeMm'])
+    zetOmgevingsnamen(view, benoemdePunten(gegevens.dag.waypoints))
   }
 
   // de handmatige verschuivingen liggen over de standaardopmaak heen.
   // Op de pagina en niet op de opschriftenlaag: de markers en het kompas
   // staan in de tekenlaag en horen er net zo goed bij.
   pasPlaatsingToe(pagina, plaatsingVoorPagina())
+}
+
+/**
+ * De punten die op de kaart al met zoveel woorden benoemd zijn.
+ *
+ * Alleen dié houden een bekende plaats tegen. De doorrijpunten waarmee de route
+ * langs de goede weg gestuurd wordt zijn naamloos en staan met tientallen langs
+ * de route; die zouden anders elke plaats waar je doorheen reed van de kaart
+ * houden - juist de plaatsen die je wilt kunnen aanwijzen.
+ */
+function benoemdePunten (waypoints) {
+  return waypoints.filter(w =>
+    w.toon !== false && w.type !== 'via' && w.toonLabel !== false && (w.name ?? '').trim())
+}
+
+/**
+ * De bekende plaatsen erbij zetten, als laatste onderdeel van de kaart.
+ *
+ * Eerst de verschuivingen toepassen en dan pas meten: een naam hoort te wijken
+ * voor het titelblok zoals jij dat neergezet hebt, niet voor waar het van
+ * zichzelf zou staan. Daarna volgt in `tekenPagina` nog een tweede ronde
+ * verschuivingen, en die pikt deze verse namen op.
+ */
+function zetOmgevingsnamen (view, punten) {
+  const plaatsing = plaatsingVoorPagina()
+  pasPlaatsingToe(pagina, plaatsing)
+
+  // De wegnummers zitten in de kaartplaat gebakken, dus er staat niets in de
+  // pagina wat je kunt opmeten. Ze komen als millimeters mee met de plaat en
+  // worden hier omgerekend naar het scherm, zodat een naam er niet bovenop valt.
+  const mmPx = parseFloat(getComputedStyle(pagina).getPropertyValue('--mm')) || 1
+  const hoek = pagina.getBoundingClientRect()
+  const gebakken = schilden.map(s => ({
+    left: hoek.left + s.xMm * mmPx,
+    top: hoek.top + s.yMm * mmPx,
+    right: hoek.left + (s.xMm + s.breedteMm) * mmPx,
+    bottom: hoek.top + (s.yMm + s.hoogteMm) * mmPx
+  }))
+
+  tekenOmgevingsnamen(pagina, opschriften, stijl, view, { plaatsen, punten, plaatsing, gebakken })
 }
 
 /**
@@ -356,6 +449,7 @@ function hertekenAlles () {
   haalAchtergrond()
   haalSilhouet()
   haalReis()
+  haalPlaatsnamen()
 }
 
 /** ------------------------------------------------------- gegevens laden */
@@ -579,6 +673,18 @@ async function start () {
 
     // Het icoontje van de kaart af, met de naam en de voortgangsbalk erbij.
     bijWeghalen: id => {
+      // Een bekende plaats die je niet op déze kaart wilt. Dat gaat naar de
+      // plaatsing en niet naar een dagbestand: het is een opmaakbesluit over
+      // deze pagina, net als het verschuiven ervan, en het blijft dus bewaard.
+      const plaats = /^plaats:(.+)$/.exec(id)
+      if (plaats) {
+        const doel = plaatsingDoel()
+        doel[id] = { ...doel[id], verborgen: true }
+        bewaarPlaatsing(`plaatsnaam weg: ${plaats[1]}`)
+        tekenPagina()
+        return
+      }
+
       const m = /^marker:(\d+)$/.exec(id)
       const w = m && gegevens?.dag.waypoints[Number(m[1])]
       if (!w) return

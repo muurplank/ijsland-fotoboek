@@ -233,6 +233,19 @@ button.stil:hover { background: #e6e3df; color: #2b2926; }
   -webkit-text-stroke: var(--halo) var(--halokleur);
 }
 
+/* Een bekende plaats waar je niet stopte. Zelfde letter en zelfde witrand als
+   de stops - het is één familie - maar lichter en kleiner, want het is een
+   aanwijzing voor de oriëntatie en niet een plek waar je geweest bent.
+
+   En hij staat midden op de plaats in plaats van erboven: er is geen marker om
+   boven te hangen, dus de naam wijst zelf de plek aan. */
+.plaatsnaam.omgeving {
+  transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px)));
+  font-size: var(--omgevinggrootte);
+  color: var(--omgevingkleur);
+  font-weight: 460;
+}
+
 /* Exportmodus: alleen de pagina, verder niets. */
 body.exporteren { grid-template-columns: 1fr; background: none; }
 body.exporteren #paneel,
