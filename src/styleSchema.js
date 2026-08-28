@@ -289,11 +289,27 @@ export const KNOPPEN = [
   { key: 'bron.kleur', groep: 'bron', label: 'Kleur', type: 'kleur', standaard: '#a8a099'},
 
   // ------------------------------------------------------------- voortgang
+  //
+  // Drie gedaantes van hetzelfde. De balk is de grafiek; penlijn en vak horen
+  // bij de veldnotitie-stijl, waar een strakke balk met ronde stippen als het
+  // enige schermelement op een papieren bladzijde blijft liggen.
+  { key: 'voortgang.vorm', groep: 'voortgang', label: 'Gedaante', type: 'keuze', opties: ['balk', 'penlijn', 'vak'], standaard: 'balk', help: 'balk = een rechte baan met stippen erop · penlijn = dezelfde lijn met de hand getrokken, met streepjes op de stops en een cirkel om waar je nu bent · vak = een met de pen omlijnd vak dat volgetekend is tot waar je gekomen bent' },
+  { key: 'voortgang.vulling', groep: 'voortgang', label: 'Vulling van het vak', type: 'keuze', opties: ['inkt', 'hoogtelijnen', 'arcering', 'profiel'], standaard: 'hoogtelijnen', help: 'Alleen bij de gedaante vak. hoogtelijnen = geneste kringen die nooit kruisen, zoals op de kaart · profiel = het echte hoogteprofiel van die dag, dus het terrein waar je overheen bent gegaan · arcering = schuine haaltjes · inkt = effen' },
+  { key: 'voortgang.vakHoogteMm', groep: 'voortgang', label: 'Hoogte van het vak', type: 'mm', min: 3, max: 20, step: 0.5, standaard: 7 },
+  { key: 'voortgang.kaderMm', groep: 'voortgang', label: 'Dikte van het kader', type: 'mm', min: 0.1, max: 1.2, step: 0.05, standaard: 0.35 },
+  { key: 'voortgang.penJitter', groep: 'voortgang', label: 'Onvaste hand', type: 'getal', min: 0, max: 1, step: 0.01, standaard: 0.5, help: 'Hoe ver de pen van de liniaal afwijkt. Nul geeft de rechte lijn terug. Gezaaid op het dagnummer, dus dezelfde dag geeft altijd dezelfde hand' },
+  { key: 'voortgang.doorzichtig', groep: 'voortgang', label: 'Doorzichtige achtergrond', type: 'aanuit', standaard: true, help: 'Het strookje krijgt geen paginakleur, zodat de PNG los over een foto te leggen is. Op het scherm zie je het ruitjespatroon van het werkblad erdoorheen. Zet je hier papier onder, dan is dat papier wél dekkend - met een scheurrand krijg je zo een strookje papier op een doorzichtige achtergrond' },
+  { key: 'voortgang.papierAan', groep: 'voortgang', label: 'Papier eronder', type: 'aanuit', standaard: false, help: 'Legt hetzelfde vel met vezels onder het strookje als onder de cijfers. Zonder ondergrond blijft het een balkje dat op de pagina zweeft' },
+  { key: 'voortgang.scheurAan', groep: 'voortgang', label: 'Uit een blaadje gescheurd', type: 'aanuit', standaard: false, help: 'Boven- en onderrand van het papier krijgen een scheurrand, net binnen de snijlijn. Links en rechts loopt het gewoon paginabreed door' },
+  { key: 'voortgang.getyptAan', groep: 'voortgang', label: 'Opschriften getypt', type: 'aanuit', standaard: false, help: 'Zet de naam, de kilometers en de dagregel letter voor letter iets uit het lood, met dezelfde onvaste aanslag als de veldnotitie onder de stempels' },
+  { key: 'voortgang.hoofdletters', groep: 'voortgang', label: 'Opschriften in kapitalen', type: 'aanuit', standaard: false },
+  { key: 'voortgang.onderstreepAan', groep: 'voortgang', label: 'Dagregel onderstreept', type: 'aanuit', standaard: false, help: 'Een haal met de pen onder Dag en titel, zoals je een kop in een schrift onderstreept' },
+  { key: 'voortgang.procentAan', groep: 'voortgang', label: 'Percentage erbij', type: 'aanuit', standaard: false, help: 'Zet achter de kilometers hoeveel procent van de dag je gehad hebt' },
   { key: 'voortgang.hoogteMm', groep: 'voortgang', label: 'Hoogte van het strookje', type: 'mm', min: 8, max: 80, step: 1, standaard: 24, help: 'Het strookje wordt zo hoog als je hier zet, en net zo breed als de pagina. Bedoeld om onder een foto te plaatsen' },
   { key: 'voortgang.dikteMm', groep: 'voortgang', label: 'Dikte van de balk', type: 'mm', min: 0.5, max: 8, step: 0.1, standaard: 1.8 },
   { key: 'voortgang.kernDekking', groep: 'voortgang', label: 'Dekking van de kern', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.47, help: 'De rand blijft altijd dekkend; dit is alleen de binnenkant, net als bij de routelijn op de kaart' },
-  { key: 'voortgang.buitenExtraMm', groep: 'voortgang', label: 'Rand extra dik', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.35 },
-  { key: 'voortgang.gehadFactor', groep: 'voortgang', label: 'Stippen die je gehad hebt', type: 'getal', min: 0.42, max: 1, step: 0.01, standaard: 0.62, help: 'Hoeveel groter de stops die je al gehad hebt zijn dan de stops die nog komen' },
+  { key: 'voortgang.buitenExtraMm', groep: 'voortgang', label: 'Rand extra dik', type: 'mm', min: 0, max: 2, step: 0.05, standaard: 0.35, help: 'Alleen bij de gedaante balk' },
+  { key: 'voortgang.gehadFactor', groep: 'voortgang', label: 'Stippen die je gehad hebt', type: 'getal', min: 0.42, max: 1, step: 0.01, standaard: 0.62, help: 'Alleen bij de gedaante balk: hoeveel groter de stops die je al gehad hebt zijn dan de stops die nog komen' },
   { key: 'voortgang.eenKleur', groep: 'voortgang', label: 'Alles in één kleur', type: 'aanuit', standaard: false, help: 'Baan, balk, stippen en teksten krijgen dezelfde kleur. Je leest de voortgang dan aan de stipgroottes af in plaats van aan het kleurverschil' },
   { key: 'voortgang.kleur', groep: 'voortgang', label: 'Die ene kleur', type: 'kleur', standaard: '#8c2f39' },
   { key: 'voortgang.legeDekking', groep: 'voortgang', label: 'Dekking van wat nog komt', type: 'getal', min: 0.05, max: 1, step: 0.01, standaard: 0.22, help: 'Alleen in één kleur: hoe licht het stuk staat dat je nog voor de boeg hebt' },

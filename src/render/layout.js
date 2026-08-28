@@ -21,6 +21,25 @@ export function paginaMaat (stijl) {
   }
 }
 
+/**
+ * Buitenmaat van het voortgangsstrookje: paginabreed, maar veel lager.
+ *
+ * Staat hier en niet in de pagina die het tekent, want de export moet dezelfde
+ * maat uitrekenen zonder browser - en twee plekken die dit apart uitrekenen
+ * lopen binnen een maand uiteen.
+ */
+export function voortgangMaat (stijl) {
+  const paginaBreed = paginaMaat(stijl)
+  const afloop = stijl['pagina.afloopMm']
+  return {
+    breedteMm: paginaBreed.breedteMm,
+    hoogteMm: stijl['voortgang.hoogteMm'] + 2 * afloop,
+    afloopMm: afloop,
+    snijBreedteMm: paginaBreed.snijBreedteMm,
+    snijHoogteMm: stijl['voortgang.hoogteMm']
+  }
+}
+
 /** De kaartuitsnede voor deze route bij deze instellingen. */
 export function maakView (coords, stijl) {
   const maat = paginaMaat(stijl)

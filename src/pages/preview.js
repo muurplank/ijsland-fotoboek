@@ -9,6 +9,8 @@
  *   kaart      - de dagkaart met route
  *   stats      - hoogteprofiel en kerncijfers
  *   overzicht  - de hele reis op een kaart
+ *   reiscijfers- de cijfers van alle dagen naast elkaar
+ *   voortgang  - het strookje dat over een foto gaat
  */
 
 import { bouwPaneel } from './panel.js'
@@ -17,12 +19,12 @@ import { tekenBijwerk, inzetMaten } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
 import { tekenReisCijfers } from './tripstats.js'
-import { tekenVoortgang, stopsMetAfstand, voortgangMaat } from './progress.js'
+import { tekenVoortgang, stopsMetAfstand } from './progress.js'
 import { tekenStempelOpKaart } from './postzegel.js'
 import { papierKnopen } from '../render/papier.js'
 import { bouwSvg } from '../render/profielvorm.js'
 import { maakBewerkbaar, pasPlaatsingToe } from './editable.js'
-import { achtergrondSleutel, paginaMaat } from '../render/layout.js'
+import { achtergrondSleutel, paginaMaat, voortgangMaat } from '../render/layout.js'
 import { klem, knop as knopVan } from '../style.js'
 
 const $ = id => document.getElementById(id)
@@ -100,7 +102,12 @@ function schaalPagina () {
   pagina.style.setProperty('--mm', `${mm}px`)
   pagina.style.width = `calc(${maat.breedteMm} * var(--mm))`
   pagina.style.height = `calc(${maat.hoogteMm} * var(--mm))`
-  pagina.style.setProperty('--paginakleur', stijl['pagina.achtergrond'])
+  // Het strookje krijgt geen paginakleur: het is geen bladzijde maar iets wat
+  // je over een foto legt, en dan moet de foto er onderuit komen. Op het scherm
+  // zie je het ruitjespatroon van het werkblad erdoorheen, in de PNG blijft het
+  // doorzichtig.
+  const doorzichtig = paginaType === 'voortgang' && stijl['voortgang.doorzichtig']
+  pagina.style.setProperty('--paginakleur', doorzichtig ? 'transparent' : stijl['pagina.achtergrond'])
 
   const dpi = stijl['pagina.dpi']
   const px = m => Math.round((m / 25.4) * dpi)
