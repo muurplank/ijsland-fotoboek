@@ -5,7 +5,8 @@
  * millimeters; --mm bepaalt hoeveel schermpixels een millimeter is, en dat is
  * het enige verschil tussen scherm en druk.
  *
- * Drie paginatypes delen dezelfde opmaakmachine:
+ * De paginatypes delen dezelfde opmaakmachine:
+ *   voorblad   - het omslag: de omtrek van het eiland en de ring van de reis
  *   kaart      - de dagkaart met route
  *   stats      - hoogteprofiel en kerncijfers
  *   overzicht  - de hele reis op een kaart
@@ -18,6 +19,7 @@ import { teken, tekenOmgevingsnamen } from './draw.js'
 import { tekenBijwerk, inzetMaten } from './furniture.js'
 import { tekenStatistieken } from './statspage.js'
 import { tekenOverzicht } from './overview.js'
+import { tekenVoorblad } from './voorblad.js'
 import { tekenReisCijfers } from './tripstats.js'
 import { tekenVoortgang, stopsMetAfstand } from './progress.js'
 import { tekenStempelOpKaart } from './postzegel.js'
@@ -52,8 +54,24 @@ let stopIndex = null     // tot welke stop de voortgangsbalk gevuld is
 let dagen = []
 let huidigeDag = Number(params.get('dag') ?? 1)
 let paginaType = params.get('pagina') ?? 'kaart'
+
+/**
+ * De bladen die bij het boek horen en niet bij een losse dag.
+ *
+ * Ze delen drie dingen: ze gebruiken de boekstijl in plaats van de dagstijl, hun
+ * verschuivingen gaan naar boek.plaatsing, en de dagkiezer doet er niets. Die
+ * toets stond eerst op vijf plekken los uitgeschreven, en dat is precies het
+ * soort ding waar je er bij het zesde blad eentje van vergeet.
+ */
+const BOEKBREED = new Set(['voorblad', 'overzicht', 'reiscijfers'])
 let silhouet = null
 let silhouetSleutel = null
+let kust = null            // de omtrek van IJsland, voor het voorblad
+let kustSleutel = null
+// De achtergrondplaat van het voorblad gaat niet naar de <img> achter de
+// tekening maar naar een <image> ín de SVG, want het masker leeft in de
+// millimeter-userspace van die SVG. Vandaar dat hij hier apart staat.
+let voorbladPlaat = null
 let plaatsen = []          // bekende plaatsen binnen de uitsnede
 let plaatsenSleutel = null
 let schilden = []          // waar de wegnummers in de kaartplaat staan
@@ -106,7 +124,8 @@ function schaalPagina () {
   // je over een foto legt, en dan moet de foto er onderuit komen. Op het scherm
   // zie je het ruitjespatroon van het werkblad erdoorheen, in de PNG blijft het
   // doorzichtig.
-  const doorzichtig = paginaType === 'voortgang' && stijl['voortgang.doorzichtig']
+  const doorzichtig = (paginaType === 'voortgang' && stijl['voortgang.doorzichtig']) ||
+    (paginaType === 'voorblad' && stijl['voorblad.doorzichtig'])
   pagina.style.setProperty('--paginakleur', doorzichtig ? 'transparent' : stijl['pagina.achtergrond'])
 
   const dpi = stijl['pagina.dpi']
@@ -152,6 +171,22 @@ async function achtergrondNu () {
   const kaartAlsAchtergrond = paginaType === 'stats' &&
     stijl['statistieken.achtergrond'] === 'kaart'
 
+  // Het voorblad zonder kaart hoeft niets op te halen. De sleutel gaat op nul,
+  // want anders denkt de volgende ronde dat de plaat er al is: voorblad.kaart
+  // zit niet in de achtergrondknoppen, dus de sleutel zou niet veranderen en
+  // terugzetten op "eiland" leverde een leeg eiland op.
+  if (paginaType === 'voorblad' && stijl['voorblad.kaart'] === 'geen') {
+    if (voorbladPlaat) URL.revokeObjectURL(voorbladPlaat.url)
+    voorbladPlaat = null
+    achtergrond.removeAttribute('src')
+    achtergrond.style.width = '0'
+    bovenlaag.style.display = 'none'
+    vorigeAchtergrondSleutel = null
+    tekenPagina()
+    zegt('klaar')
+    return
+  }
+
   if (!kaartAlsAchtergrond &&
       (paginaType === 'stats' || paginaType === 'reiscijfers' || paginaType === 'voortgang')) {
     achtergrond.removeAttribute('src')
@@ -173,9 +208,20 @@ async function achtergrondNu () {
   zegt('achtergrond berekenen…')
 
   const dpi = EXPORT ? `&dpi=${stijl['pagina.dpi']}` : ''
-  const wat = paginaType === 'overzicht' ? '&overzicht=1' : ''
+  const wat = paginaType === 'overzicht'
+    ? '&overzicht=1'
+    : paginaType === 'voorblad' ? '&voorblad=1' : ''
+
+  // Het voorblad mag een andere kaartlaag hebben dan de rest van het boek, en
+  // dat gaat door lagen.stijl te overschrijven in wat we meesturen in plaats van
+  // door het te bewaren. Zo houdt het blad zijn eigen laag zonder dat de
+  // dagkaarten meeveranderen - die lezen dezelfde boekstijl.
+  const laag = paginaType === 'voorblad' && stijl['voorblad.kaartLaag'] !== 'zoals het boek'
+    ? { ...stijl, 'lagen.stijl': stijl['voorblad.kaartLaag'] }
+    : stijl
+
   const url = `/api/achtergrond?dag=${huidigeDag}${dpi}${wat}` +
-    `&stijl=${encodeURIComponent(JSON.stringify(stijl))}`
+    `&stijl=${encodeURIComponent(JSON.stringify(laag))}`
 
   try {
     const antwoord = await fetch(url)
@@ -184,6 +230,28 @@ async function achtergrondNu () {
     const plaatsing = JSON.parse(antwoord.headers.get('x-plaatsing'))
     schilden = plaatsing.schilden ?? []
     const blob = await antwoord.blob()
+
+    // Het voorblad gebruikt de plaat als <image> binnen de tekening, zodat hij
+    // in hetzelfde stelsel staat als het masker dat hem uitknipt. Eerst laten
+    // decoderen en dán pas tekenen: zo staat het beeld er meteen, ook bij de
+    // export, waar niemand een tweede tekenronde afwacht.
+    if (paginaType === 'voorblad') {
+      const vers = URL.createObjectURL(blob)
+      const proef = new Image()
+      proef.src = vers
+      await proef.decode().catch(() => {})
+
+      const vorige = voorbladPlaat?.url
+      voorbladPlaat = { url: vers, ...plaatsing }
+      if (vorige) URL.revokeObjectURL(vorige)
+
+      achtergrond.removeAttribute('src')
+      achtergrond.style.width = '0'
+      bovenlaag.style.display = 'none'
+      tekenPagina()
+      zegt('klaar')
+      return
+    }
 
     const oud = achtergrond.src
     achtergrond.src = URL.createObjectURL(blob)
@@ -306,6 +374,33 @@ async function haalPlaatsnamen () {
   }
 }
 
+/**
+ * De omtrek van IJsland, voor het voorblad.
+ *
+ * Hangt aan één knop - hoe klein een eiland nog mag zijn - en verder aan niets,
+ * dus de sleutel is dat ene getal. Anders dan het silhouet van het inzetkaartje
+ * is dit geen plaatje maar een lijst ringen in lengte- en breedtegraden.
+ */
+async function kustNu () {
+  if (paginaType !== 'voorblad') return
+
+  const sleutel = String(stijl['voorblad.kustDetail'])
+  if (sleutel === kustSleutel && kust) return
+  kustSleutel = sleutel
+
+  try {
+    zegt('omtrek van IJsland ophalen…')
+    kust = await (await fetch(`/api/kustlijn?minKm2=${sleutel}`)).json()
+    tekenPagina()
+    zegt('klaar')
+  } catch (fout) {
+    kustSleutel = null
+    zegt(`omtrek ophalen mislukt: ${fout.message}`)
+  }
+}
+
+const haalKust = ontdubbel(kustNu, 200)
+
 /** De hele reis, voor de vage lijn op het inzetkaartje. */
 async function haalReis () {
   if (reis || paginaType !== 'kaart' || !stijl['inzet.aan']) return
@@ -324,6 +419,13 @@ function tekenPagina () {
   // alleen de dagkaart gebruikt de bovenste tekenlaag; de andere paginas
   // hebben geen opgetilde plaatsnamen, dus daar blijft hij leeg
   tekeningBoven.replaceChildren()
+
+  if (paginaType === 'voorblad') {
+    tekenVoorblad(tekening, opschriften,
+      { reis, kust, boek, plaat: voorbladPlaat }, stijl)
+    pasPlaatsingToe(pagina, plaatsingVoorPagina())
+    return
+  }
 
   if (paginaType === 'voortgang') {
     if (!gegevens) return
@@ -445,7 +547,7 @@ function legPapierOverKaart () {
 
 /** De verschuivingen die bij dit paginatype horen. */
 function plaatsingVoorPagina () {
-  if (paginaType === 'overzicht') return boek.plaatsing?.overzicht ?? {}
+  if (BOEKBREED.has(paginaType)) return boek.plaatsing?.[paginaType] ?? {}
   return gegevens?.dag.plaatsing?.[paginaType] ?? {}
 }
 
@@ -455,6 +557,7 @@ function hertekenAlles () {
   tekenPagina()
   haalAchtergrond()
   haalSilhouet()
+  haalKust()
   haalReis()
   haalPlaatsnamen()
 }
@@ -520,14 +623,9 @@ async function start () {
   stijl = { ...gegevens.stijl }
   boek = gegevens.boek ?? {}
 
-  if (paginaType === 'overzicht') {
-    await laadReis()
-    stijl = { ...gegevens.boekStijl }
-  }
-  if (paginaType === 'reiscijfers') {
-    await laadReisCijfers()
-    stijl = { ...gegevens.boekStijl }
-  }
+  if (BOEKBREED.has(paginaType)) stijl = { ...gegevens.boekStijl }
+  if (paginaType === 'overzicht' || paginaType === 'voorblad') await laadReis()
+  if (paginaType === 'reiscijfers') await laadReisCijfers()
 
   // ------ exportmodus: geen paneel, en pas klaarmelden als alles getekend is
   if (EXPORT) {
@@ -538,6 +636,8 @@ async function start () {
     // klaarVoorExport allang aan en mist de PDF de vage reislijn
     await silhouetNu()
     if (paginaType === 'kaart' && stijl['inzet.aan']) await laadReis()
+    // Het voorblad kan niets tekenen zonder de omtrek: die bepaalt de uitsnede.
+    await kustNu()
     tekenPagina()
     await achtergrondNu()
     await document.fonts.ready
@@ -585,18 +685,18 @@ async function start () {
       for (const k of $('paginakiezer').querySelectorAll('button')) {
         k.classList.toggle('actief', k === knop)
       }
-      $('dag').disabled = paginaType === 'overzicht' || paginaType === 'reiscijfers'
+      $('dag').disabled = BOEKBREED.has(paginaType)
       paneel.zetPagina(paginaType)
-      if (paginaType === 'overzicht') await laadReis()
+      if (paginaType === 'overzicht' || paginaType === 'voorblad') await laadReis()
       if (paginaType === 'reiscijfers') await laadReisCijfers()
 
       $('stopkiezer-rij').classList.toggle('verborgen', paginaType !== 'voortgang')
       if (paginaType === 'voortgang') vulStopkiezer()
 
-      // De overzichtskaart hoort bij het boek, niet bij een losse dag: wissel
-      // daarom naar de boekinstellingen en terug.
-      stijl = { ...(paginaType === 'overzicht' || paginaType === 'reiscijfers'
-        ? gegevens.boekStijl : gegevens.stijl) }
+      // Het voorblad, de overzichtskaart en de reiscijfers horen bij het boek
+      // en niet bij een losse dag: wissel daarom naar de boekinstellingen en
+      // terug.
+      stijl = { ...(BOEKBREED.has(paginaType) ? gegevens.boekStijl : gegevens.stijl) }
       for (const [key, waarde] of Object.entries(stijl)) paneel.zet(key, waarde)
 
       vorigeAchtergrondSleutel = null
@@ -623,8 +723,8 @@ async function start () {
   //
   // Het doel is per paginatype een eigen hoekje in de plaatsing: de titel mag
   // op de kaart ergens anders staan dan op de statistiekpagina.
-  const plaatsingDoel = () => paginaType === 'overzicht'
-    ? ((boek.plaatsing ??= {}).overzicht ??= {})
+  const plaatsingDoel = () => BOEKBREED.has(paginaType)
+    ? ((boek.plaatsing ??= {})[paginaType] ??= {})
     : ((gegevens.dag.plaatsing ??= {})[paginaType] ??= {})
 
   maakBewerkbaar(pagina, {
@@ -727,7 +827,7 @@ async function start () {
   for (const k of $('paginakiezer').querySelectorAll('button')) {
     k.classList.toggle('actief', k.dataset.pagina === paginaType)
   }
-  $('dag').disabled = paginaType === 'overzicht' || paginaType === 'reiscijfers'
+  $('dag').disabled = BOEKBREED.has(paginaType)
   $('stopkiezer-rij').classList.toggle('verborgen', paginaType !== 'voortgang')
   if (paginaType === 'voortgang') vulStopkiezer()
 
@@ -883,6 +983,8 @@ function pasTekstToe (id, tekst) {
   if (id === 'titel') { gegevens.dag.titel = tekst; return }
   if (id === 'tekst') { gegevens.dag.tekst = tekst; return }
   if (id === 'overzichtstitel') { (boek.overzicht ??= {}).titel = tekst; return }
+  if (id === 'voorbladtitel') { (boek.voorblad ??= {}).titel = tekst; return }
+  if (id === 'voorbladondertitel') { (boek.voorblad ??= {}).ondertitel = tekst; return }
   if (id === 'bron') { (boek.bron ??= {}).tekst = tekst; return }
 
   const waypoint = id.match(/^waypoint:(\d+)$/)
@@ -934,7 +1036,7 @@ function bewaarOpmaak (melding, velden) {
 function bewaarPlaatsing (melding) {
   bewaarOpmaak(melding, {
     plaatsing: gegevens.dag.plaatsing,
-    boek: paginaType === 'overzicht' ? { plaatsing: boek.plaatsing } : undefined
+    boek: BOEKBREED.has(paginaType) ? { plaatsing: boek.plaatsing } : undefined
   })
 }
 
@@ -943,9 +1045,10 @@ function bewaarTekst (id) {
   if (id === 'titel') return bewaarOpmaak('titel aangepast', { titel: gegevens.dag.titel })
   if (id === 'tekst') return bewaarOpmaak('tekst aangepast', { tekst: gegevens.dag.tekst })
 
-  if (id === 'overzichtstitel' || id === 'bron') {
+  if (id === 'overzichtstitel' || id === 'voorbladtitel' ||
+      id === 'voorbladondertitel' || id === 'bron') {
     return bewaarOpmaak('tekst aangepast', {
-      boek: { overzicht: boek.overzicht, bron: boek.bron }
+      boek: { overzicht: boek.overzicht, voorblad: boek.voorblad, bron: boek.bron }
     })
   }
 

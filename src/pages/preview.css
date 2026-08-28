@@ -370,6 +370,24 @@ body.exporteren #pagina { box-shadow: none; }
   color: #fff; font-weight: 700; line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+/* ------------------------------------------------------------- het voorblad
+
+   Het dagnummer staat náást de stip en niet erin: op het voorblad zijn de
+   stippen klein en zou een cijfer erin onleesbaar worden. Een halve regel
+   naar rechtsboven houdt hem van de routelijn af. */
+.voorblad-dagnummer {
+  transform: translate(calc(.55em + var(--dx, 0px)), calc(-1.05em + var(--dy, 0px)));
+  font-weight: 600; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.voorblad-titel { line-height: 1.12; }
+.voorblad-hoofd { line-height: 1; }
+/* De ondertitel en de bijregel staan losser dan de titel: dat maakt van drie
+   regels één blok in plaats van drie losse mededelingen. */
+.voorblad-onder { margin-top: .5em; opacity: .85; }
+.voorblad-bijregel { margin-top: .9em; opacity: .7; letter-spacing: .06em; }
+
 .legenda { display: flex; align-items: center; gap: .6em; }
 .legenda-balk { border-radius: 99px; }
 
@@ -379,7 +397,7 @@ body.exporteren #pagina { box-shadow: none; }
    de standaardopmaak leidend blijft en jouw correctie er alleen overheen ligt. */
 /* Alles wat zijn eigen uitlijning heeft (gecentreerd, rechts uitgelijnd) regelt
    de verschuiving zelf; deze regel is voor de rest. */
-#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
+#pagina [data-plek]:not(.plaatsnaam):not(.profiel-stop):not(.profiel-top):not(.dagnummer):not(.voorblad-dagnummer):not(.reisdag-nummer):not(.voortgang-naam):not(.voortgang-km):not(.voortgang-dag) {
   transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(var(--s, 1));
 }
 
@@ -511,6 +529,7 @@ body:not(.exporteren) #pagina [data-plek].meten::before { content: none; }
 body:not(.exporteren) #pagina .plaatsnaam,
 body:not(.exporteren) #pagina .profiel-stop,
 body:not(.exporteren) #pagina .dagnummer,
+body:not(.exporteren) #pagina .voorblad-dagnummer,
 body:not(.exporteren) #pagina .profiel-top { position: absolute; }
 
 /* duidelijker aanwijzen wat je kunt pakken */

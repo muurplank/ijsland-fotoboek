@@ -197,6 +197,27 @@ for (const d of dagen) {
     `achtergrond ${kb(n)}${b ? `, opgetild ${kb(b)}` : ''}${p ? `, plaatsnamen ${kb(p)}` : ''}`)
 }
 
+// De boekinstellingen: het voorblad, het inzetkaartje en de kustlijn hangen er
+// alle drie aan, dus haal ze een keer op in plaats van de maten hier nog eens
+// over te schrijven.
+const boekStijl = (await (await fetch(`${BASIS}/api/dag?dag=1`)).json()).boekStijl ?? {}
+
+// Het voorblad mag een andere kaartlaag hebben dan de rest van het boek, en de
+// browser regelt dat door lagen.stijl te overschrijven in wat hij meestuurt.
+// Dat moet hier dus ook: zonder deze regel bakt de statische versie de
+// dagkaartlaag onder het voorblad, mét wegen en wegnummer-schildjes, terwijl je
+// in de preview het kale relief ziet.
+const voorbladLaag = boekStijl['voorblad.kaartLaag'] ?? 'relief'
+const voorbladStijl = voorbladLaag === 'zoals het boek'
+  ? ''
+  : `&stijl=${encodeURIComponent(JSON.stringify({ 'lagen.stijl': voorbladLaag }))}`
+
+const v = await bewaar(`/api/achtergrond?dag=1&voorblad=1${voorbladStijl}`,
+  join(UIT, 'api', 'achtergrond-voorblad.png'),
+  'x-plaatsing', join(UIT, 'api', 'achtergrond-voorblad.json'))
+totaal += v
+console.log('  voorblad'.padEnd(28) + `achtergrond ${kb(v)} (${voorbladLaag})`)
+
 const o = await bewaar('/api/achtergrond?dag=1&overzicht=1',
   join(UIT, 'api', 'achtergrond-overzicht.png'),
   'x-plaatsing', join(UIT, 'api', 'achtergrond-overzicht.json'))
@@ -205,9 +226,7 @@ totaal += o + (await bewaar('/api/plaatsen?dag=1&overzicht=1',
   join(UIT, 'api', 'plaatsen-overzicht.json')) || 0)
 console.log('  hele reis'.padEnd(28) + `achtergrond ${kb(o)}`)
 
-// Het inzetkaartje hangt aan de kleuren en de breedte uit het boek, dus haal de
-// maten daaruit in plaats van ze hier nog eens op te schrijven.
-const boekStijl = (await (await fetch(`${BASIS}/api/dag?dag=1`)).json()).boekStijl ?? {}
+// Het inzetkaartje hangt aan de kleuren en de breedte uit het boek.
 const vraag = new URLSearchParams({
   kleur: boekStijl['inzet.landKleur'] ?? '#e2ddd4',
   kust: boekStijl['inzet.kustKleur'] ?? '#b9b0a3',
@@ -218,6 +237,16 @@ const i = await bewaar(`/api/inzet?${vraag}`, join(UIT, 'api', 'inzet.png'),
   'x-bounds', join(UIT, 'api', 'inzet.json'))
 totaal += i
 console.log('  inzetkaartje'.padEnd(28) + kb(i))
+
+// De omtrek van IJsland voor het voorblad. Net als bij de achtergrondplaten
+// vriest dit de detailstand vast: aan "kleinste eiland" draaien doet in de
+// gebakken versie niets meer, want de uitsnede hangt eraan en die zit in de
+// plaat gebakken.
+const k = await bewaar(
+  `/api/kustlijn?minKm2=${boekStijl['voorblad.kustDetail'] ?? 5}`,
+  join(UIT, 'api', 'kustlijn.json'))
+totaal += k
+console.log('  kustlijn'.padEnd(28) + kb(k))
 
 // --------------------------------------------------------- de stempels
 //

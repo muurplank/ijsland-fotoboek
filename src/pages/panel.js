@@ -127,18 +127,49 @@ const SNEL = new Set([
   'profiel.reisBreedte',
   'pagina.breedteMm',
   'pagina.hoogteMm',
-  'pagina.dpi'
+  'pagina.dpi',
+  // het voorblad
+  'voorblad.kaart',
+  'voorblad.kaartDekking',
+  'voorblad.baanMm',
+  'voorblad.kustDetail',
+  'voorblad.kustMm',
+  'voorblad.kustKleur',
+  'voorblad.routeMm',
+  'voorblad.routeKleur',
+  'voorblad.dagnummersAan',
+  'voorblad.vlagAan',
+  'voorblad.vlagBreedteMm',
+  'voorblad.vlagHoek',
+  'voorblad.titelMm',
+  'voorblad.titelHoek',
+  'voorblad.margeMm',
+  'voorblad.zoom'
 ])
 
-/** Welke groepen bij welk paginatype horen. */
+/**
+ * Welke groepen bij welk paginatype horen.
+ *
+ * Let op: dit filtert per groep en nooit per knop, dus een knop die maar op een
+ * blad hoort te staan moet in een eigen groep zitten. Zo is 'voortgang' gedaan
+ * en zo is 'voorblad' gedaan.
+ *
+ * Papier, postzegels en de veldnotitie stonden hier lang in geen enkele rij.
+ * Dat brak niets - de terugval verderop toont alles als een paginatype ontbreekt
+ * - maar voor een type dat er wél in staat geeft includes() netjes false, en dus
+ * waren die vierendertig knoppen alleen via de zoekbalk te vinden. Ze staan nu
+ * bij de bladen waar ze ook echt iets doen.
+ */
 const GROEPEN_PER_PAGINA = {
-  kaart: ['pagina', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
+  voorblad: ['pagina', 'papier', 'voorblad', 'lagen', 'relief', 'terrein', 'typografie'],
+  kaart: ['pagina', 'papier', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
     'pijltjes', 'eerdere', 'markers', 'labels', 'typografie', 'titelblok', 'inzet',
-    'schaal', 'bron'],
-  stats: ['pagina', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
-  overzicht: ['pagina', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
+    'schaal', 'bron', 'postzegel', 'veldnotitie'],
+  stats: ['pagina', 'papier', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron',
+    'postzegel', 'veldnotitie'],
+  overzicht: ['pagina', 'papier', 'uitsnede', 'kaartvorm', 'lagen', 'relief', 'terrein', 'route',
     'eerdere', 'markers', 'typografie', 'titelblok', 'schaal', 'bron'],
-  reiscijfers: ['pagina', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
+  reiscijfers: ['pagina', 'papier', 'typografie', 'titelblok', 'profiel', 'statistieken', 'bron'],
   voortgang: ['pagina', 'route', 'voortgang', 'typografie', 'statistieken']
 }
 

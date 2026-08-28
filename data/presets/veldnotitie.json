@@ -26,14 +26,11 @@
     "titelblok.kleur": "#3a352e",
     "titelblok.glasAan": false,
     "titelblok.vlakAan": false,
-
     "typografie.lettertype": "typemachine",
-
     "lagen.verbleking": 0.62,
     "lagen.verbleekNaar": "#efe6d2",
     "lagen.ontzadiging": 0.78,
     "lagen.zeeKleur": "#e6ddc9",
-
     "terrein.kust": "#ded2b8",
     "terrein.laag": "#d3c8ae",
     "terrein.midden": "#c2b79c",
@@ -41,7 +38,6 @@
     "terrein.top": "#efe9dc",
     "relief.schaduwKleur": "#6b6153",
     "relief.contrast": 0.8,
-
     "inzet.postzegel": true,
     "inzet.kaderKleur": "#9c5a3c",
     "inzet.reisKleur": "#a89f90",
@@ -53,14 +49,12 @@
     "inzet.randKleur": "#ded4c0",
     "inzet.schaduw": false,
     "inzet.afrondingMm": 0,
-
     "schaal.kleur": "#8b847c",
     "schaal.kompasGlas": false,
     "schaal.kompasDonker": "#3a352e",
     "schaal.kompasLicht": "#f2ebdc",
     "schaal.kompasRing": "#3a352e",
     "bron.kleur": "#a89f90",
-
     "profiel.lijnKleur": "#9c5a3c",
     "profiel.vulKleur": "#e3d9c2",
     "profiel.weertekenVorm": "gekleurd",
@@ -74,13 +68,33 @@
     "profiel.hoog": "#9c5a3c",
     "profiel.piek": "#3a352e",
     "profiel.dagLijnKleur": "#a89f90",
-
     "statistieken.achtergrond": "papier",
     "statistieken.getalKleur": "#3a352e",
     "statistieken.labelKleur": "#8b847c",
-
     "papier.overKaart": true,
-    "postzegel.aan": true
+    "postzegel.aan": true,
+    "voortgang.vorm": "vak",
+    "voortgang.vulling": "hoogtelijnen",
+    "voortgang.penJitter": 0.55,
+    "voortgang.papierAan": true,
+    "voortgang.scheurAan": true,
+    "voortgang.getyptAan": true,
+    "voortgang.hoofdletters": true,
+    "voortgang.onderstreepAan": true,
+    "voortgang.procentAan": true,
+    "voortgang.eenKleur": true,
+    "voortgang.kleur": "#9c5a3c",
+    "voortgang.legeDekking": 0.26,
+    "voortgang.kernDekking": 0.55,
+    "voorblad.kaart": "eiland",
+    "voorblad.kaartDekking": 0.55,
+    "voorblad.kustKleur": "#3a352e",
+    "voorblad.kustMm": 0.3,
+    "voorblad.routeKleur": "#9c5a3c",
+    "voorblad.routeMm": 1.3,
+    "voorblad.penAan": true,
+    "voorblad.papierAan": true,
+    "voorblad.titelKleur": "#3a352e"
   },
   "_contrast": "4,6:1 - inkt op papier, niet zwart op wit"
 }

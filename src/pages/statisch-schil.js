@@ -64,8 +64,9 @@
 
     if (naam === 'achtergrond') {
       const overzicht = u.searchParams.get('overzicht') === '1'
-      const sleutel = overzicht ? 'overzicht' : dag
-      if (!overzicht) laatsteDag = dag
+      const voorblad = u.searchParams.get('voorblad') === '1'
+      const sleutel = voorblad ? 'voorblad' : overzicht ? 'overzicht' : dag
+      if (!overzicht && !voorblad) laatsteDag = dag
       return plaat(`api/achtergrond-${sleutel}.png`, `api/achtergrond-${sleutel}.json`, 'x-plaatsing')
     }
     if (naam === 'bovenlaag') return plaat(`api/bovenlaag-${laatsteDag}.png`)

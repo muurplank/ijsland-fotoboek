@@ -20,8 +20,8 @@ import { fileURLToPath } from 'node:url'
 import { maakDagCache } from './dagCache.js'
 import { fetchRoute } from './fetch/route.js'
 import { achtergrondVoorStijl } from './render/basemap.js'
-import { ijslandSilhouet } from './render/inset.js'
-import { maakView } from './render/layout.js'
+import { ijslandKust, ijslandSilhouet } from './render/inset.js'
+import { maakView, voorbladView } from './render/layout.js'
 import { fetchDem } from './fetch/elevation.js'
 import { haalPlaatsen } from './fetch/plaatsen.js'
 import { expandBounds } from './geo/viewport.js'
@@ -97,6 +97,21 @@ async function vorigeNacht (nummer) {
   }
 }
 
+/**
+ * Een getal uit de adresregel, of de standaardwaarde als het er niet staat.
+ *
+ * De valstrik zit in Number(null), en dat is nul en niet NaN. Een controle op
+ * Number.isFinite alleen laat een ontbrekende parameter dus als nul door in
+ * plaats van als afwezig - waarmee de standaardwaarde nooit gebruikt wordt. Dat
+ * gaf de kustlijn negentienduizend punten in plaats van twaalfhonderd, want de
+ * tolerantie viel stil op nul terug.
+ */
+function getalUit (params, naam, terug) {
+  if (!params.has(naam)) return terug
+  const v = Number(params.get(naam))
+  return Number.isFinite(v) ? v : terug
+}
+
 /** De routepunten van de hele reis achter elkaar. */
 let reisCoordsCache = null
 async function heleReisCoords () {
@@ -110,11 +125,22 @@ async function heleReisCoords () {
   return coords
 }
 
-/** Het hoogteraster voor de overzichtskaart, over de hele reis. */
+/**
+ * Het hoogteraster voor de bladen die de hele reis beslaan.
+ *
+ * De cache let ook op de uitsnede en niet alleen op de detailstand. Dat moet
+ * sinds het voorblad er is: dat kadert op het eiland en de overzichtskaart op de
+ * rit, en dat zijn twee verschillende vakken. Zou alleen de detailstand tellen,
+ * dan kreeg het tweede blad dat je opent het raster van het eerste - zonder
+ * foutmelding, want een DemGrid van het verkeerde gebied ziet er precies zo uit
+ * als een goede.
+ */
 let reisDemCache = null
 async function reisDem (stijl, view) {
   const detail = stijl['relief.detailZoom']
-  if (reisDemCache?.detail === detail) return reisDemCache.dem
+  const b = view.visibleBounds()
+  const vak = [b.west, b.south, b.east, b.north].map(v => v.toFixed(3)).join(',')
+  if (reisDemCache?.detail === detail && reisDemCache?.vak === vak) return reisDemCache.dem
 
   const zicht = expandBounds(view.visibleBounds(), 0.05)
   const metersPerPixel = view.metersPerMm() / (stijl['pagina.dpi'] / 25.4)
@@ -126,7 +152,7 @@ async function reisDem (stijl, view) {
       process.stdout.write(`  ... overzicht (${typeof n === 'string' ? n : `${n}/${totaal}`})\n`)
   })
 
-  reisDemCache = { detail, dem }
+  reisDemCache = { detail, vak, dem }
   return dem
 }
 
@@ -301,6 +327,7 @@ const server = createServer(async (req, res) => {
           ondertitel: d.boek.ondertitel,
           plaatsing: d.boek.plaatsing,
           overzicht: d.boek.overzicht,
+          voorblad: d.boek.voorblad,
           bron: d.boek.bron
         },
         stijl: d.stijl,
@@ -325,12 +352,26 @@ const server = createServer(async (req, res) => {
       const eigen = JSON.parse(url.searchParams.get('stijl') ?? '{}')
       const { stijl } = mergeStijl(d.boek.stijl, d.dag.stijl, eigen)
 
-      // de overzichtskaart beslaat de hele reis, dus een eigen uitsnede en
-      // een eigen, ruimer hoogteraster
+      // De overzichtskaart en het voorblad beslaan allebei de hele reis, dus
+      // een eigen uitsnede en een eigen, ruimer hoogteraster.
+      //
+      // Ze kaderen alleen niet hetzelfde. Het overzicht past op de rit; het
+      // voorblad past op het eiland, want de Westfjorden en de oostpunt liggen
+      // buiten de route en een omslag waarop IJsland is afgesneden klopt niet.
+      // De browser rekent met precies dezelfde ringen, zodat de plaat en de
+      // getekende kust op elkaar vallen.
       const overzicht = url.searchParams.get('overzicht') === '1'
-      const coords = overzicht ? await heleReisCoords() : d.route.coordinates
-      const view = maakView(coords, stijl)
-      const dem = overzicht ? await reisDem(stijl, view) : d.dem
+      const voorblad = url.searchParams.get('voorblad') === '1'
+      const heleReis = overzicht || voorblad
+
+      const coords = heleReis ? await heleReisCoords() : d.route.coordinates
+      const kader = voorblad
+        ? (await ijslandKust({ minKm2: Math.max(0, stijl['voorblad.kustDetail'] ?? 5) }))
+            .ringen.flat()
+        : coords
+
+      const view = voorblad ? voorbladView(kader, stijl) : maakView(kader, stijl)
+      const dem = heleReis ? await reisDem(stijl, view) : d.dem
 
       const r = await achtergrondVoorStijl({
         dem, view, stijl, dpi, route: coords,
@@ -391,20 +432,33 @@ const server = createServer(async (req, res) => {
     }
 
     // ------------------------------------------------------- inzetkaartje
-    if (pad === '/api/inzet') {
-      const getal = (naam, terug) => {
-        const v = Number(url.searchParams.get(naam))
-        return Number.isFinite(v) ? v : terug
-      }
+    /**
+     * De kustlijn van IJsland als lijn in plaats van als vlak.
+     *
+     * Het voorblad trekt hem met een pen na en knipt de kaart erop uit. Anders
+     * dan /api/inzet hangt dit aan geen enkele kleur, dus het antwoord is voor
+     * elke stijl hetzelfde en het rekenwerk gebeurt een keer per detailstand.
+     */
+    if (pad === '/api/kustlijn') {
+      const kust = await ijslandKust({
+        minKm2: Math.max(0, getalUit(url.searchParams, 'minKm2', 5)),
+        tolerantieM: Math.max(0, getalUit(url.searchParams, 'tolerantieM', 500)),
+        onProgress: (n, totaal) =>
+          process.stdout.write(`  ... kustlijn (${typeof n === 'string' ? n : `${n}/${totaal}`})\n`)
+      })
 
+      return json(res, { ringen: kust.ringen, bounds: kust.bounds })
+    }
+
+    if (pad === '/api/inzet') {
       const landKleur = url.searchParams.get('kleur') ?? '#e8e4dd'
       const silhouet = await ijslandSilhouet({
         landKleur,
         kustKleur: url.searchParams.get('kust') ?? landKleur,
-        kustMm: getal('kustMm', 0),
+        kustMm: getalUit(url.searchParams, 'kustMm', 0),
         // de breedte waarop het kaartje straks staat: daarmee wordt de dikte van
         // de kustrand van millimeters naar beeldpunten omgerekend
-        breedteMm: getal('mm', 46),
+        breedteMm: getalUit(url.searchParams, 'mm', 46),
         onProgress: (n, totaal) =>
           process.stdout.write(`  ... inzetkaartje (${typeof n === 'string' ? n : `${n}/${totaal}`})\n`)
       })
@@ -461,6 +515,7 @@ const server = createServer(async (req, res) => {
         const b = JSON.parse(await readFile(boekBestand, 'utf8'))
         if (boek.plaatsing) b.plaatsing = boek.plaatsing
         if (boek.overzicht) b.overzicht = boek.overzicht
+        if (boek.voorblad) b.voorblad = boek.voorblad
         if (boek.bron) b.bron = boek.bron
         await writeFile(boekBestand, JSON.stringify(b, null, 2) + '\n')
       }

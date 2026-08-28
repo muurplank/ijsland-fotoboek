@@ -34,6 +34,7 @@ export const GROEPEN = [
   { id: 'inzet', label: 'Inzetkaartje' },
   { id: 'schaal', label: 'Schaalbalk & kompas' },
   { id: 'bron', label: 'Bronvermelding' },
+  { id: 'voorblad', label: 'Voorblad' },
   { id: 'voortgang', label: 'Voortgangsbalk' },
   { id: 'profiel', label: 'Hoogteprofiel' },
   { id: 'statistieken', label: 'Statistieken' },
@@ -287,6 +288,83 @@ export const KNOPPEN = [
   { key: 'bron.aan', groep: 'bron', label: 'Bronvermelding tonen', type: 'aanuit', standaard: false },
   { key: 'bron.grootteMm', groep: 'bron', label: 'Grootte', type: 'mm', min: 1, max: 5, step: 0.1, standaard: 1.8 },
   { key: 'bron.kleur', groep: 'bron', label: 'Kleur', type: 'kleur', standaard: '#a8a099'},
+
+  // -------------------------------------------------------------- voorblad
+  //
+  // Het omslag: dezelfde reis als op de overzichtskaart, maar teruggebracht tot
+  // de vorm van het eiland en de vorm van de rit. Geen legenda, geen
+  // plaatsnamen, geen schaalbalk - wat er niet op staat is hier de helft van
+  // het ontwerp.
+  //
+  // De kaart zelf is er wel, maar altijd door iets heen gezien. Welke van de
+  // vier dat is staat hieronder; dat is de knop waar dit blad om draait.
+  { key: 'voorblad.kaart', groep: 'voorblad', label: 'Hoe de kaart meedoet', type: 'keuze', opties: ['eiland', 'baan', 'achter', 'lijn', 'geen'], standaard: 'eiland', help: 'eiland = de kaart vult alleen het land en de zee blijft kaal papier · baan = alleen een strook kaart langs de route, de rest papier · achter = de hele kaart als flauw watermerk onder alles · lijn = de routelijn zelf is een venster op de kaart · geen = alleen de omtrek en de ring' },
+  { key: 'voorblad.baanMm', groep: 'voorblad', label: 'Breedte van de baan', type: 'mm', min: 1, max: 80, step: 0.5, standaard: 16, help: 'Alleen bij baan en lijn. Bij baan is dit hoe breed de strook kaart langs de weg is; bij lijn hoe dik de routeband zelf wordt' },
+  { key: 'voorblad.kaartLaag', groep: 'voorblad', label: 'Welke kaart', type: 'keuze', opties: ['relief', 'zoals het boek', 'satelliet'], standaard: 'relief', help: 'relief = alleen het landschap uit het hoogtemodel, zonder wegen en zonder wegnummer-schildjes, en dat is op een omslag meestal de rustigste · zoals het boek = dezelfde kaartlaag als de dagkaarten · satelliet = luchtfoto. Geldt alleen voor dit blad; de andere bladzijden blijven wat ze waren' },
+  { key: 'voorblad.kaartDekking', groep: 'voorblad', label: 'Hoe sterk de kaart doorkomt', type: 'getal', min: 0.05, max: 1, step: 0.05, standaard: 0.9, help: 'Bij achter is dit hoe flauw het watermerk is; daar hoort iets van 0,2. Bij de andere standen dempt het de uitgeknipte kaart, zodat de lijnen erover heen blijven leiden' },
+  { key: 'voorblad.zachteRandMm', groep: 'voorblad', label: 'Zachte rand', type: 'mm', min: 0, max: 20, step: 0.5, standaard: 0, help: 'Laat de uitgeknipte kaart naar het papier toe uitdoven in plaats van met een scherpe rand op te houden. Nul is de kartelvrije snede' },
+
+  // De omtrek. Op deze schaal is de kust van IJsland een lijn van ruim duizend
+  // punten; de detailknop bepaalt vooral wat er níét getekend wordt.
+  { key: 'voorblad.kustAan', groep: 'voorblad', label: 'De kust natrekken', type: 'aanuit', standaard: true },
+  { key: 'voorblad.kustMm', groep: 'voorblad', label: 'Dikte van de kustlijn', type: 'mm', min: 0.08, max: 2, step: 0.02, standaard: 0.3, help: 'De drukcontrole klaagt onder 0,09 mm, dus dat is de bodem' },
+  { key: 'voorblad.kustKleur', groep: 'voorblad', label: 'Kleur van de kustlijn', type: 'kleur', standaard: '#3a352e' },
+  { key: 'voorblad.kustDetail', groep: 'voorblad', label: 'Kleinste eiland', type: 'getal', min: 0, max: 200, step: 1, standaard: 5, eenheid: 'km²', help: 'Eilanden kleiner dan dit doen niet mee. Op nul komen er negenenveertig ringen terug en zijn er tweeëndertig kleiner dan een vierkante kilometer - rotsen, zandbanken, meertjes onder zeeniveau, die van een afstand als vuil op het papier lezen. Op vijf blijven het vasteland, Heimaey, Hrísey en Grímsey over' },
+
+  // De ring. Eén doorlopende lijn, want het is één rit; de dagen zijn te lezen
+  // aan de stips en de nummers en hoeven niet ook nog eens acht kleuren te
+  // krijgen. Wie dat toch wil zet de dagkleuren aan.
+  { key: 'voorblad.routeMm', groep: 'voorblad', label: 'Dikte van de route', type: 'mm', min: 0.2, max: 6, step: 0.1, standaard: 1.3 },
+  { key: 'voorblad.routeKleur', groep: 'voorblad', label: 'Kleur van de route', type: 'kleur', standaard: '#9c5a3c' },
+  { key: 'voorblad.dagkleuren', groep: 'voorblad', label: 'Elke dag een eigen kleur', type: 'aanuit', standaard: false, help: 'Uit is één doorlopende lijn: het was één rit. Aan geeft de acht kleuren van de overzichtskaart, wat drukker oogt maar wel laat zien waar een dag ophield' },
+  { key: 'voorblad.stipMm', groep: 'voorblad', label: 'Stip bij de overnachting', type: 'mm', min: 0, max: 8, step: 0.1, standaard: 2.4, help: 'Nul laat ze weg; dan is de ring een kale lijn' },
+  { key: 'voorblad.dagnummersAan', groep: 'voorblad', label: 'Dagnummers erbij', type: 'aanuit', standaard: true, help: 'Het nummer naast elke slaapplek. Daarmee lees je de reis als een volgorde en niet alleen als een vorm' },
+  { key: 'voorblad.dagnummerMm', groep: 'voorblad', label: 'Grootte van de dagnummers', type: 'mm', min: 1.8, max: 12, step: 0.1, standaard: 3.2 },
+
+  // De hand. Zonder dit is het een strakke computerlijn, en dat vloekt met de
+  // gestempelde rest van het boek.
+  { key: 'voorblad.penAan', groep: 'voorblad', label: 'Met de hand getrokken', type: 'aanuit', standaard: true, help: 'Legt een lichte wiebel over de kust en de route, zoals een pen die een kaart natrekt. Uit geeft de exacte lijn terug' },
+  { key: 'voorblad.penWiebelMm', groep: 'voorblad', label: 'Onvaste hand', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.25, help: 'Hoe ver de pen van de echte kustlijn afdwaalt. Gezaaid, dus dezelfde stand geeft altijd dezelfde hand' },
+
+  // De vlag. De enige plek op dit blad waar echte kleur komt, en dan moet het
+  // ook echt kleur zijn - een verbleekte vlag leest als een drukfout. Wat hem
+  // bij de rest laat horen is de máák en niet de kleur: gesneden rand, en elke
+  // inkt een eigen aandruk die net naast de vorige valt.
+  { key: 'voorblad.vlagAan', groep: 'voorblad', label: 'De vlag erbij', type: 'aanuit', standaard: true },
+  { key: 'voorblad.vlagBreedteMm', groep: 'voorblad', label: 'Breedte van de vlag', type: 'mm', min: 6, max: 140, step: 1, standaard: 38 },
+  { key: 'voorblad.vlagHoek', groep: 'voorblad', label: 'Waar de vlag staat', type: 'keuze', opties: ['linksonder', 'linksboven', 'rechtsonder', 'rechtsboven'], standaard: 'linksonder', help: 'Je kunt hem daarna alsnog naar elke plek slepen en aan het greepje groter maken; dit is waar hij begint' },
+  { key: 'voorblad.vlagDekking', groep: 'voorblad', label: 'Hoe hard aangedrukt', type: 'getal', min: 0.15, max: 1, step: 0.05, standaard: 1, help: 'Eén is volle inkt. Lager laat het papier of de achtergrond erdoorheen komen, alsof de stempel maar half is aangeraakt' },
+  { key: 'voorblad.vlagHandMm', groep: 'voorblad', label: 'Onvaste aandruk', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.35, help: 'Twee dingen tegelijk: hoe onvast de rand gesneden is, en hoe ver de drie inkten naast elkaar vallen. Dat tweede heeft een eigen bovengrens die met de vlag meeschaalt, want anders eet de verschuiving de witte baan op en raakt het rood het blauw. Op nul krijg je de vlag zoals een tekenprogramma hem maakt, strak en zonder aandruk' },
+  { key: 'voorblad.vlagRandMm', groep: 'voorblad', label: 'Lijn om de vlag', type: 'mm', min: 0, max: 1.5, step: 0.05, standaard: 0.3, help: 'De sleutelinkt eromheen, in de kleur van de kustlijn. Nul laat hem weg en dan is de vlag alleen kleur' },
+
+  // De letters. Standaard staat er niets: het eiland en de ring zeggen het al,
+  // en een omslag dat het nog eens uitspreekt is er een dat zichzelf niet
+  // vertrouwt. Wie de titel wél wil heeft hem hier compleet liggen - hij komt
+  // uit data/book.json en is op de bladzijde zelf bij te schaven.
+  { key: 'voorblad.titelAan', groep: 'voorblad', label: 'Titel op het voorblad', type: 'aanuit', standaard: false, help: 'Uit is kaal: alleen de omtrek, de ring en de dagnummers. Aan zet de titel, de ondertitel en de bijregel uit data/book.json neer, en die kun je daarna ter plekke aanpassen en verslepen' },
+  { key: 'voorblad.titelMm', groep: 'voorblad', label: 'Grootte van de titel', type: 'mm', min: 4, max: 80, step: 0.5, standaard: 24 },
+  { key: 'voorblad.ondertitelMm', groep: 'voorblad', label: 'Grootte van de ondertitel', type: 'mm', min: 1.8, max: 24, step: 0.2, standaard: 5 },
+  { key: 'voorblad.regelMm', groep: 'voorblad', label: 'Grootte van de bijregel', type: 'mm', min: 1.8, max: 16, step: 0.1, standaard: 3.4, help: 'De regel met het aantal dagen, de kilometers en de datums' },
+  { key: 'voorblad.titelKleur', groep: 'voorblad', label: 'Kleur van de letters', type: 'kleur', standaard: '#3a352e' },
+  { key: 'voorblad.titelHoek', groep: 'voorblad', label: 'Waar de titel staat', type: 'keuze', opties: ['linksonder', 'linksboven', 'rechtsonder', 'rechtsboven'], standaard: 'linksonder', help: 'Je kunt het blok daarna alsnog naar elke plek slepen; dit is waar het begint' },
+  { key: 'voorblad.bijregel', groep: 'voorblad', label: 'De bijregel tonen', type: 'aanuit', standaard: true },
+
+  // De uitsnede. Eigen knoppen en niet die uit de groep Uitsnede, want die
+  // zijn boekbreed: aan het voorblad schuiven zou dan ook de overzichtskaart
+  // verzetten, en die twee bladen kaderen juist met opzet verschillend - het
+  // overzicht op de rit, het voorblad op het eiland.
+  { key: 'voorblad.margeMm', groep: 'voorblad', label: 'Ruimte om het eiland', type: 'mm', min: -60, max: 90, step: 1, standaard: 22, help: 'Negatief mag: dan loopt IJsland van de bladzijde af, en dat is op een omslag vaak juist goed' },
+  { key: 'voorblad.zoom', groep: 'voorblad', label: 'Zoom', type: 'getal', min: 0.3, max: 4, step: 0.01, standaard: 1 },
+  { key: 'voorblad.panXMm', groep: 'voorblad', label: 'Verschuiven ⟷', type: 'mm', min: -200, max: 200, step: 1, standaard: 0 },
+  { key: 'voorblad.panYMm', groep: 'voorblad', label: 'Verschuiven ↕', type: 'mm', min: -200, max: 200, step: 1, standaard: 0 },
+
+  // Het vel. Zelfde papier als onder de cijferpagina's, met een eigen zaad,
+  // zodat het voorblad niet toevallig dezelfde vlek heeft als bladzijde vier.
+  { key: 'voorblad.doorzichtig', groep: 'voorblad', label: 'Doorzichtige achtergrond', type: 'aanuit', standaard: true, help: 'Het voorblad krijgt geen paginakleur, zodat de PNG los over een foto of een achtergrond te leggen is. Op het scherm zie je het ruitjespatroon van het werkblad erdoorheen. Er komt dan ook geen PDF: doorzichtigheid bestaat daar niet op een manier die een fotoboekprogramma begrijpt' },
+  { key: 'voorblad.papierAan', groep: 'voorblad', label: 'Papier eronder', type: 'aanuit', standaard: false, help: 'Een vel met vezels over de hele bladzijde. Staat uit, want dat vel is dekkend en maakt de doorzichtige achtergrond hierboven ongedaan. Aan als het voorblad wél een eigen bladzijde wordt' },
+  { key: 'voorblad.papierOverKaart', groep: 'voorblad', label: 'Papier ook over de kaart', type: 'aanuit', standaard: true, help: 'Legt hetzelfde vel nog eens over het eiland heen, onder de lijnen door. Zonder dit ligt er een wit eiland op crème papier en vallen die twee uit elkaar; ermee loopt de vezel over allebei door en is het één vel waar iets op gedrukt staat' },
+  { key: 'voorblad.papierOverDekking', groep: 'voorblad', label: 'Hoe dekkend dat vel is', type: 'getal', min: 0, max: 1, step: 0.05, standaard: 0.6, help: 'Hoger trekt de kaart verder naar de papierkleur toe. Op één is het eiland weer even leeg als de zee' },
+  { key: 'voorblad.zaad', groep: 'voorblad', label: 'Zaad van het vel', type: 'getal', min: 1, max: 999, step: 1, standaard: 7, help: 'Verander dit en je krijgt hetzelfde papier met andere vezels en vlekken, en een andere hand' },
 
   // ------------------------------------------------------------- voortgang
   //

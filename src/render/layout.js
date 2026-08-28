@@ -40,6 +40,30 @@ export function voortgangMaat (stijl) {
   }
 }
 
+/**
+ * De uitsnede van het voorblad.
+ *
+ * Apart van maakView omdat het voorblad op iets anders past: niet op de route
+ * maar op de kust. De ringweg raakt de Westfjorden en de oostpunt niet, dus wie
+ * op de rit kadert snijdt op het omslag een stuk IJsland weg - en juist daar
+ * kijk je op een voorblad naar.
+ *
+ * Zowel de server (voor de achtergrondplaat) als de browser (voor de tekening)
+ * roept dit aan met precies dezelfde ringen. Zolang dat zo blijft kunnen de
+ * plaat en de getekende kust niet uit elkaar lopen.
+ */
+export function voorbladView (coords, stijl) {
+  const maat = paginaMaat(stijl)
+  return MapView.fit(coords, {
+    widthMm: maat.breedteMm,
+    heightMm: maat.hoogteMm,
+    paddingMm: stijl['voorblad.margeMm'] + maat.afloopMm,
+    zoom: stijl['voorblad.zoom'],
+    panXMm: stijl['voorblad.panXMm'],
+    panYMm: stijl['voorblad.panYMm']
+  })
+}
+
 /** De kaartuitsnede voor deze route bij deze instellingen. */
 export function maakView (coords, stijl) {
   const maat = paginaMaat(stijl)
@@ -69,6 +93,14 @@ export const ACHTERGROND_KNOPPEN = [
   'uitsnede.panXMm',
   'uitsnede.panYMm',
   'uitsnede.margeMm',
+  // Het voorblad kadert op de kustringen en met zijn eigen schuifjes, dus die
+  // bepalen daar de plaat in plaats van de uitsnede-knoppen hierboven.
+  'voorblad.kustDetail',
+  'voorblad.kaartLaag',
+  'voorblad.margeMm',
+  'voorblad.zoom',
+  'voorblad.panXMm',
+  'voorblad.panYMm',
   'lagen.mapboxLabelMm',
   'lagen.badgesWeg',
   'lagen.badgesBoven',

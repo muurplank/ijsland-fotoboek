@@ -10,12 +10,18 @@
  * vlek; een rand eromheen maakt er een kaart van. De rand ligt bewust bínnen het
  * land: naar buiten toe zou het eiland groeien en zou de kustkleur als halo in
  * de zee hangen.
+ *
+ * Hetzelfde hoogtemodel levert onderaan dit bestand ook de kustlijn als lijn in
+ * plaats van als vlak - zie ijslandKust(). Het voorblad heeft die nodig om de
+ * omtrek met een pen te kunnen trekken en om de kaart op het eiland uit te
+ * knippen. Beide komen uit hetzelfde masker, dus ze sluiten per definitie aan.
  */
 
 import sharp from 'sharp'
 import { fetchDem } from '../fetch/elevation.js'
 import { hexNaarRgb } from './colorize.js'
-import { tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
+import { kustRingen } from './kustringen.js'
+import { metersPerPixel, tileToLonLat, TILE_SIZE } from '../geo/tiles.js'
 
 /** Ruim om het hele eiland heen, inclusief de Westfjorden en de oostkust. */
 export const IJSLAND = { west: -24.65, east: -13.35, south: 63.3, north: 66.62 }
@@ -145,6 +151,16 @@ function ijslandMasker ({ onProgress } = {}) {
 
     return {
       land,
+      // De hoogtes zelf blijven bewaard, en dat is een bewuste kosten-afweging:
+      // het is zestien megabyte die de hele serverdraai blijft staan, tegenover
+      // een hoogtemodel dat op schijf al in de honderden megabytes loopt. Het
+      // levert op dat ijslandKust() de kust tússen twee meetpunten door kan
+      // interpoleren in plaats van langs de trapjes van een veld van enen en
+      // nullen te lopen - en dat aan de detailknop draaien daarna gratis is.
+      hoogtes: dem.data,
+      z: dem.z,
+      originPx: dem.originPx,
+      originPy: dem.originPy,
       afstand: kustAfstand(land, dem.width, dem.height),
       breedte: dem.width,
       hoogte: dem.height,
@@ -210,5 +226,88 @@ export async function ijslandSilhouet ({
   })()
 
   cache.set(sleutel, belofte)
+  return belofte
+}
+
+/** Onthoudt de kustlijn per detailstand; het masker eronder is toch al gedeeld. */
+const kustCache = new Map()
+
+/**
+ * De kustlijn van IJsland als gesloten ringen in lengte- en breedtegraden.
+ *
+ * Waarom niet gewoon de silhouet-PNG met een randje: een raster kun je niet met
+ * een pen trekken. Het voorblad wil een lijn die in de PDF een lijn blijft, die
+ * je dunner of dikker kunt zetten, en waar je de kaart op kunt uitknippen.
+ *
+ * De twee knoppen zijn er allebei omdat IJsland op tweehonderddertig meter per
+ * punt véél meer kust heeft dan je op een voorblad wilt zien:
+ *
+ * - `minKm2` gooit alles weg dat kleiner is dan zoveel vierkante kilometer. Op
+ *   nul komen er negenenveertig ringen terug en zijn tweeendertig daarvan
+ *   kleiner dan een vierkante kilometer: rotsen voor de kust, zandbanken,
+ *   meertjes onder zeeniveau. Die lezen op een voorblad als vuil op het papier.
+ *   Op vijf blijven er vijf over - het vasteland, Heimaey, Hrisey, Grimsey en
+ *   een eilandje in Faxafloi - en dat zijn precies de vier die je op een kaart
+ *   van IJsland verwacht. Vandaar die standaard.
+ *
+ *   Ter controle van het geheel: het vasteland komt er op 104.815 vierkante
+ *   kilometer uit en IJsland is er 103.000. Dat verschil is de kustrand van een
+ *   halve cel die marching squares er per definitie omheen legt.
+ * - `tolerantieM` bepaalt hoe grof de lijn zelf mag worden. Vijfhonderd meter is
+ *   op een voorblad van dertig centimeter ruim een kwart millimeter, dus onder
+ *   de lijndikte, en het scheelt een orde van grootte in het aantal punten.
+ *
+ * De omrekening naar graden gaat per punt door tileToLonLat en niet lineair over
+ * de bounds. Dat moet ook: het raster staat in Mercator, en daarin is de afstand
+ * tussen twee breedtegraden bovenin het plaatje kleiner dan onderin. Lineair
+ * rekenen zou de Westfjorden een halve tegel omhoog schuiven.
+ *
+ * @param {object} [opties]
+ * @param {number} [opties.minKm2]      eilanden kleiner dan dit vallen af
+ * @param {number} [opties.tolerantieM] hoe grof de lijn vereenvoudigd mag worden
+ * @returns {Promise<{ringen: Array<Array<[number, number]>>, bounds: object, punten: number}>}
+ */
+export async function ijslandKust ({ minKm2 = 5, tolerantieM = 500, onProgress } = {}) {
+  const sleutel = `${minKm2}|${tolerantieM}`
+  if (kustCache.has(sleutel)) return kustCache.get(sleutel)
+
+  const belofte = (async () => {
+    const masker = await ijslandMasker({ onProgress })
+
+    // Hoe groot een roostercel op de grond is, gemeten op het midden van het
+    // plaatje. IJsland loopt van 63 tot 67 graden en in Mercator scheelt dat
+    // een procent of acht in schaal; voor een ondergrens die je met een
+    // schuifje zet is dat ruim binnen de marge.
+    const middenLat = (masker.bounds.north + masker.bounds.south) / 2
+    const celM = metersPerPixel(middenLat, masker.z)
+
+    const ringen = kustRingen({
+      veld: masker.hoogtes,
+      kolommen: masker.breedte,
+      rijen: masker.hoogte,
+      niveau: 0,
+      minCellen: (minKm2 * 1e6) / (celM * celM),
+      tolerantie: tolerantieM / celM,
+      rondes: 2
+    })
+
+    let punten = 0
+    const uit = ringen.map(ring => {
+      punten += ring.length
+      return ring.map(p => {
+        const { lon, lat } = tileToLonLat(
+          (masker.originPx + p.x) / TILE_SIZE,
+          (masker.originPy + p.y) / TILE_SIZE,
+          masker.z
+        )
+        // afronden op vijf decimalen: ruim een meter, en het halveert de JSON
+        return [Math.round(lon * 1e5) / 1e5, Math.round(lat * 1e5) / 1e5]
+      })
+    })
+
+    return { ringen: uit, bounds: masker.bounds, punten }
+  })()
+
+  kustCache.set(sleutel, belofte)
   return belofte
 }
