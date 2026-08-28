@@ -276,9 +276,10 @@ wat dit boek is, en dan is alles wat je erbij zet er één te veel.
 
 Wat er staat zijn twee omtrekken die elkaar uitleggen: de vorm van het eiland en
 de vorm van de rit. De ene is een ring om de andere, en juist die gelijkenis is
-waar een rondreis om draait. Bij elke overnachting een stip met het dagnummer, in
-een hoek de vlag, en verder niets — de titel staat standaard uit, want een omslag
-dat het nog eens uitspreekt is er een dat zichzelf niet vertrouwt.
+waar een rondreis om draait. Het eiland is gevuld met de IJslandse vlag, bij elke
+overnachting staat een stip met het dagnummer, en verder niets — de titel staat
+standaard uit, want een omslag dat het nog eens uitspreekt is er een dat zichzelf
+niet vertrouwt.
 
 De achtergrond is standaard doorzichtig. Het blad komt er dus als PNG uit en niet
 als PDF, precies zoals het voortgangsstrookje, zodat je het in het
@@ -286,33 +287,65 @@ fotoboekprogramma over een foto of een egale kleur kunt leggen. Wil je er een
 gewone bladzijde van maken, zet dan *Doorzichtige achtergrond* uit en *Papier
 eronder* aan; dan komt er ook weer een PDF.
 
-### De vlag
+### De vlag als de vorm van het land
 
-In een hoek staat de IJslandse vlag, en dat is de enige plek op het blad waar
-echte kleur komt. Dan moet het ook echt kleur zijn: een verbleekte vlag leest als
-een drukfout. Wat hem bij de rest laat horen is niet de kleur maar de máák —
-dezelfde gedachte als bij de reisstempels. De rand is gesneden en niet met een
-liniaal getrokken, en elke inkt is een eigen aandruk, dus het rode kruis ligt een
-haartje naast het witte.
+Standaard is de landsgrens het venster en de vlag de vulling: IJsland in blauw,
+wit en rood, met de kustlijn en de ringroute er als lijn overheen. Juist die
+lijnen maken er een kaart van in plaats van een plaatje — zonder de route is het
+een vlaggetje in een landvorm, mét de route is het deze reis.
 
-Twee maten zijn met opzet klein gehouden, allebei nadat het er één keer verkeerd
-uitzag:
+De vlag wordt daarbij **niet uitgerekt naar de vorm van het land** maar dekkend
+geschaald met behoud van verhouding. IJsland is breder dan de vlag hoog is, dus
+wat boven en onder uitsteekt knipt de kust vanzelf weg. Uitrekken zou het kruis
+vervormen, en een vlag met een scheef kruis is geen vlag meer.
 
-- **De hoekafronding stond op zes procent van de korte zijde**, en toen was het
-  geen stempel meer maar een sticker. Een mes dat door rubber gaat laat een hoek
-  staan die je net niet scherp krijgt, geen ronding waar je een munt langs kunt
-  leggen. Nu 1,2 procent.
-- **De scheve aandruk heeft een eigen bovengrens**, en die schaalt mee met de
-  vlag: een achtste eenheid. De witte baan is maar één eenheid breed — op een
-  vlag van veertig millimeter nog geen anderhalve millimeter — dus een vrije
-  verschuiving van een halve millimeter at er de helft van op, en dan raakte het
-  rood het blauw. `test/vlag.test.js` houdt vast dat er tussen rood en blauw
-  altijd wit blijft zitten, bij elke vlagbreedte en elke stand van de knop.
+Twee dingen om te weten als je deze stand gebruikt:
 
-De kleuren staan als benoemde constanten in `src/render/vlag.js` en niet als
-losse hexcodes in de tekencode, want een vlag met een net iets ander blauw is
-geen stijlkeuze maar een fout — en dat is precies het soort ding dat niemand
-nakijkt.
+- Zet **"Hoe de kaart meedoet" op `geen`**. De vlag ligt over het eiland heen en
+  dekt de kaart volledig af, dus anders haalt de server elke keer een plaat op
+  die niemand ziet. Tenzij je de dekking van de vlag verlaagt — dan schijnt het
+  reliëf er juist doorheen, en dat kan mooi zijn.
+- **De routekleur vecht met de vlag.** De standaard is stempeloker, en dat leest
+  slecht op vol rood. Een donkere inkt (`#1b2430`) leest op blauw, wit én rood;
+  wit leest prachtig op blauw en rood maar verdwijnt waar de route het witte
+  kruis kruist.
+
+De andere drie standen van "Hoe de vlag meedoet" zetten hem als los voorwerp
+neer: `postzegel` (gefrankeerd in een hoek, zie hieronder), `los in de hoek`, en
+`bij het beginpunt` — klein, op Keflavík waar de reis begon.
+
+### De postzegel
+
+Als zegel zit de vlag op een vel met kartelrand, een paar graden scheef geplakt,
+met de afstempeling er schuin overheen. Dat is waar op een envelop een zegel
+hoort, en daarmee leest het omslag als post uit IJsland. Een vlag die gewoon in
+de hoek geparkeerd staat is een logo, en een boek met een logo erop is een
+brochure; als zegel krijgt hij een reden om er te zijn.
+
+De zegel is een eigen vel en dus dekkend, ook als het blad verder doorzichtig is.
+Dat hoort zo: een zegel is een voorwerp dat je erop plakt.
+
+De perforatie zijn halve cirkels die naar bínnen bijten — dat is wat een
+perforatie is, gaatjes die uit het vel geponst zijn met het papier ertussen.
+Bollen ze naar buiten, dan wordt het een bloem. Elke boog wordt met een even
+aantal stukjes benaderd, want bij een oneven aantal valt er geen meetpunt op het
+diepste punt en is elke tand een paar procent ondieper dan de straal zegt.
+
+### De vlag zelf is overgenomen, niet nagetekend
+
+`src/render/vlag.js` bevat letterlijk de drie paden uit `Flag_of_Iceland.svg`: een
+blauw veld van 25 bij 18, en daarop twee kruisen die als **streek** getekend zijn
+in plaats van als losse balken — eerst wit op streekbreedte 4, daar bovenop rood
+op 2. Dat het één streek is en geen vier rechthoeken is precies waarom het klopt:
+het midden van het kruis komt zo vanzelf goed uit, zonder dat er ergens vier
+hoeken op elkaar hoeven te passen. Op maat zetten gebeurt met één transform, dus
+de streekbreedte schaalt mee en de verhouding tussen wit en rood blijft staan.
+
+Hier stond eerst een eigen versie, met een gesneden rand en drie inkten die naast
+elkaar vielen zoals bij de reisstempels. Die was niet mooi. De vlag is geen
+stempel: hij hoort strak te zijn, en het karakter van het blad komt van de zegel
+eromheen of van de landvorm eromheen. `test/vlag.test.js` legt de padtekst vast,
+want een nagetekende vlag ziet er goed uit tot je hem naast de echte legt.
 
 ### De kaart zit erin, maar altijd door iets heen
 
