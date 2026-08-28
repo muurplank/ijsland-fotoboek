@@ -208,10 +208,20 @@
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 0,
+        "dxMm": 98.69,
         "dyMm": 0,
-        "breedteMm": 259.59,
-        "hoogteMm": 36.69
+        "breedteMm": 106.19,
+        "hoogteMm": 115.07
+      },
+      "postzegel:1": {
+        "dxMm": -2.18,
+        "dyMm": -37.75,
+        "schaal": 1.17
+      },
+      "postzegel:2": {
+        "dxMm": 100.45,
+        "dyMm": -13.99,
+        "schaal": 1.54
       }
     }
   }

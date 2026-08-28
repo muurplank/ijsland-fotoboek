@@ -27,7 +27,7 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "Dalvík",
+      "name": "Dalvík ontbijt",
       "lat": 65.949434,
       "lon": -18.474374,
       "type": "stop",
@@ -201,33 +201,47 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 0,
-        "dyMm": 0
+        "dxMm": 4.7,
+        "dyMm": 5.59
       },
       "marker:26": {
         "dxMm": 0,
         "dyMm": 0
       },
       "titelblok": {
-        "dxMm": 48.19,
-        "dyMm": -3.86
+        "dxMm": 56.01,
+        "dyMm": -3.87
       },
       "marker:1": {
-        "dxMm": -2.35,
-        "dyMm": 3.02
+        "dxMm": 1.91,
+        "dyMm": 0
+      },
+      "label:3": {
+        "dxMm": -6.95,
+        "dyMm": 10.43
+      },
+      "label:18": {
+        "dxMm": -13.74,
+        "dyMm": 5.22
       }
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 83.56,
+        "dxMm": 99.56,
         "dyMm": 0,
         "schaal": 1,
         "breedteMm": 116.88,
         "hoogteMm": 74.37
       },
       "postzegel:2": {
-        "dxMm": 138.92,
-        "dyMm": -36.93
+        "dxMm": 119.35,
+        "dyMm": -42.66,
+        "schaal": 1.23
+      },
+      "postzegel:1": {
+        "dxMm": -3.03,
+        "dyMm": -43.49,
+        "schaal": 1.15
       }
     }
   }

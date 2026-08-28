@@ -5,7 +5,7 @@
   "tekst": "We hebben geslapen tot 08:00 uur en zijn daarna met de step de auto gaan ophalen en gaan inladen bij het hotel. Toen konden we eindelijk onderweg naar Reykjavík. Onderweg zijn we even gestopt voor wat snacks en daarna de stad in gegaan voor gasflesjes en souvenirs. We zijn nog langs een paar kledingwinkels geweest voor waterdichte kleding, maar helaas met weinig resultaat. Wel kregen we te horen dat we het geld van de originele boeking terug zouden krijgen, waardoor we onderaan de streep toch 250 euro minder kwijt waren aan de auto.\n\nHierna reden we door naar het stadje waar we in de buurt wilden kamperen. Onderweg kwamen we langs de Seljalandsfoss, een super mooie en grote waterval waar je na een klein stukje lopen ook nog een waterval in een berg vindt. Vervolgens zijn we doorgereden naar de camping. Na een heerlijke maaltijd van varkenshaas en zoete aardappel hebben we de tent opgezet. We probeerden op tijd te gaan slapen, maar dat lukte half door de extreme kou. Vanaf 02:00 uur heeft eigenlijk niemand van ons meer geslapen.",
   "waypoints": [
     {
-      "name": "Hotyel",
+      "name": "Hotel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "start"
@@ -18,12 +18,13 @@
       "toonLabel": false
     },
     {
-      "name": "Hotyel",
+      "name": "Hotel",
       "lat": 64.009072,
       "lon": -22.561895,
       "type": "stop",
       "notitie": "spullen opgehaald",
-      "toonLabel": false
+      "toonLabel": false,
+      "toonIcoon": false
     },
     {
       "name": "",
@@ -183,28 +184,75 @@
         "dyMm": -6.31
       },
       "marker:2": {
-        "dxMm": 0,
-        "dyMm": 14.67
+        "dxMm": 9.04,
+        "dyMm": 4.59
       },
       "marker:1": {
-        "dxMm": 0,
-        "dyMm": 27.85
+        "dxMm": 107.79,
+        "dyMm": 4.87
+      },
+      "plaats:Garðabær": {
+        "dxMm": 8,
+        "dyMm": 6.43
+      },
+      "label:20": {
+        "dxMm": 9.21,
+        "dyMm": 0
+      },
+      "inzet": {
+        "dxMm": 4.52,
+        "dyMm": 3.64
+      },
+      "titelblok": {
+        "dxMm": 80.15,
+        "dyMm": 0
+      },
+      "plaats:Reykjanesbær": {
+        "dxMm": -2.61,
+        "dyMm": 2.09
+      },
+      "kompas": {
+        "dxMm": 3.65,
+        "dyMm": -3.67
+      },
+      "plaats:Hvolsvöllur": {
+        "dxMm": -9.91,
+        "dyMm": 2.26
+      },
+      "plaats:Hella": {
+        "dxMm": -2.61,
+        "dyMm": 6.26
+      },
+      "marker:4": {
+        "dxMm": 188.47,
+        "dyMm": 76.67
       }
     },
     "stats": {
       "cijferrij": {
-        "dxMm": 1.98,
-        "dyMm": -1.81
+        "dxMm": 2.15,
+        "dyMm": -5.84
       },
       "titelblok": {
-        "dxMm": 2.5,
-        "dyMm": 5.17
+        "dxMm": 80.47,
+        "dyMm": 0
       },
       "dagtekst": {
-        "dxMm": 74.81,
-        "dyMm": 0,
+        "dxMm": 134.38,
+        "dyMm": 11.52,
         "breedteMm": 152.69,
         "hoogteMm": 98.21
+      },
+      "postzegel:1": {
+        "dxMm": 5.91,
+        "dyMm": -18.9,
+        "schaal": 1.73
+      }
+    },
+    "reiscijfers": {
+      "reistabel": {
+        "dxMm": 53.96,
+        "dyMm": -7.31
       }
     }
   }

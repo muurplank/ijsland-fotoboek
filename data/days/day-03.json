@@ -204,46 +204,60 @@
   "plaatsing": {
     "kaart": {
       "label:26": {
-        "dxMm": 3.81,
-        "dyMm": 16.28
+        "dxMm": 10.42,
+        "dyMm": 6.54
       },
       "marker:0": {
         "dxMm": 0,
         "dyMm": 0
       },
       "label:0": {
-        "dxMm": 4.98,
-        "dyMm": -17.53
+        "dxMm": 0,
+        "dyMm": -6.06
       },
       "marker:26": {
-        "dxMm": -8.77,
-        "dyMm": 3.32
+        "dxMm": 4.63,
+        "dyMm": -4.5
       },
       "titelblok": {
-        "dxMm": 124.38,
-        "dyMm": -2.74,
+        "dxMm": 69.65,
+        "dyMm": 0,
         "schaal": 0.99
       },
       "kompas": {
-        "dxMm": 0,
-        "dyMm": 0,
+        "dxMm": -256.63,
+        "dyMm": -3.57,
         "schaal": 1.29
       },
       "inzet": {
         "dxMm": 0,
         "dyMm": 2.35
+      },
+      "schaalbalk": {
+        "dxMm": 0,
+        "dyMm": 2.96
       }
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 56.46,
-        "dyMm": 15.84,
-        "breedteMm": 192.91,
-        "hoogteMm": 31.46
+        "dxMm": 0,
+        "dyMm": -5.23,
+        "breedteMm": 273.99,
+        "hoogteMm": 56.92
       },
       "cijferrij": {
         "dxMm": 0.01,
         "dyMm": 3.72
+      },
+      "postzegel:2": {
+        "dxMm": 88.32,
+        "dyMm": 6.22,
+        "schaal": 1.19
+      },
+      "postzegel:1": {
+        "dxMm": 29.65,
+        "dyMm": 8.63,
+        "schaal": 1.31
       }
     }
   }

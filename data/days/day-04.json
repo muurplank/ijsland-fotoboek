@@ -240,33 +240,41 @@
       },
       "titelblok": {
         "dxMm": 58.57,
-        "dyMm": -3.86
+        "dyMm": -3.51
       },
       "label:2": {
-        "dxMm": 0,
-        "dyMm": -3.01
+        "dxMm": -2.61,
+        "dyMm": -2.84
       },
       "label:27": {
-        "dxMm": 17.84,
-        "dyMm": 7.8
+        "dxMm": 17.14,
+        "dyMm": 5.37
       },
       "label:5": {
-        "dxMm": -2.44,
-        "dyMm": -5.61
+        "dxMm": 3.13,
+        "dyMm": -2.83
       },
       "label:9": {
-        "dxMm": 0.49,
-        "dyMm": -8.78
+        "dxMm": 0,
+        "dyMm": 11.91
       },
       "label:0": {
-        "dxMm": 4.74,
-        "dyMm": -6.87
+        "dxMm": -9.52,
+        "dyMm": 5.47
       },
       "kompas": {
-        "dxMm": 2.72,
-        "dyMm": -4.21
+        "dxMm": 0,
+        "dyMm": -7.18
       },
       "marker:0": {
+        "dxMm": 0,
+        "dyMm": 0
+      },
+      "plaats:Svalbarðseyri": {
+        "dxMm": 16.52,
+        "dyMm": 19.89
+      },
+      "plaats:Reykjahlíð": {
         "dxMm": 0,
         "dyMm": 0
       }
@@ -277,10 +285,27 @@
         "dyMm": -3.25
       },
       "dagtekst": {
-        "dxMm": 68.49,
-        "dyMm": 6.83,
-        "breedteMm": 126.87,
-        "hoogteMm": 58.17
+        "dxMm": 3.59,
+        "dyMm": -10.88,
+        "breedteMm": 282.79,
+        "hoogteMm": 71.32
+      },
+      "postzegel:1": {
+        "dxMm": 0,
+        "dyMm": 8.94,
+        "schaal": 1.36
+      },
+      "postzegel:2": {
+        "dxMm": 41.92,
+        "dyMm": 8.94,
+        "schaal": 1.3
+      }
+    },
+    "reiscijfers": {
+      "reistabel": {
+        "dxMm": 51.12,
+        "dyMm": 0,
+        "schaal": 1.04
       }
     }
   }

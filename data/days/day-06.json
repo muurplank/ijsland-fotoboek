@@ -69,7 +69,7 @@
       "notitie": "langsgereden"
     },
     {
-      "name": "Geysir",
+      "name": "Strokkur geysir",
       "lat": 64.308492,
       "lon": -20.30207,
       "type": "stop",
@@ -172,34 +172,72 @@
   "plaatsing": {
     "kaart": {
       "inzet": {
-        "dxMm": 0,
-        "dyMm": -247.54,
-        "schaal": 0.68
+        "dxMm": -2.26,
+        "dyMm": -246.5
       },
       "titelblok": {
         "dxMm": 98.63,
         "dyMm": -3.55
       },
       "label:22": {
-        "dxMm": 0,
-        "dyMm": 0
+        "dxMm": -11.47,
+        "dyMm": 5.74
       },
       "label:9": {
-        "dxMm": -2.72,
-        "dyMm": -3.47
+        "dxMm": -5.85,
+        "dyMm": -2.61
+      },
+      "label:17": {
+        "dxMm": 6.26,
+        "dyMm": 0
+      },
+      "label:12": {
+        "dxMm": 3.48,
+        "dyMm": 0
+      },
+      "plaats:Borgarnes": {
+        "dxMm": -3.99,
+        "dyMm": 0
+      },
+      "plaats:Flúðir": {
+        "dxMm": 11.13,
+        "dyMm": 2.61
+      },
+      "plaats:Laugarvatn": {
+        "dxMm": 0,
+        "dyMm": -2.43
       }
     },
     "stats": {
       "dagtekst": {
-        "dxMm": 92.02,
-        "dyMm": 0,
+        "dxMm": 5.09,
+        "dyMm": -5.21,
         "schaal": 1.39,
-        "breedteMm": 145.05,
-        "hoogteMm": 57.39
+        "breedteMm": 273.82,
+        "hoogteMm": 46.88
       },
       "cijferrij": {
         "dxMm": 0.01,
         "dyMm": 2.61
+      },
+      "postzegel:3": {
+        "dxMm": -183.78,
+        "dyMm": 0,
+        "schaal": 1.55
+      },
+      "postzegel:2": {
+        "dxMm": 98.21,
+        "dyMm": -11.47,
+        "schaal": 1.27
+      },
+      "postzegel:1": {
+        "dxMm": 85.9,
+        "dyMm": -5.38,
+        "schaal": 1.36
+      },
+      "titelblok": {
+        "dxMm": 95.28,
+        "dyMm": -3.13
       }
     }
   }
