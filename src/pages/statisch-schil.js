@@ -97,14 +97,15 @@
     })
   }
 
-  // Geen server om naar te bewaren, dus die knoppen verbergen.
+  // Geen server om naar te bewaren en geen Chromium om op drukmaat te renderen,
+  // dus die knoppen verbergen.
   //
   // Verbergen en niet weghalen: de tekencode hangt er later een handler op, en
   // als het element dan weg is loopt die vast nog voordat de eerste kaart staat.
   // Dat kostte me een lege pagina bij het openen, terwijl van dag wisselen wel
   // werkte - precies het soort fout dat je alleen ziet als je het echt opent.
   addEventListener('DOMContentLoaded', () => {
-    for (const id of ['bewaar-boek', 'bewaar-dag']) {
+    for (const id of ['bewaar-boek', 'bewaar-dag', 'exporteer']) {
       const knop = document.getElementById(id)
       if (knop) { knop.hidden = true; knop.disabled = true }
     }

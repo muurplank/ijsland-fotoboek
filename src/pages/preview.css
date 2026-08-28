@@ -218,6 +218,20 @@ button {
 button:hover { background: #8a5c3f; }
 button.stil { background: none; color: #7d766e; font-weight: 450; }
 button.stil:hover { background: #e6e3df; color: #2b2926; }
+button:disabled { background: #b5afa8; cursor: progress; }
+
+/* De knop waarmee je weggaat met een bestand. Inktzwart in plaats van bruin,
+   want het is een ander soort handeling dan bewaren: bewaren legt instellingen
+   vast, dit levert het blad zelf op. En een streep eronder om die twee uit
+   elkaar te houden. */
+#exporteer {
+  background: #2b2926;
+  margin-bottom: 5px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2ded9;
+  border-radius: 6px;
+}
+#exporteer:hover:not(:disabled) { background: #3f3b36; }
 
 /* --------------------------------------------- opschriften op de kaart */
 

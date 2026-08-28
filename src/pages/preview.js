@@ -50,7 +50,10 @@ let paneel
 let gegevens = null      // van de huidige dag
 let reis = null          // alle dagen, voor de overzichtskaart
 let reisCijfers = null   // per dag de statistieken en het profiel
-let stopIndex = null     // tot welke stop de voortgangsbalk gevuld is
+// Tot welke stop de voortgangsbalk gevuld is. Mag uit de adresbalk komen, want
+// de export moet per foto een ander strookje kunnen opleveren zonder dat er
+// iemand in de keuzelijst klikt.
+let stopIndex = params.has('stop') ? Number(params.get('stop')) : null
 let dagen = []
 let huidigeDag = Number(params.get('dag') ?? 1)
 let paginaType = params.get('pagina') ?? 'kaart'
@@ -629,6 +632,16 @@ async function start () {
 
   // ------ exportmodus: geen paneel, en pas klaarmelden als alles getekend is
   if (EXPORT) {
+    // Deze pagina is door Chromium geopend en niet door jouw tabblad, dus hij
+    // weet niets van de knoppen waar je net aan gedraaid hebt. Met het kaartje
+    // uit het adres haalt hij ze op bij de server. Zonder kaartje - dat is de
+    // export vanaf de opdrachtregel - blijft het bij wat er bewaard staat.
+    const stijlToken = params.get('stijlToken')
+    if (stijlToken) {
+      Object.assign(stijl,
+        await (await fetch(`/api/exportstijl?token=${encodeURIComponent(stijlToken)}`)).json())
+    }
+
     document.body.classList.add('exporteren')
     schaalPagina()
     zetTypografie()
@@ -834,6 +847,7 @@ async function start () {
   $('zoek').addEventListener('input', e => paneel.filter(e.target.value))
   window.addEventListener('resize', ontdubbel(() => { schaalPagina(); tekenPagina() }, 120))
 
+  $('exporteer').addEventListener('click', exporteerBeeld)
   $('bewaar-boek').addEventListener('click', () => bewaar('boek'))
   $('bewaar-dag').addEventListener('click', () => bewaar('dag'))
   $('herstel').addEventListener('click', herstel)
@@ -1067,6 +1081,93 @@ async function bewaar (niveau) {
   zegt(antwoord.ok
     ? (niveau === 'dag' ? `bewaard voor dag ${huidigeDag}` : 'bewaard voor het hele boek')
     : 'bewaren mislukt')
+}
+
+/**
+ * Deze pagina als JPG, op de drukresolutie, waar jij hem hebben wilt.
+ *
+ * Wat je op het scherm ziet staat op een handzame 110 dpi. Dit laat de server
+ * hem opnieuw renderen op de dpi uit de instellingen, met de knopstanden zoals
+ * ze nu zijn - ook de dingen die je nog niet bewaard hebt. Hetzelfde werk als
+ * `node src/build.js`, alleen komt het bestand hier terug in plaats van in out/.
+ *
+ * De bewaarplek wordt als eerste gevraagd en niet als laatste: de bewaardialoog
+ * wil een klik die net gebeurd is, en na een halve minuut renderen is die
+ * vervallen. Browsers zonder die dialoog - Safari, Firefox - laten het bestand
+ * gewoon in de downloadmap vallen.
+ */
+async function exporteerBeeld () {
+  // Het voortgangsstrookje blijft een PNG: dat hoort doorzichtig over een foto,
+  // en doorzichtigheid bestaat niet in JPG.
+  // Doorzichtigheid bestaat niet in JPG, dus alles wat doorzichtig hoort te
+  // zijn komt er als PNG uit - het strookje altijd, het voorblad als je die
+  // knop aan hebt staan.
+  const soort = paginaType === 'voortgang' ||
+    (paginaType === 'voorblad' && stijl['voorblad.doorzichtig']) ? 'png' : 'jpg'
+  const naam = BOEKBREED.has(paginaType)
+    ? `${paginaType}.${soort}`
+    : `dag-${String(huidigeDag).padStart(2, '0')}-${paginaType}.${soort}`
+
+  let handvat = null
+  if (window.showSaveFilePicker) {
+    try {
+      handvat = await window.showSaveFilePicker({
+        suggestedName: naam,
+        types: soort === 'jpg'
+          ? [{ description: 'JPG-afbeelding', accept: { 'image/jpeg': ['.jpg', '.jpeg'] } }]
+          : [{ description: 'PNG-afbeelding', accept: { 'image/png': ['.png'] } }]
+      })
+    } catch (fout) {
+      // Op annuleren stoppen we; gaat de dialoog om een andere reden niet open,
+      // dan is downloaden nog altijd beter dan niets.
+      if (fout.name === 'AbortError') { zegt('exporteren afgebroken'); return }
+    }
+  }
+
+  const knop = $('exporteer')
+  knop.disabled = true
+  zegt(`exporteren op ${stijl['pagina.dpi']} dpi — dit duurt even…`)
+
+  try {
+    const antwoord = await fetch('/api/export', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ dag: huidigeDag, pagina: paginaType, stop: stopIndex, stijl })
+    })
+    if (!antwoord.ok) throw new Error((await antwoord.text()).slice(0, 200))
+
+    const controle = JSON.parse(antwoord.headers.get('x-controle') ?? '{}')
+    const blob = await antwoord.blob()
+
+    if (handvat) {
+      const stroom = await handvat.createWritable()
+      await stroom.write(blob)
+      await stroom.close()
+    } else {
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = naam
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(link.href), 10000)
+    }
+
+    // Dezelfde drukcontrole als op de opdrachtregel. Zwijgen als het goed is en
+    // het eerste bezwaar in de balk zetten als het dat niet is; de rest staat in
+    // de console, want vijf regels passen daar niet.
+    const mb = (blob.size / 1e6).toFixed(1)
+    const mis = controle.mis ?? []
+    if (mis.length) {
+      console.warn('Drukcontrole:', mis.map(p => p.tekst))
+      zegt(`${naam} bewaard (${mb} MB) — let op: ${mis[0].tekst}` +
+        (mis.length > 1 ? ` en ${mis.length - 1} ander(e), zie de console` : ''))
+    } else {
+      zegt(`${naam} bewaard (${mb} MB) · drukcontrole helemaal goed`)
+    }
+  } catch (fout) {
+    zegt(`exporteren mislukt: ${fout.message}`)
+  } finally {
+    knop.disabled = false
+  }
 }
 
 function herstel () {

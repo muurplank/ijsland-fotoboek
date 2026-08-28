@@ -18,6 +18,7 @@ import { extname, join, normalize, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { maakDagCache } from './dagCache.js'
+import { exporteer, PAGINA_TYPES } from './export.js'
 import { fetchRoute } from './fetch/route.js'
 import { achtergrondVoorStijl } from './render/basemap.js'
 import { ijslandKust, ijslandSilhouet } from './render/inset.js'
@@ -50,6 +51,20 @@ const dagCache = maakDagCache()
 
 /** De laatst gemaakte laag met opgetilde plaatsnamen. */
 let bovenlaagCache = null
+
+/**
+ * De instellingen die bij een lopende export horen.
+ *
+ * De exportpagina wordt door Chromium geopend en niet door jouw tabblad, dus die
+ * weet niets van de knoppen waar je net aan gedraaid hebt. Daarom legt de knop ze
+ * hier neer en haalt de exportpagina ze op met het kaartje dat in zijn adres
+ * staat. Ze gaan er meteen na afloop weer uit.
+ */
+const exportStijlen = new Map()
+let exportTeller = 0
+
+/** Eén export tegelijk: twee keer Chromium op 600 dpi is vragen om geheugennood. */
+let exportBezig = false
 
 async function dagGegevens (nummer, stijlOverschrijving) {
   return dagCache.dag(nummer, {
@@ -543,6 +558,72 @@ const server = createServer(async (req, res) => {
 
       dagCache.leeg()
       return json(res, { opgeslagen: true })
+    }
+
+    // --------------------------------------------------------------- exporteren
+    //
+    // Dezelfde export als `node src/build.js`, maar dan met de instellingen zoals
+    // ze op dit moment op je scherm staan - ook de knoppen die je nog niet
+    // bewaard hebt - en het resultaat gaat niet naar out/ maar terug naar de
+    // browser, zodat je zelf kiest waar het bestand belandt.
+    if (pad === '/api/export' && req.method === 'POST') {
+      if (exportBezig) return json(res, { fout: 'Er loopt al een export' }, 409)
+
+      const body = await leesBody(req)
+      const nummer = Number(body.dag ?? 1)
+      const paginaType = PAGINA_TYPES.find(p => p === (body.pagina ?? 'kaart'))
+      if (!paginaType) return json(res, { fout: `Onbekende pagina "${body.pagina}"` }, 400)
+
+      // Door mergeStijl heen: dat klemt waarden binnen hun bereik en gooit
+      // sleutels weg die het schema niet kent, net als bij het bewaren.
+      const { stijl } = mergeStijl(body.stijl ?? {})
+
+      const token = `e${++exportTeller}`
+      exportStijlen.set(token, stijl)
+      exportBezig = true
+
+      console.log(`  exporteren: dag ${nummer} ${paginaType} op ${stijl['pagina.dpi']} dpi`)
+
+      try {
+        const uit = await exporteer({
+          basis: `http://localhost:${POORT}`,
+          dag: nummer,
+          paginaType,
+          stopIndex: body.stop ?? null,
+          stijl,
+          stijlToken: token,
+          formaat: 'jpg',
+          pdf: false,
+          melden: b => process.stdout.write(`  ... ${b}\n`)
+        })
+
+        // Het voortgangsstrookje komt als PNG terug ook al vroegen we om JPG:
+        // dat leeft van zijn doorzichtige achtergrond. Vandaar dat de naam uit
+        // het antwoord komt en niet uit de vraag.
+        const naam = `dag-${String(nummer).padStart(2, '0')}-${paginaType}.${uit.formaat}`
+
+        const mis = uit.controle.filter(p => !p.goed)
+        console.log(`  ${naam} klaar (${(uit.beeld.length / 1e6).toFixed(1)} MB)` +
+          (mis.length ? `, ${mis.length} punt(en) om naar te kijken` : ''))
+
+        res.writeHead(200, {
+          'content-type': uit.mime,
+          'content-length': uit.beeld.length,
+          'content-disposition': `attachment; filename="${naam}"`,
+          // alleen wat niet klopt: de hele lijst is nooit interessant als hij goed is
+          'x-controle': JSON.stringify({ totaal: uit.controle.length, mis }),
+          'cache-control': 'no-store'
+        })
+        return res.end(uit.beeld)
+      } finally {
+        exportBezig = false
+        exportStijlen.delete(token)
+      }
+    }
+
+    // De knopstanden voor de pagina die Chromium net geopend heeft.
+    if (pad === '/api/exportstijl') {
+      return json(res, exportStijlen.get(url.searchParams.get('token')) ?? {})
     }
 
     // ------------------------------------------------------------- bronbestanden
