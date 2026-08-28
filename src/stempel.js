@@ -7,6 +7,7 @@
  *   node src/stempel.js --snel       het lichtere model, om een prompt te proberen
  *   node src/stempel.js --herzet     de bewaarde platen opnieuw sleutelen, gratis
  *   node src/stempel.js --drempel=.1 strenger het papier eraf halen
+ *   node src/stempel.js --kleur=1.6  de steunkleuren voller of juist rustiger
  *
  * Wat hier gebeurt en waarom juist dit:
  *
@@ -34,7 +35,10 @@ import { fileURLToPath } from 'node:url'
 
 import sharp from 'sharp'
 import { genereerFoto, haalGoogleSleutel } from './fetch/nanobanana.js'
-import { fotosPerDag, inktKleuren, stempelPrompt, veldnotitieConcept, HERO_MAP, RAW_SOORTEN } from './hero.js'
+import {
+  fotosPerDag, inktKleuren, stempelPrompt, veldnotitieConcept, versterkKleur,
+  HERO_MAP, RAW_SOORTEN
+} from './hero.js'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const UIT = join(ROOT, 'data', 'hero')
@@ -48,6 +52,21 @@ const UIT = join(ROOT, 'data', 'hero')
  * uit. Wil je de drempel anders, dan is dat gratis - zie --herzet.
  */
 const RUW = join(UIT, 'ruw')
+
+/**
+ * Waar de plaat van deze variant staat.
+ *
+ * Elke --opnieuw vraagt een volgende variant, en die krijgt zijn eigen bestand.
+ * Vroeger overschreef hij gewoon de vorige, en dat is één keer te vaak bijna
+ * misgegaan: verander je ook de prompt, dan zit de oude afdruk daarna alleen nog
+ * in de schijfcache van nanobanana.js, achter de óude prompttekst. Onvindbaar in
+ * de praktijk, en een gekochte plaat is niet opnieuw te maken.
+ *
+ * Variant 1 houdt zijn kale naam, want zo staan de platen er nu al op schijf.
+ * Teruggaan naar een oudere afdruk is daarmee gratis: zet "variant" terug in
+ * data/hero/dag-NN.json en draai --herzet.
+ */
+const plaatNaam = (merk, variant) => join(RUW, variant > 1 ? `${merk}-v${variant}.jpg` : `${merk}.jpg`)
 
 /**
  * Welk model de stempels snijdt.
@@ -176,72 +195,117 @@ function witpuntVan (data, kanalen) {
  * een vak dat twee keer zo groot is als wat je ziet, en er is niet aan te wijzen
  * waar de stempel nou eigenlijk zit.
  *
- * Dus zoeken we op waar er echt inkt ligt en snijden we de rest eraf. Met een
- * klein beetje papier eromheen, want een afdruk die kaarsrecht op zijn inkt is
- * afgesneden ziet er uitgeknipt uit - en uitgeknipt is precies wat een stempel
- * niet is.
+ * Het kader ligt om de buitenste zichtbare inkt, zonder papier eromheen. Dat is
+ * precies wat je op de pagina wilt kunnen pakken: het vak dat je versleept valt
+ * samen met wat je ziet staan.
+ *
+ * Zichtbaar is hier het woord dat telt, en daarom rekent dit met dezelfde
+ * drempel als de stempel zelf. Onder die drempel wordt een pixel straks
+ * doorzichtig gemaakt, dus een flauwe waas die nu nog meetelt is op het vel
+ * niets - en een kader dat daar toch omheen loopt geeft precies de lege rand
+ * terug die we eraf wilden hebben. Dat scheelde op een geiser een derde van de
+ * breedte aan leeg papier.
  */
-const KADER_MARGE = 0.02
 
-/** Hoe donker een pixel moet zijn om als inkt te tellen, ten opzichte van het papier. */
-const INKT_GRENS = 0.88
+/**
+ * Hoe vol een pixel moet zijn om de rand van het kader te mogen zetten.
+ *
+ * Niet elke pixel die nét boven de drempel uitkomt: dan zet één korrel in de
+ * hoek het kader alsnog op de hele plaat. Een vijfde dekking is een streek van
+ * de pen of een rand van een wassing, en dat is wat we zoeken.
+ */
+const RAND_DEKKING = 0.2
 
-/** Hoeveel van een rij inkt moet zijn voordat die rij bij de afdruk hoort. */
-const RIJ_DICHTHEID = 0.004
+/**
+ * Hoeveel inkt er in een cel moet liggen voordat die cel bij de tekening hoort.
+ *
+ * Eerst grof kijken, dan pas fijn. Het vel van het model heeft losse donkere
+ * korrels tot in de hoeken, en op één zo'n korrel afgaan rekt het kader meteen
+ * weer op tot de hele plaat - wat precies gebeurde: nul tot zes procent eraf,
+ * terwijl de afdruk maar de helft van het vel beslaat.
+ *
+ * Dus wordt de plaat eerst in cellen van ongeveer een honderdtwintigste
+ * verdeeld, en telt een cel pas mee als er gemiddeld twee procent inkt in ligt.
+ * Een korrel haalt dat niet, de dunste arcering ruim wel. Binnen de cellen die
+ * overblijven wordt daarna alsnog op de pixel gezocht, zodat het kader strak om
+ * de tekening ligt en niet om een raster.
+ */
+const RASTER = 128
+const CEL_DEKKING = 0.02
 
-function inktKader (rgba, width, height, papier) {
-  const grens = papier * INKT_GRENS
+function inktKader (rgba, width, height, papier, drempel) {
+  const cel = Math.max(8, Math.round(Math.max(width, height) / RASTER))
+  const kolommen = Math.ceil(width / cel)
+  const rijen = Math.ceil(height / cel)
 
-  // Per rij en per kolom tellen hoeveel inkt erin zit.
-  //
-  // Niet de buitenste donkere pixel opzoeken. Het vel van het model heeft losse
-  // donkere korrels tot in de hoeken, en één zo'n korrel rekt het kader dan
-  // meteen weer op tot de hele plaat - wat precies gebeurde: nul tot zes procent
-  // eraf, terwijl de afdruk maar de helft van het vel beslaat.
-  //
-  // Een rij hoort er pas bij als er echt een streek doorheen loopt. Een paar
-  // promille van de rijbreedte is genoeg om de dunste arcering te vangen en veel
-  // te weinig voor wat korrels.
-  const perRij = new Uint32Array(height)
-  const perKolom = new Uint32Array(width)
+  // De dekking van elke pixel zoals de stempel hem straks krijgt: hoe donker
+  // ten opzichte van het papier, met de drempel er alvast af.
+  const dekking = new Float32Array(width * height)
+  const perCel = new Float64Array(kolommen * rijen)
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4
       const licht = rgba[i] * 0.299 + rgba[i + 1] * 0.587 + rgba[i + 2] * 0.114
-      if (licht >= grens) continue
-      perRij[y]++
-      perKolom[x]++
+      const rauw = 1 - licht / papier
+      const d = rauw <= drempel ? 0 : (rauw - drempel) / (1 - drempel)
+      dekking[y * width + x] = d
+      perCel[((y / cel) | 0) * kolommen + ((x / cel) | 0)] += d
     }
   }
 
-  const bereik = (telling, lengte, dwars) => {
-    const nodig = Math.max(3, dwars * RIJ_DICHTHEID)
-    let eerste = -1
-    let laatste = -1
-    for (let i = 0; i < lengte; i++) {
-      if (telling[i] < nodig) continue
-      if (eerste < 0) eerste = i
-      laatste = i
-    }
-    return [eerste, laatste]
-  }
+  let celLinks = kolommen
+  let celRechts = -1
+  let celBoven = rijen
+  let celOnder = -1
 
-  const [boven, onder] = bereik(perRij, height, width)
-  const [links, rechts] = bereik(perKolom, width, height)
+  for (let j = 0; j < rijen; j++) {
+    for (let i = 0; i < kolommen; i++) {
+      const pixels = Math.min(cel, width - i * cel) * Math.min(cel, height - j * cel)
+      if (perCel[j * kolommen + i] / pixels < CEL_DEKKING) continue
+      if (i < celLinks) celLinks = i
+      if (i > celRechts) celRechts = i
+      if (j < celBoven) celBoven = j
+      if (j > celOnder) celOnder = j
+    }
+  }
 
   // Geen afdruk gevonden - dan maar de hele plaat, dat is beter dan niets.
-  if (boven < 0 || links < 0) return { left: 0, top: 0, width, height }
+  if (celRechts < 0) return { left: 0, top: 0, width, height }
 
-  const marge = Math.round(Math.max(width, height) * KADER_MARGE)
-  const left = Math.max(0, links - marge)
-  const top = Math.max(0, boven - marge)
+  // Eén cel speling eromheen, zodat de fijne zoektocht ook de uitlopers pakt
+  // die net buiten de laatste volle cel vallen.
+  const x0 = Math.max(0, (celLinks - 1) * cel)
+  const x1 = Math.min(width - 1, (celRechts + 2) * cel - 1)
+  const y0 = Math.max(0, (celBoven - 1) * cel)
+  const y1 = Math.min(height - 1, (celOnder + 2) * cel - 1)
+
+  let links = x1
+  let rechts = x0
+  let boven = y1
+  let onder = y0
+
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if (dekking[y * width + x] < RAND_DEKKING) continue
+      if (x < links) links = x
+      if (x > rechts) rechts = x
+      if (y < boven) boven = y
+      if (y > onder) onder = y
+    }
+  }
+
+  // Wel cellen met inkt, maar geen enkele pixel die vol genoeg is: dan is het
+  // raster het beste antwoord dat er is.
+  if (rechts < links || onder < boven) {
+    return { left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 }
+  }
 
   return {
-    left,
-    top,
-    width: Math.min(width - left, rechts - links + 1 + marge * 2),
-    height: Math.min(height - top, onder - boven + 1 + marge * 2)
+    left: links,
+    top: boven,
+    width: rechts - links + 1,
+    height: onder - boven + 1
   }
 }
 
@@ -262,21 +326,30 @@ function inktKader (rgba, width, height, papier) {
  * tussengebied is waar een stempel op lijkt; een harde drempel maakt er een
  * uitgeknipt silhouet van.
  */
-async function bewerkPlaat (plaat, { drempel }) {
+async function bewerkPlaat (plaat, { drempel, kleur }) {
   const beeld = sharp(plaat).ensureAlpha()
   const { width, height } = await beeld.metadata()
   const rgba = await beeld.raw().toBuffer()
 
   const witpunt = witpuntVan(rgba, 4)
   const papier = witpunt[0] * 0.299 + witpunt[1] * 0.587 + witpunt[2] * 0.114
-  const kader = inktKader(rgba, width, height, papier)
+  const kader = inktKader(rgba, width, height, papier, drempel)
 
   // --- de plaat: papier naar wit, doorzichtigheid weg
+  //
+  // De kleurversterking gaat er na de witpuntcorrectie overheen en niet ervoor:
+  // pas dan liggen de steunkleuren op hun uiteindelijke helderheid, en die
+  // helderheid bepaalt hoe zwaar versterkKleur ze aanpakt.
   const rgb = Buffer.allocUnsafe(width * height * 3)
   for (let p = 0, q = 0; p < rgba.length; p += 4, q += 3) {
-    for (let k = 0; k < 3; k++) {
-      rgb[q + k] = Math.min(255, Math.round((rgba[p + k] * 255) / witpunt[k]))
-    }
+    const [r, g, b] = versterkKleur(
+      Math.min(255, Math.round((rgba[p] * 255) / witpunt[0])),
+      Math.min(255, Math.round((rgba[p + 1] * 255) / witpunt[1])),
+      Math.min(255, Math.round((rgba[p + 2] * 255) / witpunt[2])),
+      kleur)
+    rgb[q] = r
+    rgb[q + 1] = g
+    rgb[q + 2] = b
   }
 
   const plaatJpeg = await sharp(rgb, { raw: { width, height, channels: 3 } })
@@ -286,6 +359,11 @@ async function bewerkPlaat (plaat, { drempel }) {
     .toBuffer()
 
   // --- de stempel: helderheid wordt dekking
+  //
+  // De dekking komt uit de helderheid zoals het model hem gaf, dus die wordt
+  // eerst uitgerekend en pas daarna mag de kleur eroverheen. Andersom zou een
+  // voller kleurvlak ook dekkender worden, en dan staan de plaat en de stempel
+  // niet meer even zwaar op de pagina.
   for (let i = 0; i < rgba.length; i += 4) {
     const licht = rgba[i] * 0.299 + rgba[i + 1] * 0.587 + rgba[i + 2] * 0.114
     const dekking = 1 - licht / papier
@@ -293,6 +371,11 @@ async function bewerkPlaat (plaat, { drempel }) {
     // hele plaat een grauwe waas die op het vel als een vies vlak leest
     const uit = dekking <= drempel ? 0 : (dekking - drempel) / (1 - drempel)
     rgba[i + 3] = Math.round(Math.max(0, Math.min(1, uit)) * 255)
+
+    const [r, g, b] = versterkKleur(rgba[i], rgba[i + 1], rgba[i + 2], kleur)
+    rgba[i] = r
+    rgba[i + 1] = g
+    rgba[i + 2] = b
   }
 
   // Een PNG van korrelige inkt met zachte doorzichtigheid comprimeert vreselijk:
@@ -315,7 +398,7 @@ async function dagBestand (nummer) {
   return JSON.parse(await readFile(join(ROOT, 'data', 'days', naam), 'utf8'))
 }
 
-async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel }) {
+async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel, kleur }) {
   const nummer = String(dag.dag).padStart(2, '0')
   const notitie = {
     dag: dag.dag,
@@ -341,12 +424,17 @@ async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel }) {
     const stempelPad = join(UIT, `stempel-${merk}.png`)
     const plaatPad = join(UIT, `plaat-${merk}.jpg`)
     const fotoPad = join(UIT, `foto-${merk}.jpg`)
-    const ruwPad = join(RUW, `${merk}.jpg`)
     const oud = bestaand?.afdrukken?.[i]
     // Elke --opnieuw vraagt een volgende variant, zodat je echt een nieuwe
-    // afdruk krijgt en de vorige in de cache blijft staan voor het geval je hem
-    // toch mooier vond.
+    // afdruk krijgt en de vorige blijft staan voor het geval je hem toch mooier
+    // vond.
     const variant = (oud?.variant ?? 1) + (opnieuw ? 1 : 0)
+    const ruwPad = plaatNaam(merk, variant)
+
+    // Wat er met de hand bij deze ene afdruk is gezet, en wat dus niet uit de
+    // dag zelf af te leiden is: de regel die het model vertelt waar het bij
+    // juist deze foto op moet letten.
+    const nadruk = oud?.nadruk ?? ''
 
     if (!opnieuw && !herzet && await bestaat(plaatPad) && oud) {
       console.log(`  ${merk}  staat er al`)
@@ -384,7 +472,7 @@ async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel }) {
         .jpeg({ quality: 92 }).toBuffer()
 
       plaat = await genereerFoto({
-        prompt: stempelPrompt(dag),
+        prompt: stempelPrompt(dag, nadruk),
         model,
         verhouding: '1:1',
         formaat: '4K',
@@ -400,7 +488,7 @@ async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel }) {
 
     // Allebei de versies in één keer, zodat ze hetzelfde witpunt en hetzelfde
     // uitsnijkader delen en dus even groot zijn.
-    const { plaatJpeg, stempelPng, rgba, kader } = await bewerkPlaat(plaat, { drempel })
+    const { plaatJpeg, stempelPng, rgba, kader } = await bewerkPlaat(plaat, { drempel, kleur })
     await writeFile(plaatPad, plaatJpeg)
     await writeFile(stempelPad, stempelPng)
 
@@ -413,6 +501,9 @@ async function doeDag (dag, fotos, { model, opnieuw, herzet, drempel }) {
     notitie.afdrukken.push({
       bron: foto.naam,
       variant,
+      // meeschrijven, want dit blok wordt vers opgebouwd en zou de met de hand
+      // bijgezette regel anders elke run kwijtraken
+      ...(nadruk ? { nadruk } : {}),
       // Hoe breed de afdruk is ten opzichte van zijn hoogte. De pagina heeft dit
       // nodig vóórdat het plaatje geladen is: zonder de verhouding zou hij bij
       // het uitrekenen van de standaardplekken van vierkant uitgaan, en dan
@@ -472,6 +563,20 @@ const opnieuw = argumenten.includes('--opnieuw')
 const snel = argumenten.includes('--snel')
 const herzet = argumenten.includes('--herzet')
 const drempel = Number(argumenten.find(a => a.startsWith('--drempel='))?.split('=')[1] ?? 0.06)
+/**
+ * Hoe hard de steunkleuren worden bijgesteld.
+ *
+ * Dit getal is een keer van kant gewisseld en dat is het onthouden waard. Zolang
+ * de prompt "keep them desaturated" zei kwamen de platen te bleek uit het model
+ * en moest deze knop de kleur juist ophalen - 1,35 stond hier. Nu de prompt om
+ * volle inkt vraagt komen ze er andersom uit: fel genoeg voor een reisposter,
+ * en dat is niet waar dit boek op lijkt. Dus houdt hij ze nu in.
+ *
+ * Onder de 1 is dus geen fout maar het antwoord op een prompt die zijn werk te
+ * goed doet. Zet je hem op 1, dan zie je de plaat precies zoals het model hem
+ * gaf.
+ */
+const kleur = Number(argumenten.find(a => a.startsWith('--kleur='))?.split('=')[1] ?? 0.75)
 const alleenDag = Number(argumenten.find(a => /^\d+$/.test(a)) ?? 0)
 
 // Bij --herzet komt er geen enkele aanroep aan te pas, dus dan hoeft er ook geen
@@ -498,8 +603,8 @@ await mkdir(RUW, { recursive: true })
 
 const model = snel ? SNEL : MODEL
 console.log(herzet
-  ? '\nDe bewaarde platen opnieuw sleutelen, zonder het model\n'
-  : `\nStempels maken met ${model}\n`)
+  ? `\nDe bewaarde platen opnieuw sleutelen, zonder het model - kleur ${kleur}, drempel ${drempel}\n`
+  : `\nStempels maken met ${model} - kleur ${kleur}, drempel ${drempel}\n`)
 
 for (const [dagNummer, fotos] of perDag) {
   if (alleenDag && dagNummer !== alleenDag) continue
@@ -512,7 +617,7 @@ for (const [dagNummer, fotos] of perDag) {
 
   console.log(`Dag ${dagNummer}: ${dag.titel}`)
   try {
-    await doeDag(dag, fotos, { model, opnieuw, herzet, drempel })
+    await doeDag(dag, fotos, { model, opnieuw, herzet, drempel, kleur })
   } catch (fout) {
     console.error(`  mislukt: ${fout.message}`)
   }

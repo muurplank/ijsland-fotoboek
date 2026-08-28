@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   fotosPerDag, stempelNummer, veldnotitieConcept, dagNotitie, stempelPrompt, inktKleuren,
-  DAG_VERSCHUIVING
+  versterkKleur, DAG_VERSCHUIVING
 } from '../src/hero.js'
 
 /** Precies de namen zoals ze nu in Hero/ staan, plus wat rommel ertussen. */
@@ -130,6 +130,87 @@ test('de prompt vraagt om de dingen die deze stijl maken', () => {
 
 test('de prompt draagt de dag mee', () => {
   assert.ok(stempelPrompt(DAG).includes('Diamond Beach'))
+})
+
+test('lucht, water en verte krijgen niet dezelfde behandeling', () => {
+  // Dit is de fout die de eerste ronde stempels maakte: één zin voor alle drie,
+  // en dan loopt de lucht als een streepjesveld over de halve afdruk terwijl het
+  // kerkje erin verdwijnt. Het water hóórt die streepjes te hebben.
+  const prompt = stempelPrompt(DAG)
+  assert.ok(prompt.includes('The sky is bare paper'), 'mist de lege lucht')
+  assert.ok(prompt.includes('Water is where the dashes belong'), 'mist de streepjes in het water')
+  assert.ok(prompt.includes('one thin contour line'), 'mist de dunne contour voor de verte')
+  assert.doesNotMatch(prompt, /sky, water, distant hills and haze as rows/)
+})
+
+test('de prompt zegt dat het onderwerp wint van de achtergrond', () => {
+  const prompt = stempelPrompt(DAG)
+  assert.ok(prompt.includes('The subject carries the most ink'))
+  assert.ok(prompt.includes('bare paper, or reduced to a single thin ridge line'))
+})
+
+test('de kleuren mogen niet meer ingehouden zijn', () => {
+  // "keep them desaturated" leverde salie waar gras hoorde
+  const prompt = stempelPrompt(DAG)
+  assert.doesNotMatch(prompt, /keep them desaturated/)
+  assert.ok(prompt.includes('a true grass or moss green'))
+})
+
+test('de nadruk voor één afdruk komt in de prompt, en anders niets', () => {
+  const zonder = stempelPrompt(DAG)
+  assert.doesNotMatch(zonder, /THIS PARTICULAR PRINT/)
+
+  const met = stempelPrompt(DAG, '  The sand is orange.  ')
+  assert.ok(met.includes('THIS PARTICULAR PRINT\nThe sand is orange.'))
+  // en hij staat vóór de foto, want de foto blijft het laatste woord houden
+  assert.ok(met.indexOf('THIS PARTICULAR PRINT') < met.indexOf('THIS PHOTOGRAPH'))
+})
+
+/** ------------------------------------------------------- versterkKleur */
+
+test('laat de sleutelinkt met rust', () => {
+  // Gemeten op de echte platen: de sleutelinkt is een warm bruinzwart rond
+  // rgb(64,32,32), dus chroma 32. Een platte verzadigingsboost maakt juist die
+  // roder, en dan is de tekening niet donker meer maar bruin.
+  assert.deepEqual(versterkKleur(64, 32, 32, 1.35), [64, 32, 32])
+  assert.deepEqual(versterkKleur(24, 22, 20, 2), [24, 22, 20])
+})
+
+test('trekt een salieachtig groen voller', () => {
+  const [r, g, b] = versterkKleur(96, 128, 96, 1.35)
+  assert.ok(g > 128, 'het groen moet groener worden')
+  assert.ok(r < 96 && b < 96, 'de andere kanalen moeten wijken')
+})
+
+test('houdt de helderheid gelijk, alleen de kleur verandert', () => {
+  const licht = (r, g, b) => r * 0.299 + g * 0.587 + b * 0.114
+  const voor = [160, 160, 128]
+  const na = versterkKleur(...voor, 1.5)
+  assert.ok(Math.abs(licht(...na) - licht(...voor)) < 2)
+})
+
+test('doet niets bij kracht 1, en houdt in onder de 1', () => {
+  assert.deepEqual(versterkKleur(200, 150, 90, 1), [200, 150, 90])
+
+  const [r, g, b] = versterkKleur(200, 150, 90, 0.5)
+  assert.ok(r < 200 && b > 90, 'onder de 1 moeten de kanalen naar elkaar toe')
+})
+
+test('een onzinnige kracht laat de pixel met rust', () => {
+  // node src/stempel.js --kleur=veel geeft NaN; dan liever niets doen dan een
+  // hele reeks platen met zwarte gaten erin wegschrijven
+  assert.deepEqual(versterkKleur(200, 150, 90, NaN), [200, 150, 90])
+})
+
+test('loopt nergens buiten 0 tot 255', () => {
+  for (const kracht of [1.35, 3, 10]) {
+    for (const kleur of [[255, 200, 40], [250, 246, 236], [10, 200, 10], [0, 0, 0]]) {
+      for (const kanaal of versterkKleur(...kleur, kracht)) {
+        assert.ok(Number.isInteger(kanaal) && kanaal >= 0 && kanaal <= 255,
+          `${kanaal} uit ${kleur} bij ${kracht}`)
+      }
+    }
+  }
 })
 
 /** Een verzonnen afdruk: drie inkten op doorzichtig papier. */
