@@ -6,29 +6,31 @@
   "afdrukken": [
     {
       "bron": "Dag 4.ARW",
-      "variant": 1,
-      "verhouding": 1.333,
+      "variant": 2,
+      "nadruk": "The church with its red roof is the subject. The sky is bare paper - no rows of dashes around the tower. The green slope and the red roof carry the colour.",
+      "verhouding": 1.529,
       "plaat": "plaat-dag-05-1.jpg",
       "stempel": "stempel-dag-05-1.png",
       "foto": "foto-dag-05-1.jpg",
       "inkten": [
-        "#1a1813",
-        "#4b4641",
-        "#884740",
-        "#702016"
+        "#1a2e1a",
+        "#4a5b47",
+        "#a53f31",
+        "#5d2e1d"
       ]
     },
     {
       "bron": "Dag 4-2.ARW",
-      "variant": 1,
-      "verhouding": 0.873,
+      "variant": 2,
+      "verhouding": 0.872,
       "plaat": "plaat-dag-05-2.jpg",
       "stempel": "stempel-dag-05-2.png",
       "foto": "foto-dag-05-2.jpg",
       "inkten": [
-        "#1b2820",
-        "#474c43",
-        "#8d4643"
+        "#47312e",
+        "#685550",
+        "#8e3232",
+        "#1a0b0f"
       ]
     }
   ]

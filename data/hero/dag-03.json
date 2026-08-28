@@ -6,27 +6,27 @@
   "afdrukken": [
     {
       "bron": "Dag 2.ARW",
-      "variant": 1,
-      "verhouding": 1.383,
+      "variant": 2,
+      "verhouding": 1.298,
       "plaat": "plaat-dag-03-1.jpg",
       "stempel": "stempel-dag-03-1.png",
       "foto": "foto-dag-03-1.jpg",
       "inkten": [
-        "#465950",
-        "#1c2d28",
-        "#6e511e"
+        "#161e16",
+        "#434334",
+        "#714308"
       ]
     },
     {
       "bron": "Dag 2-2.ARW",
-      "variant": 1,
-      "verhouding": 1.023,
+      "variant": 2,
+      "verhouding": 0.682,
       "plaat": "plaat-dag-03-2.jpg",
       "stempel": "stempel-dag-03-2.png",
       "foto": "foto-dag-03-2.jpg",
       "inkten": [
-        "#2d2e1a",
-        "#645835"
+        "#47342f",
+        "#6d5654"
       ]
     }
   ]

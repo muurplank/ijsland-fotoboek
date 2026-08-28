@@ -1,33 +1,21 @@
 {
   "dag": 7,
-  "plaats": "Vliegtuigwrak",
+  "plaats": "Búðakirkja",
   "jaar": "2026",
   "trefwoorden": [],
   "afdrukken": [
     {
       "bron": "Dag 6.jpg",
-      "variant": 1,
-      "verhouding": 1.437,
+      "variant": 2,
+      "nadruk": "The black timber church is the whole subject and nothing may compete with it. The sky is bare paper - no rows of dashes anywhere above the horizon. Keep the stone wall thin and the mountains behind it to a single thin contour line. The grass in front carries the green.",
+      "verhouding": 1.12,
       "plaat": "plaat-dag-07-1.jpg",
       "stempel": "stempel-dag-07-1.png",
       "foto": "foto-dag-07-1.jpg",
       "inkten": [
-        "#4d5c49",
-        "#321b15",
-        "#72451e"
-      ]
-    },
-    {
-      "bron": "Dag 6-2.JPG",
-      "variant": 1,
-      "verhouding": 1.036,
-      "plaat": "plaat-dag-07-2.jpg",
-      "stempel": "stempel-dag-07-2.png",
-      "foto": "foto-dag-07-2.jpg",
-      "inkten": [
-        "#46312d",
-        "#4d6257",
-        "#100e0a"
+        "#141e15",
+        "#464c43",
+        "#573707"
       ]
     }
   ]

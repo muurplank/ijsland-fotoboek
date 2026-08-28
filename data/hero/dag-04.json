@@ -6,27 +6,28 @@
   "afdrukken": [
     {
       "bron": "Dag 3.ARW",
-      "variant": 1,
-      "verhouding": 1.278,
+      "variant": 2,
+      "nadruk": "The three sheep are the subject and they must read first. Cut them dark and closed in the key ink so they stand clear against the paper. The hillside behind them is bare paper: no hatching, no rows of dashes, at most a single thin ridge line where it meets the sky. Put a full grass green into the tussocks they are standing in.",
+      "verhouding": 2.495,
       "plaat": "plaat-dag-04-1.jpg",
       "stempel": "stempel-dag-04-1.png",
       "foto": "foto-dag-04-1.jpg",
       "inkten": [
-        "#321e17",
-        "#5d4c43"
+        "#1b2d1e",
+        "#4b5d47",
+        "#5a4208"
       ]
     },
     {
       "bron": "Dag 3-2.jpg",
-      "variant": 1,
-      "verhouding": 1.064,
+      "variant": 2,
+      "verhouding": 1.222,
       "plaat": "plaat-dag-04-2.jpg",
       "stempel": "stempel-dag-04-2.png",
       "foto": "foto-dag-04-2.jpg",
       "inkten": [
-        "#1a281e",
-        "#434d45",
-        "#593709"
+        "#2d2d18",
+        "#604d2b"
       ]
     }
   ]

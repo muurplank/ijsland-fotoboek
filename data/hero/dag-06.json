@@ -6,41 +6,43 @@
   "afdrukken": [
     {
       "bron": "Dag 5.ARW",
-      "variant": 1,
-      "verhouding": 1.108,
+      "variant": 2,
+      "nadruk": "A wide waterfall in a canyon. Put a full, saturated moss green into the banks and the canyon rim. The water keeps its rows of broken dashes.",
+      "verhouding": 1.301,
       "plaat": "plaat-dag-06-1.jpg",
       "stempel": "stempel-dag-06-1.png",
       "foto": "foto-dag-06-1.jpg",
       "inkten": [
-        "#46312d",
-        "#5d575b",
-        "#1d100a"
+        "#4a6045",
+        "#08111a"
       ]
     },
     {
       "bron": "Dag 5-2.jpg",
-      "variant": 1,
-      "verhouding": 1.214,
+      "variant": 2,
+      "nadruk": "A wrecked aeroplane on black sand. Push the warm ink further than usual: a real orange in the stripe along the fuselage and in the ground it lies on.",
+      "verhouding": 1.951,
       "plaat": "plaat-dag-06-2.jpg",
       "stempel": "stempel-dag-06-2.png",
       "foto": "foto-dag-06-2.jpg",
       "inkten": [
-        "#341a13",
-        "#5e4035",
-        "#9f3f2c"
+        "#181b2a",
+        "#5f5a59",
+        "#602a14",
+        "#9e461a"
       ]
     },
     {
       "bron": "Dag 5-3.ARW",
-      "variant": 1,
-      "verhouding": 0.94,
+      "variant": 2,
+      "verhouding": 0.887,
       "plaat": "plaat-dag-06-3.jpg",
       "stempel": "stempel-dag-06-3.png",
       "foto": "foto-dag-06-3.jpg",
       "inkten": [
-        "#2b342a",
-        "#4e574d",
-        "#050b07"
+        "#2c352b",
+        "#595a4d",
+        "#73341e"
       ]
     }
   ]

@@ -6,14 +6,15 @@
   "afdrukken": [
     {
       "bron": "Dag 1.jpg",
-      "variant": 1,
-      "verhouding": 0.878,
+      "variant": 2,
+      "nadruk": "This is a waterfall coming over a mossy cliff. Put a full, saturated moss green into the cliff face and the banks - green is the colour that carries this print. The sky at the top left is bare paper.",
+      "verhouding": 1.01,
       "plaat": "plaat-dag-02-1.jpg",
       "stempel": "stempel-dag-02-1.png",
       "foto": "foto-dag-02-1.jpg",
       "inkten": [
-        "#1d2820",
-        "#484c42"
+        "#121f18",
+        "#434a2f"
       ]
     }
   ]
