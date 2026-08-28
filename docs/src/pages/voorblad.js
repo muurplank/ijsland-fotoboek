@@ -41,7 +41,7 @@
 
 import { bouwSvg } from '../render/profielvorm.js'
 import { padVan } from '../render/pen.js'
-import { vlagKnopen, vlagVlakken } from '../render/vlag.js'
+import { dekkendVak, vlagKnopen, vlagMaat, zegelKnopen, zegelMaat } from '../render/vlag.js'
 import { papierKnopen, zaadje } from '../render/papier.js'
 import { padData, projecteer, vereenvoudig } from '../render/svg.js'
 import { paginaMaat, voorbladView } from '../render/layout.js'
@@ -320,6 +320,51 @@ export function tekenVoorblad (svg, opschriften, { reis, kust, boek, plaat }, st
     svg.append(over)
   }
 
+  // -------------------------------------------------- de vlag als het eiland
+  //
+  // De landsgrens is hier het venster en de vlag de vulling. Hij komt vóór de
+  // kustlijn en de route, want juist dat maakt het een kaart en geen plaatje:
+  // de omtrek en de rit liggen er als lijn overheen.
+  //
+  // De vlag wordt niet uitgerekt naar de vorm van het land maar dekkend
+  // geschaald met behoud van verhouding - IJsland is breder dan de vlag hoog is,
+  // dus wat boven en onder uitsteekt knipt de kust vanzelf weg. Uitrekken zou
+  // het kruis vervormen, en een vlag met een scheef kruis is geen vlag meer.
+  if (stijl['voorblad.vlagAan'] && stijl['voorblad.vlagPlek'] === 'als het eiland') {
+    const clip = maakSvg('clipPath', {
+      id: 'voorblad-vlageiland',
+      clipPathUnits: 'userSpaceOnUse'
+    })
+    clip.append(maakSvg('path', {
+      d: kusten.map(k => padVan(k, true)).join(' '),
+      'clip-rule': 'evenodd'
+    }))
+
+    const defs = maakSvg('defs')
+    defs.append(clip)
+
+    const xen = kusten.flat().map(p => p.x)
+    const yen = kusten.flat().map(p => p.y)
+    const vak = dekkendVak({
+      x: Math.min(...xen),
+      y: Math.min(...yen),
+      breedte: Math.max(...xen) - Math.min(...xen),
+      hoogte: Math.max(...yen) - Math.min(...yen)
+    })
+
+    const groep = maakSvg('g', { 'clip-path': 'url(#voorblad-vlageiland)' })
+    for (const knoop of vlagKnopen({
+      x: vak.x,
+      y: vak.y,
+      breedteMm: vak.breedteMm,
+      dekking: stijl['voorblad.vlagDekking']
+    })) {
+      groep.append(bouwSvg(knoop))
+    }
+
+    svg.append(defs, groep)
+  }
+
   // ------------------------------------------------------------- de kust
   if (stijl['voorblad.kustAan']) {
     for (const punten of kusten) {
@@ -392,37 +437,81 @@ export function tekenVoorblad (svg, opschriften, { reis, kust, boek, plaat }, st
 
   // ---------------------------------------------------------------- de vlag
   //
-  // In een hoek en niet op het eiland: op het land ligt de kaart en daar zou de
-  // vlag als een sticker overheen liggen. In de hoek leest hij als wat hij is -
-  // een stempel die iemand naast de tekening heeft gezet.
-  if (stijl['voorblad.vlagAan']) {
-    const breedte = stijl['voorblad.vlagBreedteMm']
-    const { hoogteMm: vlagHoog } = vlagVlakken(breedte)
-    const vlagHoek = stijl['voorblad.vlagHoek']
+  // Niet in een hoek geparkeerd, want een vlag die daar staat is een logo en een
+  // boek met een logo erop is een brochure. Als postzegel krijgt hij een reden
+  // om er te zijn - rechtsboven, waar op een envelop een zegel hoort - en leest
+  // het omslag als post uit IJsland in plaats van als een kaart met een
+  // vlaggetje erbij.
+  //
+  // De draaiing zit op een binnengroep en niet op de groep met data-plek erop.
+  // Dat moet: het slepen en schalen zet een CSS-transform op dat element, en een
+  // transform-attribuut zou daar door overschreven worden - de zegel stond dan
+  // recht zodra je hem aanraakte.
+  const losseVlag = stijl['voorblad.vlagAan'] &&
+    stijl['voorblad.vlagPlek'] !== 'als het eiland'
 
-    const groep = maakSvg('g', {
+  if (losseVlag) {
+    const plek = stijl['voorblad.vlagPlek']
+    const zegel = plek === 'postzegel'
+    const breedte = stijl['voorblad.vlagBreedteMm']
+    const tandMm = stijl['voorblad.vlagTandMm']
+
+    const afmeting = zegel ? zegelMaat(breedte, tandMm) : vlagMaat(breedte)
+
+    let vx
+    let vy
+
+    if (plek === 'bij het beginpunt') {
+      // waar de reis begon, en dan net naast het punt zodat de stip vrij blijft
+      const start = (reis?.[0]?.waypoints ?? []).find(w => w.type === 'start') ??
+        reis?.[0]?.waypoints?.[0]
+      const p = start ? view.project(start.lon, start.lat) : null
+      vx = (p?.x ?? maat.breedteMm / 2) + afmeting.breedteMm * 0.18
+      vy = (p?.y ?? maat.hoogteMm / 2) - afmeting.hoogteMm * 1.15
+    } else {
+      const hoek = stijl['voorblad.vlagHoek']
+      vx = hoek.startsWith('rechts') ? maat.breedteMm - marge - afmeting.breedteMm : marge
+      vy = hoek.endsWith('boven') ? marge : maat.hoogteMm - marge - afmeting.hoogteMm
+    }
+
+    const doos = maakSvg('g', {
       'data-plek': 'voorbladvlag',
       'data-schaalbaar': 'css',
       'data-knoppen': 'voorblad'
     })
 
-    for (const knoop of vlagKnopen({
-      x: vlagHoek.startsWith('rechts') ? maat.breedteMm - marge - breedte : marge,
-      y: vlagHoek.endsWith('boven') ? marge : maat.hoogteMm - marge - vlagHoog,
-      breedteMm: breedte,
-      // een eigen zaad naast dat van het vel: anders verandert de aandruk van de
-      // vlag mee zodra je aan de vezels van het papier draait
-      rnd: zaadje(stijl['voorblad.zaad'] * 17 + 5),
-      handMm: stijl['voorblad.vlagHandMm'],
-      dekking: stijl['voorblad.vlagDekking'],
-      inktKleur: stijl['voorblad.kustKleur'],
-      inktMm: stijl['voorblad.vlagRandMm'],
-      id: 'voorbladvlag'
-    })) {
-      groep.append(bouwSvg(knoop))
-    }
+    const scheef = maakSvg('g', {
+      transform: `rotate(${rond(stijl['voorblad.vlagDraaiing'])} ` +
+        `${rond(vx + afmeting.breedteMm / 2)} ${rond(vy + afmeting.hoogteMm / 2)})`
+    })
 
-    svg.append(groep)
+    // een eigen zaad naast dat van het vel: anders verandert de aandruk van de
+    // vlag mee zodra je aan de vezels van het papier draait
+    const zaad = zaadje(stijl['voorblad.zaad'] * 17 + 5)
+
+    const knopen = zegel
+      ? zegelKnopen({
+          x: vx,
+          y: vy,
+          breedteMm: breedte,
+          rnd: zaad,
+          tandMm,
+          papierKleur: stijl['papier.kleur'],
+          inktKleur: stijl['voorblad.kustKleur'],
+          afstempeling: stijl['voorblad.vlagAfstempeling'],
+          dekking: stijl['voorblad.vlagDekking'],
+          id: 'voorbladzegel'
+        })
+      : vlagKnopen({
+          x: vx,
+          y: vy,
+          breedteMm: breedte,
+          dekking: stijl['voorblad.vlagDekking']
+        })
+
+    for (const knoop of knopen) scheef.append(bouwSvg(knoop))
+    doos.append(scheef)
+    svg.append(doos)
   }
 
   // --------------------------------------------------------- het titelblok
